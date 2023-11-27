@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：Algorithm 是一道算法题Review 是读一篇英文文章Technique&#x2F;Tips 是分享一个小技术Share 是分享一个观点。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARTS-2023-47">
+<meta property="og:url" content="http://example.com/2023/11/20/arts/ARTS-2023-47/index.html">
+<meta property="og:site_name" content="萝卜的博客">
+<meta property="og:description" content="ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：Algorithm 是一道算法题Review 是读一篇英文文章Technique&#x2F;Tips 是分享一个小技术Share 是分享一个观点。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-11-20T06:13:45.000Z">
+<meta property="article:modified_time" content="2023-11-23T10:32:26.243Z">
+<meta property="article:author" content="hxzhouh">
+<meta property="article:tag" content="atrs">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/11/20/arts/ARTS-2023-47/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ARTS-2023-47 | 萝卜的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">萝卜的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-arts">
+
+    <a href="/arts" rel="section"><i class="fa fa-paint-brush fa-fw"></i>arts</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/11/20/arts/ARTS-2023-47/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="hxzhouh">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="萝卜的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ARTS-2023-47
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-11-20 14:13:45" itemprop="dateCreated datePublished" datetime="2023-11-20T14:13:45+08:00">2023-11-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-11-23 18:32:26" itemprop="dateModified" datetime="2023-11-23T18:32:26+08:00">2023-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/arts/" itemprop="url" rel="index"><span itemprop="name">arts</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a target="_blank" rel="noopener" href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a target="_blank" rel="noopener" href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
+<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
+<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
+<ol>
+<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/atrs/" rel="tag"># atrs</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/11/13/arts/ARTS-2023-46/" rel="prev" title="ARTS-2023-46">
+      <i class="fa fa-chevron-left"></i> ARTS-2023-46
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/" rel="next" title="玩转memos">
+      玩转memos <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#leetcode-383"><span class="nav-number">1.1.</span> <span class="nav-text">leetcode 383</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#49"><span class="nav-number">1.2.</span> <span class="nav-text">49</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Review"><span class="nav-number">2.</span> <span class="nav-text">Review</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Technique-Tips"><span class="nav-number">3.</span> <span class="nav-text">Technique&#x2F;Tips</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-sar"><span class="nav-number">3.1.</span> <span class="nav-text">#linux sar</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Share"><span class="nav-number">4.</span> <span class="nav-text">Share</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">hxzhouh</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hxzhouh@gmail.com" title="E-Mail → mailto:hxzhouh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hxzhouh</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

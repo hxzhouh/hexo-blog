@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在VPS上搭建vaultwarden之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 Bitwarden 支持自托管服务端,但是 Bitwarden 对性能要求比较高， 退而求其次，用它的另一个实现 Vaultwarden（原名 Bitwarden_rs） Vaultwarden 完美兼容Bitwarden ，这样我们就在A">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在VPS上搭建vaultwarden">
+<meta property="og:url" content="http://example.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/index.html">
+<meta property="og:site_name" content="萝卜的博客">
+<meta property="og:description" content="在VPS上搭建vaultwarden之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 Bitwarden 支持自托管服务端,但是 Bitwarden 对性能要求比较高， 退而求其次，用它的另一个实现 Vaultwarden（原名 Bitwarden_rs） Vaultwarden 完美兼容Bitwarden ，这样我们就在A">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png">
+<meta property="article:published_time" content="2023-09-23T05:43:28.000Z">
+<meta property="article:modified_time" content="2023-11-20T06:57:50.548Z">
+<meta property="article:author" content="hxzhouh">
+<meta property="article:tag" content="反向代理">
+<meta property="article:tag" content="密码托管">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png">
+
+<link rel="canonical" href="http://example.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>在VPS上搭建vaultwarden | 萝卜的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">萝卜的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-arts">
+
+    <a href="/arts" rel="section"><i class="fa fa-paint-brush fa-fw"></i>arts</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="hxzhouh">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="萝卜的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在VPS上搭建vaultwarden
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-23 13:43:28" itemprop="dateCreated datePublished" datetime="2023-09-23T13:43:28+08:00">2023-09-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-11-20 14:57:50" itemprop="dateModified" datetime="2023-11-20T14:57:50+08:00">2023-11-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/blog/" itemprop="url" rel="index"><span itemprop="name">blog</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a target="_blank" rel="noopener" href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a target="_blank" rel="noopener" href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a target="_blank" rel="noopener" href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a target="_blank" rel="noopener" href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a target="_blank" rel="noopener" href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a target="_blank" rel="noopener" href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a target="_blank" rel="noopener" href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
+<span id="more"></span>
+<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
+<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
+<blockquote>
+<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
+</blockquote>
+<p>运行 下面的指令，进入配置页面， 参考文章 <a target="_blank" rel="noopener" href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
+
+<p>然后查看一下配置的内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
+<p>这样就好了。</p>
+<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
+<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
+<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
+<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a target="_blank" rel="noopener" href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
+<p>具体使用 ，请参考 <a target="_blank" rel="noopener" href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
+<hr>
+<p>Enjoy 😄</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/" rel="tag"># 反向代理</a>
+              <a href="/tags/%E5%AF%86%E7%A0%81%E6%89%98%E7%AE%A1/" rel="tag"># 密码托管</a>
+              <a href="/tags/docker/" rel="tag"># docker</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/22/arts/ARTS-2023-38/" rel="prev" title="ARTS-2023-38">
+      <i class="fa fa-chevron-left"></i> ARTS-2023-38
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" rel="next" title="Obsidian 最佳实践 -持续更新">
+      Obsidian 最佳实践 -持续更新 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden"><span class="nav-number">1.</span> <span class="nav-text">在VPS上搭建vaultwarden</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Vaultwarden-%E9%83%A8%E7%BD%B2"><span class="nav-number">1.1.</span> <span class="nav-text">Vaultwarden 部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cloudflare-%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">cloudflare 反向代理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6"><span class="nav-number">1.2.1.</span> <span class="nav-text">证书</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.3.</span> <span class="nav-text">客户端设置</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">hxzhouh</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hxzhouh@gmail.com" title="E-Mail → mailto:hxzhouh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hxzhouh</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

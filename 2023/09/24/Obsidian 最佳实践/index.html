@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Obsidian 最佳实践#obsidian 我用Obsidian 来做什么？写博客我的blog 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：Deploy a Hugo site obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Templ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Obsidian 最佳实践 -持续更新">
+<meta property="og:url" content="http://example.com/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="萝卜的博客">
+<meta property="og:description" content="Obsidian 最佳实践#obsidian 我用Obsidian 来做什么？写博客我的blog 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：Deploy a Hugo site obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Templ">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-09-23T16:26:01.000Z">
+<meta property="article:modified_time" content="2023-11-23T11:02:23.296Z">
+<meta property="article:author" content="hxzhouh">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Obsidian 最佳实践 -持续更新 | 萝卜的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">萝卜的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-list fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-arts">
+
+    <a href="/arts" rel="section"><i class="fa fa-paint-brush fa-fw"></i>arts</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="hxzhouh">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="萝卜的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Obsidian 最佳实践 -持续更新
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-24 00:26:01" itemprop="dateCreated datePublished" datetime="2023-09-24T00:26:01+08:00">2023-09-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-11-23 19:02:23" itemprop="dateModified" datetime="2023-11-23T19:02:23+08:00">2023-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%9A%8F%E7%AC%94/" itemprop="url" rel="index"><span itemprop="name">随笔</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a target="_blank" rel="noopener" href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a target="_blank" rel="noopener" href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a target="_blank" rel="noopener" href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a target="_blank" rel="noopener" href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a target="_blank" rel="noopener" href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a target="_blank" rel="noopener" href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+<li></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/" rel="prev" title="在VPS上搭建vaultwarden">
+      <i class="fa fa-chevron-left"></i> 在VPS上搭建vaultwarden
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/09/27/arts/ARTS-2023-39/" rel="next" title="ARTS-2023-39">
+      ARTS-2023-39 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Obsidian-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">1.</span> <span class="nav-text">Obsidian 最佳实践</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%91%E7%94%A8Obsidian-%E6%9D%A5%E5%81%9A%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">我用Obsidian 来做什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%8D%9A%E5%AE%A2"><span class="nav-number">2.1.</span> <span class="nav-text">写博客</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A5%E8%AE%B0"><span class="nav-number">2.2.</span> <span class="nav-text">日记</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%AE%80%E6%82%A6%E8%AE%B0%E5%BD%95%E7%BD%91%E7%BB%9C%E5%86%85%E5%AE%B9"><span class="nav-number">2.3.</span> <span class="nav-text">使用简悦记录网络内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%97%A5%E8%AE%B0%E6%9C%AC%E3%80%82"><span class="nav-number">2.4.</span> <span class="nav-text">本地日记本。</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%B0%8F%E6%8A%80%E5%B7%A7"><span class="nav-number">3.</span> <span class="nav-text">一些小技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E5%AE%9A%E6%96%87%E4%BB%B6%E5%A4%B9%E8%87%AA%E5%8A%A8%E4%BD%BF%E7%94%A8%E6%9F%90%E4%B8%AA%E6%A8%A1%E6%9D%BF%E3%80%82"><span class="nav-number">3.1.</span> <span class="nav-text">特定文件夹自动使用某个模板。</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AD%A3%E5%9C%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E6%8F%92%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">正在使用的插件</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">hxzhouh</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hxzhouh@gmail.com" title="E-Mail → mailto:hxzhouh@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">hxzhouh</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
