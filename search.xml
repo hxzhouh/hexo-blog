@@ -217,7 +217,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#x31;&#48;&#x2e;&#x31;&#x31;&#50;&#46;&#x31;&#x2e;&#49;">&#x67;&#x6c;&#116;&#64;&#x31;&#48;&#x2e;&#x31;&#x31;&#50;&#46;&#x31;&#x2e;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#116;&#x40;&#49;&#48;&#46;&#49;&#x31;&#50;&#x2e;&#49;&#46;&#49;">&#103;&#x6c;&#116;&#x40;&#49;&#48;&#46;&#49;&#x31;&#50;&#x2e;&#49;&#46;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -295,6 +295,51 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
+    <content><![CDATA[<blockquote>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
+</blockquote>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -523,51 +568,6 @@
       </tags>
   </entry>
   <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>聊聊Redis  链表</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8ARedis%20%20%E9%93%BE%E8%A1%A8/</url>
     <content><![CDATA[<p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。</p>
@@ -641,47 +641,6 @@
       </categories>
       <tags>
         <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -787,6 +746,78 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>arts</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-42</title>
     <url>/2023/10/16/arts/ARTS-2023-42/</url>
     <content><![CDATA[<blockquote>
@@ -802,6 +833,60 @@
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
 </ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
@@ -847,62 +932,35 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-47</title>
+    <url>/2023/11/20/arts/ARTS-2023-47/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
+<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
+<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
+<ol>
+<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
 ]]></content>
       <categories>
         <category>arts</category>
       </categories>
       <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
+        <tag>atrs</tag>
       </tags>
   </entry>
   <entry>
@@ -945,64 +1003,6 @@
         <tag>工具</tag>
         <tag>碎碎念</tag>
         <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-47</title>
-    <url>/2023/11/20/arts/ARTS-2023-47/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
-<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
-<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
-<ol>
-<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>atrs</tag>
       </tags>
   </entry>
 </search>
