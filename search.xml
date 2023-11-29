@@ -51,45 +51,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Golang 通过 Consul 实现分布式锁</title>
-    <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
-    <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
-<h1 id="Consul-的使用场景"><a href="#Consul-的使用场景" class="headerlink" title="Consul 的使用场景"></a>Consul 的使用场景</h1><ul>
-<li>docker 实例的注册与配置共享</li>
-<li>coreos 实例的注册与配置共享</li>
-<li>vitess 集群</li>
-<li>SaaS 应用的配置共享</li>
-<li>与 confd 服务集成，动态生成 nginx 和 haproxy 配置文件</li>
-</ul>
-<h1 id="Consul-的优势"><a href="#Consul-的优势" class="headerlink" title="Consul 的优势"></a>Consul 的优势</h1><ul>
-<li>使用 Raft 算法来保证一致性, 比复杂的 Paxos 算法更直接. 相比较而言, zookeeper 采用的是 Paxos, 而 etcd 使用的则是 Raft.</li>
-<li>支持多数据中心，内外网的服务采用不同的端口进行监听。 多数据中心集群可以避免单数据中心的单点故障,而其部署则需要考虑网络延迟, 分片等情况等. zookeeper 和 etcd 均不提供多数据中心功能的支持.</li>
-<li>支持健康检查. etcd 不提供此功能.</li>
-<li>支持 http 和 dns 协议接口. zookeeper 的集成较为复杂, etcd 只支持 http 协议.</li>
-<li>官方提供web管理界面, etcd 无此功能.<br>综合比较, Consul 作为服务注册和配置管理的新星, 比较值得关注和研究.</li>
-</ul>
-<h1 id="Consul-的角色"><a href="#Consul-的角色" class="headerlink" title="Consul 的角色"></a>Consul 的角色</h1><p>client: 客户端, 无状态, 将 HTTP 和 DNS 接口请求转发给局域网内的服务端集群.<br>server: 服务端, 保存配置信息, 高可用集群, 在局域网内与本地客户端通讯, 通过广域网与其他数据中心通讯. 每个数据中心的 server 数量推荐为 3 个或是 5 个.</p>
-<h1 id="什么是分布式锁"><a href="#什么是分布式锁" class="headerlink" title="什么是分布式锁"></a>什么是分布式锁</h1><p><strong>分布式锁</strong>，是控制<a href="https://zh.wikipedia.org/w/index.php?title=%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F&action=edit&redlink=1" title="分布式系统（页面不存在）">分布式系统</a>之间同步访问共享<a href="https://zh.wikipedia.org/wiki/%E8%B5%84%E6%BA%90" title="资源">资源</a>的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要<a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E6%96%A5" title="互斥">互斥</a>来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。<br>目前几乎很多大型网站及应用都是分布式部署的，分布式场景中的数据一致性问题一直是一个比较重要的话题。分布式的CAP理论告诉我们“任何一个分布式系统都无法同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance），最多只能同时满足两项。”所以，很多系统在设计之初就要对这三者做出取舍。在互联网领域的绝大多数的场景中，都需要牺牲强一致性来换取系统的高可用性，系统往往只需要保证“最终一致性”，只要这个最终时间是在用户可以接受的范围内即可。<br>在很多场景中，我们为了保证数据的最终一致性，需要很多的技术方案来支持，比如分布式事务、分布式锁等。有的时候，我们需要保证一个方法在同一时间内只能被同一个线程执行。<br>在这里我们使用Consul来管理分布式锁。Consul内置了服务注册与发现框 架、分布一致性协议实现、健康检查、Key&#x2F;Value存储、多数据中心方案，不再需要依赖其他工具（比如<a href="http://tonybai.com/tag/zookeeper">ZooKeeper</a>等）。</p>
-<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p><a href="https://o6rr5e4by.qnssl.com/wp-content/uploads/2017/01/consul-sessions-56bc7006.png"></a><br>session是一个远程进程和consul节点之间的链接，它由一个远程进程和可以显式无效或由于健康检查机制。根据会话配置，创建与已失效会话锁摧毁或释放。</p>
-<h4 id="Health-checks"><a href="#Health-checks" class="headerlink" title="Health checks"></a>Health checks</h4><p>Consul支持多种检查 （如 HTTP、 TCP 等）。在session创建过程中可以定义的健康检查列表。这些检查将用于确定是否sessio需要使之失效。</p>
-<h4 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h4><p>除了健康检查，会话也具有内置支持的 TTL。当 TTL 过期session被视为无效。远程进程负责更新session之前 TTL 过期。</p>
-<h3 id="Golang-API"><a href="#Golang-API" class="headerlink" title="Golang API"></a>Golang API</h3><p><a href="https://godoc.org/github.com/hashicorp/consul/api">Consul API client</a> 提供一个方便的抽象，session和 K&#x2F;V 存储。有是一个锁结构与锁定、 解锁和破坏的方法。也有用于帮助创建锁实例方法。API 客户端还负责更新会话。</p>
-<h4 id="Creating-the-Consul-client"><a href="#Creating-the-Consul-client" class="headerlink" title="Creating the Consul client"></a>Creating the Consul client</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">client, err := api.NewClient(&amp;api.Config&#123;Address: <span class="string">&quot;127.0.0.1:8500&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
-<h4 id="Creating-Lock-instance"><a href="#Creating-Lock-instance" class="headerlink" title="Creating Lock instance"></a>Creating Lock instance</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> LockOptions <span class="keyword">struct</span> &#123;</span><br><span class="line">    Key <span class="type">string</span> <span class="comment">// Must be set and have write permissions</span></span><br><span class="line">    Value []<span class="type">byte</span> <span class="comment">// Optional, value to associate with the lock</span></span><br><span class="line">    Session <span class="type">string</span> <span class="comment">// Optional, created if not specified</span></span><br><span class="line">    SessionOpts *SessionEntry <span class="comment">// Optional, options to use when creating a session</span></span><br><span class="line">    SessionName <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionName (ignored if SessionOpts is given)</span></span><br><span class="line">    SessionTTL <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionTTL (ignored if SessionOpts is given)</span></span><br><span class="line">    MonitorRetries <span class="type">int</span> <span class="comment">// Optional, defaults to 0 which means no retries</span></span><br><span class="line">    MonitorRetryTime time.Duration <span class="comment">// Optional, defaults to DefaultMonitorRetryTime</span></span><br><span class="line">    LockWaitTime time.Duration <span class="comment">// Optional, defaults to DefaultLockWaitTime</span></span><br><span class="line">    LockTryOnce <span class="type">bool</span> <span class="comment">// Optional, defaults to false which means try forever</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>LockOptions 是所有可能的选项的容器，可以用于设置键和值、 定制会话或设置TTL。</p>
-<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">opts := &amp;api.LockOptions&#123;</span><br><span class="line">    Key: <span class="string">&quot;webhook_receiver/1&quot;</span>,</span><br><span class="line">    Value: []<span class="type">byte</span>(<span class="string">&quot;set by sender 1&quot;</span>),</span><br><span class="line">    SessionTTL: <span class="string">&quot;10s&quot;</span>,</span><br><span class="line">    SessionOpts: &amp;api.SessionEntry&#123;</span><br><span class="line">    Checks: []<span class="type">string</span>&#123;<span class="string">&quot;check1&quot;</span>, <span class="string">&quot;check2&quot;</span>&#125;,</span><br><span class="line">    Behavior: <span class="string">&quot;release&quot;</span>,</span><br><span class="line">&#125;,</span><br><span class="line">&#125;</span><br><span class="line">lock, err := client.LockOpts(opts)</span><br></pre></td></tr></table></figure>
-<p>另一种常用的方法是 LockKey，它创建一个锁与所有选项设置为默认条目名称除外。</p>
-<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">lock, err := client.LockKey(<span class="string">&quot;webhook_receiver/1&quot;</span>)</span><br></pre></td></tr></table></figure>
-<h4 id="Acquiring-lock"><a href="#Acquiring-lock" class="headerlink" title="Acquiring lock"></a>Acquiring lock</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">stopCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">lockCh, err := lock.Lock(stopCh)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">&#125;</span><br><span class="line">cancelCtx, cancelRequest := context.WithCancel(context.Background())</span><br><span class="line">req, _ := http.NewRequest(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;https://example.com/webhook&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">req = req.WithContext(cancelCtx)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">http.DefaultClient.Do(req)</span><br><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> &lt;-cancelCtx.Done():</span><br><span class="line">log.Println(<span class="string">&quot;request cancelled&quot;</span>)</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">log.Println(<span class="string">&quot;request done&quot;</span>)</span><br><span class="line">err = lock.Unlock()</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">log.Println(<span class="string">&quot;lock already unlocked&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">&lt;-lockCh</span><br><span class="line">cancelRequest()</span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20PProf/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-PProf"><a href="#Golang-大杀器之性能剖析-PProf" class="headerlink" title="Golang 大杀器之性能剖析 PProf"></a>Golang 大杀器之性能剖析 PProf</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了</p>
@@ -209,6 +170,45 @@
       </tags>
   </entry>
   <entry>
+    <title>Golang 通过 Consul 实现分布式锁</title>
+    <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
+    <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
+<h1 id="Consul-的使用场景"><a href="#Consul-的使用场景" class="headerlink" title="Consul 的使用场景"></a>Consul 的使用场景</h1><ul>
+<li>docker 实例的注册与配置共享</li>
+<li>coreos 实例的注册与配置共享</li>
+<li>vitess 集群</li>
+<li>SaaS 应用的配置共享</li>
+<li>与 confd 服务集成，动态生成 nginx 和 haproxy 配置文件</li>
+</ul>
+<h1 id="Consul-的优势"><a href="#Consul-的优势" class="headerlink" title="Consul 的优势"></a>Consul 的优势</h1><ul>
+<li>使用 Raft 算法来保证一致性, 比复杂的 Paxos 算法更直接. 相比较而言, zookeeper 采用的是 Paxos, 而 etcd 使用的则是 Raft.</li>
+<li>支持多数据中心，内外网的服务采用不同的端口进行监听。 多数据中心集群可以避免单数据中心的单点故障,而其部署则需要考虑网络延迟, 分片等情况等. zookeeper 和 etcd 均不提供多数据中心功能的支持.</li>
+<li>支持健康检查. etcd 不提供此功能.</li>
+<li>支持 http 和 dns 协议接口. zookeeper 的集成较为复杂, etcd 只支持 http 协议.</li>
+<li>官方提供web管理界面, etcd 无此功能.<br>综合比较, Consul 作为服务注册和配置管理的新星, 比较值得关注和研究.</li>
+</ul>
+<h1 id="Consul-的角色"><a href="#Consul-的角色" class="headerlink" title="Consul 的角色"></a>Consul 的角色</h1><p>client: 客户端, 无状态, 将 HTTP 和 DNS 接口请求转发给局域网内的服务端集群.<br>server: 服务端, 保存配置信息, 高可用集群, 在局域网内与本地客户端通讯, 通过广域网与其他数据中心通讯. 每个数据中心的 server 数量推荐为 3 个或是 5 个.</p>
+<h1 id="什么是分布式锁"><a href="#什么是分布式锁" class="headerlink" title="什么是分布式锁"></a>什么是分布式锁</h1><p><strong>分布式锁</strong>，是控制<a href="https://zh.wikipedia.org/w/index.php?title=%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F&action=edit&redlink=1" title="分布式系统（页面不存在）">分布式系统</a>之间同步访问共享<a href="https://zh.wikipedia.org/wiki/%E8%B5%84%E6%BA%90" title="资源">资源</a>的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要<a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E6%96%A5" title="互斥">互斥</a>来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。<br>目前几乎很多大型网站及应用都是分布式部署的，分布式场景中的数据一致性问题一直是一个比较重要的话题。分布式的CAP理论告诉我们“任何一个分布式系统都无法同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance），最多只能同时满足两项。”所以，很多系统在设计之初就要对这三者做出取舍。在互联网领域的绝大多数的场景中，都需要牺牲强一致性来换取系统的高可用性，系统往往只需要保证“最终一致性”，只要这个最终时间是在用户可以接受的范围内即可。<br>在很多场景中，我们为了保证数据的最终一致性，需要很多的技术方案来支持，比如分布式事务、分布式锁等。有的时候，我们需要保证一个方法在同一时间内只能被同一个线程执行。<br>在这里我们使用Consul来管理分布式锁。Consul内置了服务注册与发现框 架、分布一致性协议实现、健康检查、Key&#x2F;Value存储、多数据中心方案，不再需要依赖其他工具（比如<a href="http://tonybai.com/tag/zookeeper">ZooKeeper</a>等）。</p>
+<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p><a href="https://o6rr5e4by.qnssl.com/wp-content/uploads/2017/01/consul-sessions-56bc7006.png"></a><br>session是一个远程进程和consul节点之间的链接，它由一个远程进程和可以显式无效或由于健康检查机制。根据会话配置，创建与已失效会话锁摧毁或释放。</p>
+<h4 id="Health-checks"><a href="#Health-checks" class="headerlink" title="Health checks"></a>Health checks</h4><p>Consul支持多种检查 （如 HTTP、 TCP 等）。在session创建过程中可以定义的健康检查列表。这些检查将用于确定是否sessio需要使之失效。</p>
+<h4 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h4><p>除了健康检查，会话也具有内置支持的 TTL。当 TTL 过期session被视为无效。远程进程负责更新session之前 TTL 过期。</p>
+<h3 id="Golang-API"><a href="#Golang-API" class="headerlink" title="Golang API"></a>Golang API</h3><p><a href="https://godoc.org/github.com/hashicorp/consul/api">Consul API client</a> 提供一个方便的抽象，session和 K&#x2F;V 存储。有是一个锁结构与锁定、 解锁和破坏的方法。也有用于帮助创建锁实例方法。API 客户端还负责更新会话。</p>
+<h4 id="Creating-the-Consul-client"><a href="#Creating-the-Consul-client" class="headerlink" title="Creating the Consul client"></a>Creating the Consul client</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">client, err := api.NewClient(&amp;api.Config&#123;Address: <span class="string">&quot;127.0.0.1:8500&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
+<h4 id="Creating-Lock-instance"><a href="#Creating-Lock-instance" class="headerlink" title="Creating Lock instance"></a>Creating Lock instance</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> LockOptions <span class="keyword">struct</span> &#123;</span><br><span class="line">    Key <span class="type">string</span> <span class="comment">// Must be set and have write permissions</span></span><br><span class="line">    Value []<span class="type">byte</span> <span class="comment">// Optional, value to associate with the lock</span></span><br><span class="line">    Session <span class="type">string</span> <span class="comment">// Optional, created if not specified</span></span><br><span class="line">    SessionOpts *SessionEntry <span class="comment">// Optional, options to use when creating a session</span></span><br><span class="line">    SessionName <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionName (ignored if SessionOpts is given)</span></span><br><span class="line">    SessionTTL <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionTTL (ignored if SessionOpts is given)</span></span><br><span class="line">    MonitorRetries <span class="type">int</span> <span class="comment">// Optional, defaults to 0 which means no retries</span></span><br><span class="line">    MonitorRetryTime time.Duration <span class="comment">// Optional, defaults to DefaultMonitorRetryTime</span></span><br><span class="line">    LockWaitTime time.Duration <span class="comment">// Optional, defaults to DefaultLockWaitTime</span></span><br><span class="line">    LockTryOnce <span class="type">bool</span> <span class="comment">// Optional, defaults to false which means try forever</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>LockOptions 是所有可能的选项的容器，可以用于设置键和值、 定制会话或设置TTL。</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">opts := &amp;api.LockOptions&#123;</span><br><span class="line">    Key: <span class="string">&quot;webhook_receiver/1&quot;</span>,</span><br><span class="line">    Value: []<span class="type">byte</span>(<span class="string">&quot;set by sender 1&quot;</span>),</span><br><span class="line">    SessionTTL: <span class="string">&quot;10s&quot;</span>,</span><br><span class="line">    SessionOpts: &amp;api.SessionEntry&#123;</span><br><span class="line">    Checks: []<span class="type">string</span>&#123;<span class="string">&quot;check1&quot;</span>, <span class="string">&quot;check2&quot;</span>&#125;,</span><br><span class="line">    Behavior: <span class="string">&quot;release&quot;</span>,</span><br><span class="line">&#125;,</span><br><span class="line">&#125;</span><br><span class="line">lock, err := client.LockOpts(opts)</span><br></pre></td></tr></table></figure>
+<p>另一种常用的方法是 LockKey，它创建一个锁与所有选项设置为默认条目名称除外。</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">lock, err := client.LockKey(<span class="string">&quot;webhook_receiver/1&quot;</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="Acquiring-lock"><a href="#Acquiring-lock" class="headerlink" title="Acquiring lock"></a>Acquiring lock</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">stopCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">lockCh, err := lock.Lock(stopCh)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">&#125;</span><br><span class="line">cancelCtx, cancelRequest := context.WithCancel(context.Background())</span><br><span class="line">req, _ := http.NewRequest(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;https://example.com/webhook&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">req = req.WithContext(cancelCtx)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">http.DefaultClient.Do(req)</span><br><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> &lt;-cancelCtx.Done():</span><br><span class="line">log.Println(<span class="string">&quot;request cancelled&quot;</span>)</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">log.Println(<span class="string">&quot;request done&quot;</span>)</span><br><span class="line">err = lock.Unlock()</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">log.Println(<span class="string">&quot;lock already unlocked&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">&lt;-lockCh</span><br><span class="line">cancelRequest()</span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Linux 远程服务器免密登录</title>
     <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
     <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
@@ -217,7 +217,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#x31;&#x2e;&#x31;">&#x67;&#x6c;&#116;&#64;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#x31;&#x2e;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#46;&#x31;&#x2e;&#x31;">&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#46;&#x31;&#x2e;&#x31;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -251,25 +251,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
     <title>go trace view trace 显示空白</title>
     <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
     <content><![CDATA[<blockquote>
@@ -295,6 +276,51 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
+    <content><![CDATA[<blockquote>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
+</blockquote>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -459,51 +485,6 @@
       </tags>
   </entry>
   <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>玩转memos</title>
     <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
     <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
@@ -526,6 +507,45 @@
       </categories>
       <tags>
         <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>聊聊redis sds</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
+    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
+<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
+<span id="more"></span>
+
+<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
+<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
+<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
+<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
+<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
+<ol>
+<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
+<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
+</ol>
+<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
+<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
+<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
+<ol>
+<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
+<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
+</ol>
+<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
+<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
+<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
+<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
       </tags>
   </entry>
   <entry>
@@ -580,84 +600,23 @@
       </tags>
   </entry>
   <entry>
-    <title>聊聊redis sds</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
-    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
-<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
-<span id="more"></span>
-
-<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
-<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
-<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
-<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
-<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
-<ol>
-<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
-<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
-</ol>
-<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
-<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
-<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
-<ol>
-<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
-<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
-</ol>
-<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
-<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
-<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
-<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+<li></li>
 </ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
-        <category>arts</category>
+        <category>随笔</category>
       </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
   </entry>
   <entry>
     <title>ARTS 0907-0913</title>
@@ -676,6 +635,32 @@
 <li>leetcode 19</li>
 </ul>
 <h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS 0914-0920</title>
+    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
+    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
+<p>82</p>
+<p>83</p>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
+<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
+<li></li>
+</ul>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -725,6 +710,47 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>arts</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-40</title>
     <url>/2023/10/02/arts/ARTS-2023-40/</url>
     <content><![CDATA[<blockquote>
@@ -746,6 +772,37 @@
 <li>我要坚持写长文博客。。</li>
 <li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -789,63 +846,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS 0914-0920</title>
-    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
-    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
-<p>82</p>
-<p>83</p>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
-<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-44</title>
     <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
@@ -856,66 +856,6 @@
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
 <h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-47</title>
-    <url>/2023/11/20/arts/ARTS-2023-47/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
-<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
-<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
-<ol>
-<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>atrs</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
@@ -948,6 +888,34 @@
 <li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
 </ul>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
@@ -1003,6 +971,38 @@
         <tag>工具</tag>
         <tag>碎碎念</tag>
         <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-47</title>
+    <url>/2023/11/20/arts/ARTS-2023-47/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
+<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
+<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
+<ol>
+<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>atrs</tag>
       </tags>
   </entry>
 </search>
