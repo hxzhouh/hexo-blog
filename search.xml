@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/ARTS-2023-48/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Go - Ordering in Select Statements</title>
     <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
     <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
@@ -51,18 +65,43 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-]]></content>
+    <title>Golang 通过 Consul 实现分布式锁</title>
+    <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
+    <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
+<h1 id="Consul-的使用场景"><a href="#Consul-的使用场景" class="headerlink" title="Consul 的使用场景"></a>Consul 的使用场景</h1><ul>
+<li>docker 实例的注册与配置共享</li>
+<li>coreos 实例的注册与配置共享</li>
+<li>vitess 集群</li>
+<li>SaaS 应用的配置共享</li>
+<li>与 confd 服务集成，动态生成 nginx 和 haproxy 配置文件</li>
+</ul>
+<h1 id="Consul-的优势"><a href="#Consul-的优势" class="headerlink" title="Consul 的优势"></a>Consul 的优势</h1><ul>
+<li>使用 Raft 算法来保证一致性, 比复杂的 Paxos 算法更直接. 相比较而言, zookeeper 采用的是 Paxos, 而 etcd 使用的则是 Raft.</li>
+<li>支持多数据中心，内外网的服务采用不同的端口进行监听。 多数据中心集群可以避免单数据中心的单点故障,而其部署则需要考虑网络延迟, 分片等情况等. zookeeper 和 etcd 均不提供多数据中心功能的支持.</li>
+<li>支持健康检查. etcd 不提供此功能.</li>
+<li>支持 http 和 dns 协议接口. zookeeper 的集成较为复杂, etcd 只支持 http 协议.</li>
+<li>官方提供web管理界面, etcd 无此功能.<br>综合比较, Consul 作为服务注册和配置管理的新星, 比较值得关注和研究.</li>
+</ul>
+<h1 id="Consul-的角色"><a href="#Consul-的角色" class="headerlink" title="Consul 的角色"></a>Consul 的角色</h1><p>client: 客户端, 无状态, 将 HTTP 和 DNS 接口请求转发给局域网内的服务端集群.<br>server: 服务端, 保存配置信息, 高可用集群, 在局域网内与本地客户端通讯, 通过广域网与其他数据中心通讯. 每个数据中心的 server 数量推荐为 3 个或是 5 个.</p>
+<h1 id="什么是分布式锁"><a href="#什么是分布式锁" class="headerlink" title="什么是分布式锁"></a>什么是分布式锁</h1><p><strong>分布式锁</strong>，是控制<a href="https://zh.wikipedia.org/w/index.php?title=%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F&action=edit&redlink=1" title="分布式系统（页面不存在）">分布式系统</a>之间同步访问共享<a href="https://zh.wikipedia.org/wiki/%E8%B5%84%E6%BA%90" title="资源">资源</a>的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要<a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E6%96%A5" title="互斥">互斥</a>来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。<br>目前几乎很多大型网站及应用都是分布式部署的，分布式场景中的数据一致性问题一直是一个比较重要的话题。分布式的CAP理论告诉我们“任何一个分布式系统都无法同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance），最多只能同时满足两项。”所以，很多系统在设计之初就要对这三者做出取舍。在互联网领域的绝大多数的场景中，都需要牺牲强一致性来换取系统的高可用性，系统往往只需要保证“最终一致性”，只要这个最终时间是在用户可以接受的范围内即可。<br>在很多场景中，我们为了保证数据的最终一致性，需要很多的技术方案来支持，比如分布式事务、分布式锁等。有的时候，我们需要保证一个方法在同一时间内只能被同一个线程执行。<br>在这里我们使用Consul来管理分布式锁。Consul内置了服务注册与发现框 架、分布一致性协议实现、健康检查、Key&#x2F;Value存储、多数据中心方案，不再需要依赖其他工具（比如<a href="http://tonybai.com/tag/zookeeper">ZooKeeper</a>等）。</p>
+<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p><a href="https://o6rr5e4by.qnssl.com/wp-content/uploads/2017/01/consul-sessions-56bc7006.png"></a><br>session是一个远程进程和consul节点之间的链接，它由一个远程进程和可以显式无效或由于健康检查机制。根据会话配置，创建与已失效会话锁摧毁或释放。</p>
+<h4 id="Health-checks"><a href="#Health-checks" class="headerlink" title="Health checks"></a>Health checks</h4><p>Consul支持多种检查 （如 HTTP、 TCP 等）。在session创建过程中可以定义的健康检查列表。这些检查将用于确定是否sessio需要使之失效。</p>
+<h4 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h4><p>除了健康检查，会话也具有内置支持的 TTL。当 TTL 过期session被视为无效。远程进程负责更新session之前 TTL 过期。</p>
+<h3 id="Golang-API"><a href="#Golang-API" class="headerlink" title="Golang API"></a>Golang API</h3><p><a href="https://godoc.org/github.com/hashicorp/consul/api">Consul API client</a> 提供一个方便的抽象，session和 K&#x2F;V 存储。有是一个锁结构与锁定、 解锁和破坏的方法。也有用于帮助创建锁实例方法。API 客户端还负责更新会话。</p>
+<h4 id="Creating-the-Consul-client"><a href="#Creating-the-Consul-client" class="headerlink" title="Creating the Consul client"></a>Creating the Consul client</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">client, err := api.NewClient(&amp;api.Config&#123;Address: <span class="string">&quot;127.0.0.1:8500&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
+<h4 id="Creating-Lock-instance"><a href="#Creating-Lock-instance" class="headerlink" title="Creating Lock instance"></a>Creating Lock instance</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> LockOptions <span class="keyword">struct</span> &#123;</span><br><span class="line">    Key <span class="type">string</span> <span class="comment">// Must be set and have write permissions</span></span><br><span class="line">    Value []<span class="type">byte</span> <span class="comment">// Optional, value to associate with the lock</span></span><br><span class="line">    Session <span class="type">string</span> <span class="comment">// Optional, created if not specified</span></span><br><span class="line">    SessionOpts *SessionEntry <span class="comment">// Optional, options to use when creating a session</span></span><br><span class="line">    SessionName <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionName (ignored if SessionOpts is given)</span></span><br><span class="line">    SessionTTL <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionTTL (ignored if SessionOpts is given)</span></span><br><span class="line">    MonitorRetries <span class="type">int</span> <span class="comment">// Optional, defaults to 0 which means no retries</span></span><br><span class="line">    MonitorRetryTime time.Duration <span class="comment">// Optional, defaults to DefaultMonitorRetryTime</span></span><br><span class="line">    LockWaitTime time.Duration <span class="comment">// Optional, defaults to DefaultLockWaitTime</span></span><br><span class="line">    LockTryOnce <span class="type">bool</span> <span class="comment">// Optional, defaults to false which means try forever</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>LockOptions 是所有可能的选项的容器，可以用于设置键和值、 定制会话或设置TTL。</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">opts := &amp;api.LockOptions&#123;</span><br><span class="line">    Key: <span class="string">&quot;webhook_receiver/1&quot;</span>,</span><br><span class="line">    Value: []<span class="type">byte</span>(<span class="string">&quot;set by sender 1&quot;</span>),</span><br><span class="line">    SessionTTL: <span class="string">&quot;10s&quot;</span>,</span><br><span class="line">    SessionOpts: &amp;api.SessionEntry&#123;</span><br><span class="line">    Checks: []<span class="type">string</span>&#123;<span class="string">&quot;check1&quot;</span>, <span class="string">&quot;check2&quot;</span>&#125;,</span><br><span class="line">    Behavior: <span class="string">&quot;release&quot;</span>,</span><br><span class="line">&#125;,</span><br><span class="line">&#125;</span><br><span class="line">lock, err := client.LockOpts(opts)</span><br></pre></td></tr></table></figure>
+<p>另一种常用的方法是 LockKey，它创建一个锁与所有选项设置为默认条目名称除外。</p>
+<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">lock, err := client.LockKey(<span class="string">&quot;webhook_receiver/1&quot;</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="Acquiring-lock"><a href="#Acquiring-lock" class="headerlink" title="Acquiring lock"></a>Acquiring lock</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">stopCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">lockCh, err := lock.Lock(stopCh)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">&#125;</span><br><span class="line">cancelCtx, cancelRequest := context.WithCancel(context.Background())</span><br><span class="line">req, _ := http.NewRequest(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;https://example.com/webhook&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">req = req.WithContext(cancelCtx)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">http.DefaultClient.Do(req)</span><br><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> &lt;-cancelCtx.Done():</span><br><span class="line">log.Println(<span class="string">&quot;request cancelled&quot;</span>)</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">log.Println(<span class="string">&quot;request done&quot;</span>)</span><br><span class="line">err = lock.Unlock()</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">log.Println(<span class="string">&quot;lock already unlocked&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">&lt;-lockCh</span><br><span class="line">cancelRequest()</span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>]]></content>
       <categories>
-        <category>arts</category>
+        <category>go</category>
       </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
   </entry>
   <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
@@ -184,64 +223,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Golang 通过 Consul 实现分布式锁</title>
-    <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
-    <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
-<h1 id="Consul-的使用场景"><a href="#Consul-的使用场景" class="headerlink" title="Consul 的使用场景"></a>Consul 的使用场景</h1><ul>
-<li>docker 实例的注册与配置共享</li>
-<li>coreos 实例的注册与配置共享</li>
-<li>vitess 集群</li>
-<li>SaaS 应用的配置共享</li>
-<li>与 confd 服务集成，动态生成 nginx 和 haproxy 配置文件</li>
-</ul>
-<h1 id="Consul-的优势"><a href="#Consul-的优势" class="headerlink" title="Consul 的优势"></a>Consul 的优势</h1><ul>
-<li>使用 Raft 算法来保证一致性, 比复杂的 Paxos 算法更直接. 相比较而言, zookeeper 采用的是 Paxos, 而 etcd 使用的则是 Raft.</li>
-<li>支持多数据中心，内外网的服务采用不同的端口进行监听。 多数据中心集群可以避免单数据中心的单点故障,而其部署则需要考虑网络延迟, 分片等情况等. zookeeper 和 etcd 均不提供多数据中心功能的支持.</li>
-<li>支持健康检查. etcd 不提供此功能.</li>
-<li>支持 http 和 dns 协议接口. zookeeper 的集成较为复杂, etcd 只支持 http 协议.</li>
-<li>官方提供web管理界面, etcd 无此功能.<br>综合比较, Consul 作为服务注册和配置管理的新星, 比较值得关注和研究.</li>
-</ul>
-<h1 id="Consul-的角色"><a href="#Consul-的角色" class="headerlink" title="Consul 的角色"></a>Consul 的角色</h1><p>client: 客户端, 无状态, 将 HTTP 和 DNS 接口请求转发给局域网内的服务端集群.<br>server: 服务端, 保存配置信息, 高可用集群, 在局域网内与本地客户端通讯, 通过广域网与其他数据中心通讯. 每个数据中心的 server 数量推荐为 3 个或是 5 个.</p>
-<h1 id="什么是分布式锁"><a href="#什么是分布式锁" class="headerlink" title="什么是分布式锁"></a>什么是分布式锁</h1><p><strong>分布式锁</strong>，是控制<a href="https://zh.wikipedia.org/w/index.php?title=%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F&action=edit&redlink=1" title="分布式系统（页面不存在）">分布式系统</a>之间同步访问共享<a href="https://zh.wikipedia.org/wiki/%E8%B5%84%E6%BA%90" title="资源">资源</a>的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要<a href="https://zh.wikipedia.org/wiki/%E4%BA%92%E6%96%A5" title="互斥">互斥</a>来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。<br>目前几乎很多大型网站及应用都是分布式部署的，分布式场景中的数据一致性问题一直是一个比较重要的话题。分布式的CAP理论告诉我们“任何一个分布式系统都无法同时满足一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance），最多只能同时满足两项。”所以，很多系统在设计之初就要对这三者做出取舍。在互联网领域的绝大多数的场景中，都需要牺牲强一致性来换取系统的高可用性，系统往往只需要保证“最终一致性”，只要这个最终时间是在用户可以接受的范围内即可。<br>在很多场景中，我们为了保证数据的最终一致性，需要很多的技术方案来支持，比如分布式事务、分布式锁等。有的时候，我们需要保证一个方法在同一时间内只能被同一个线程执行。<br>在这里我们使用Consul来管理分布式锁。Consul内置了服务注册与发现框 架、分布一致性协议实现、健康检查、Key&#x2F;Value存储、多数据中心方案，不再需要依赖其他工具（比如<a href="http://tonybai.com/tag/zookeeper">ZooKeeper</a>等）。</p>
-<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p><a href="https://o6rr5e4by.qnssl.com/wp-content/uploads/2017/01/consul-sessions-56bc7006.png"></a><br>session是一个远程进程和consul节点之间的链接，它由一个远程进程和可以显式无效或由于健康检查机制。根据会话配置，创建与已失效会话锁摧毁或释放。</p>
-<h4 id="Health-checks"><a href="#Health-checks" class="headerlink" title="Health checks"></a>Health checks</h4><p>Consul支持多种检查 （如 HTTP、 TCP 等）。在session创建过程中可以定义的健康检查列表。这些检查将用于确定是否sessio需要使之失效。</p>
-<h4 id="TTL"><a href="#TTL" class="headerlink" title="TTL"></a>TTL</h4><p>除了健康检查，会话也具有内置支持的 TTL。当 TTL 过期session被视为无效。远程进程负责更新session之前 TTL 过期。</p>
-<h3 id="Golang-API"><a href="#Golang-API" class="headerlink" title="Golang API"></a>Golang API</h3><p><a href="https://godoc.org/github.com/hashicorp/consul/api">Consul API client</a> 提供一个方便的抽象，session和 K&#x2F;V 存储。有是一个锁结构与锁定、 解锁和破坏的方法。也有用于帮助创建锁实例方法。API 客户端还负责更新会话。</p>
-<h4 id="Creating-the-Consul-client"><a href="#Creating-the-Consul-client" class="headerlink" title="Creating the Consul client"></a>Creating the Consul client</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">client, err := api.NewClient(&amp;api.Config&#123;Address: <span class="string">&quot;127.0.0.1:8500&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
-<h4 id="Creating-Lock-instance"><a href="#Creating-Lock-instance" class="headerlink" title="Creating Lock instance"></a>Creating Lock instance</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> LockOptions <span class="keyword">struct</span> &#123;</span><br><span class="line">    Key <span class="type">string</span> <span class="comment">// Must be set and have write permissions</span></span><br><span class="line">    Value []<span class="type">byte</span> <span class="comment">// Optional, value to associate with the lock</span></span><br><span class="line">    Session <span class="type">string</span> <span class="comment">// Optional, created if not specified</span></span><br><span class="line">    SessionOpts *SessionEntry <span class="comment">// Optional, options to use when creating a session</span></span><br><span class="line">    SessionName <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionName (ignored if SessionOpts is given)</span></span><br><span class="line">    SessionTTL <span class="type">string</span> <span class="comment">// Optional, defaults to DefaultLockSessionTTL (ignored if SessionOpts is given)</span></span><br><span class="line">    MonitorRetries <span class="type">int</span> <span class="comment">// Optional, defaults to 0 which means no retries</span></span><br><span class="line">    MonitorRetryTime time.Duration <span class="comment">// Optional, defaults to DefaultMonitorRetryTime</span></span><br><span class="line">    LockWaitTime time.Duration <span class="comment">// Optional, defaults to DefaultLockWaitTime</span></span><br><span class="line">    LockTryOnce <span class="type">bool</span> <span class="comment">// Optional, defaults to false which means try forever</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>LockOptions 是所有可能的选项的容器，可以用于设置键和值、 定制会话或设置TTL。</p>
-<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">opts := &amp;api.LockOptions&#123;</span><br><span class="line">    Key: <span class="string">&quot;webhook_receiver/1&quot;</span>,</span><br><span class="line">    Value: []<span class="type">byte</span>(<span class="string">&quot;set by sender 1&quot;</span>),</span><br><span class="line">    SessionTTL: <span class="string">&quot;10s&quot;</span>,</span><br><span class="line">    SessionOpts: &amp;api.SessionEntry&#123;</span><br><span class="line">    Checks: []<span class="type">string</span>&#123;<span class="string">&quot;check1&quot;</span>, <span class="string">&quot;check2&quot;</span>&#125;,</span><br><span class="line">    Behavior: <span class="string">&quot;release&quot;</span>,</span><br><span class="line">&#125;,</span><br><span class="line">&#125;</span><br><span class="line">lock, err := client.LockOpts(opts)</span><br></pre></td></tr></table></figure>
-<p>另一种常用的方法是 LockKey，它创建一个锁与所有选项设置为默认条目名称除外。</p>
-<figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">lock, err := client.LockKey(<span class="string">&quot;webhook_receiver/1&quot;</span>)</span><br></pre></td></tr></table></figure>
-<h4 id="Acquiring-lock"><a href="#Acquiring-lock" class="headerlink" title="Acquiring lock"></a>Acquiring lock</h4><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line">stopCh := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">lockCh, err := lock.Lock(stopCh)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">&#125;</span><br><span class="line">cancelCtx, cancelRequest := context.WithCancel(context.Background())</span><br><span class="line">req, _ := http.NewRequest(<span class="string">&quot;GET&quot;</span>, <span class="string">&quot;https://example.com/webhook&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">req = req.WithContext(cancelCtx)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">http.DefaultClient.Do(req)</span><br><span class="line"><span class="keyword">select</span> &#123;</span><br><span class="line"><span class="keyword">case</span> &lt;-cancelCtx.Done():</span><br><span class="line">log.Println(<span class="string">&quot;request cancelled&quot;</span>)</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">log.Println(<span class="string">&quot;request done&quot;</span>)</span><br><span class="line">err = lock.Unlock()</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">log.Println(<span class="string">&quot;lock already unlocked&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">&lt;-lockCh</span><br><span class="line">cancelRequest()</span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Linux 远程服务器免密登录</title>
     <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
     <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
@@ -250,7 +231,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#x40;&#x31;&#48;&#46;&#x31;&#49;&#50;&#x2e;&#x31;&#46;&#49;">&#x67;&#x6c;&#116;&#x40;&#x31;&#48;&#46;&#x31;&#49;&#50;&#x2e;&#x31;&#46;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#x32;&#46;&#x31;&#46;&#x31;">&#103;&#108;&#116;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#x32;&#46;&#x31;&#46;&#x31;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -282,6 +263,25 @@
       <tags>
         <tag>linux</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+<li></li>
+</ul>
+]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
   </entry>
   <entry>
     <title>go trace view trace 显示空白</title>
@@ -633,6 +633,31 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -650,31 +675,6 @@
 <li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
 <li></li>
 </ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -716,42 +716,6 @@
       <tags>
         <tag>算法</tag>
         <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-40</title>
-    <url>/2023/10/02/arts/ARTS-2023-40/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
-<ol>
-<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
-<ol>
-<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
-</ol>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<ol>
-<li>我要坚持写长文博客。。</li>
-<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -832,73 +796,27 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-40</title>
+    <url>/2023/10/02/arts/ARTS-2023-40/</url>
     <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
+<ol>
+<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
+<ol>
+<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
+</ol>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<ol>
+<li>我要坚持写长文博客。。</li>
+<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
+</ol>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -946,6 +864,60 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-46</title>
     <url>/2023/11/13/arts/ARTS-2023-46/</url>
     <content><![CDATA[<blockquote>
@@ -973,6 +945,34 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
