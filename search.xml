@@ -209,48 +209,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#49;&#48;&#46;&#x31;&#x31;&#50;&#x2e;&#x31;&#46;&#x31;">&#x67;&#x6c;&#116;&#64;&#49;&#48;&#46;&#x31;&#x31;&#50;&#x2e;&#x31;&#46;&#x31;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
-</blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
-
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
-
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
-]]></content>
-      <categories>
-        <category>技术</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Obsidian 最佳实践 -持续更新</title>
     <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
     <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
@@ -295,6 +253,46 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
       </tags>
   </entry>
   <entry>
@@ -343,46 +341,6 @@
       </tags>
   </entry>
   <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
-</blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
-]]></content>
-      <categories>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -419,6 +377,48 @@
       </categories>
       <tags>
         <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#x74;&#64;&#49;&#x30;&#x2e;&#x31;&#49;&#50;&#46;&#49;&#x2e;&#49;">&#103;&#x6c;&#x74;&#64;&#49;&#x30;&#x2e;&#x31;&#49;&#50;&#46;&#49;&#x2e;&#49;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
       </tags>
   </entry>
   <entry>
@@ -501,6 +501,31 @@
         <tag>反向代理</tag>
         <tag>密码托管</tag>
         <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
       </tags>
   </entry>
   <entry>
@@ -594,6 +619,184 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS 0914-0920</title>
+    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
+    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
+<p>82</p>
+<p>83</p>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
+<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
+<li></li>
+</ul>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-40</title>
+    <url>/2023/10/02/arts/ARTS-2023-40/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
+<ol>
+<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
+<ol>
+<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
+</ol>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<ol>
+<li>我要坚持写长文博客。。</li>
+<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-38</title>
     <url>/2023/09/22/arts/ARTS-2023-38/</url>
     <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
@@ -624,8 +827,8 @@
         <category>arts</category>
       </categories>
       <tags>
-        <tag>arts</tag>
         <tag>算法</tag>
+        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -675,150 +878,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS 0914-0920</title>
-    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
-    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
-<p>82</p>
-<p>83</p>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
-<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-40</title>
-    <url>/2023/10/02/arts/ARTS-2023-40/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
-<ol>
-<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
-<ol>
-<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
-</ol>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<ol>
-<li>我要坚持写长文博客。。</li>
-<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-43</title>
     <url>/2023/10/23/arts/ARTS-2023-43/</url>
     <content><![CDATA[<blockquote>
@@ -832,6 +891,32 @@
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 <p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -889,6 +974,23 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2023-47</title>
     <url>/2023/11/20/arts/ARTS-2023-47/</url>
     <content><![CDATA[<blockquote>
@@ -918,108 +1020,6 @@
       </categories>
       <tags>
         <tag>atrs</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
       </tags>
   </entry>
 </search>
