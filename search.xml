@@ -209,25 +209,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Linux 远程服务器免密登录</title>
     <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
     <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
@@ -236,7 +217,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#x74;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#50;&#46;&#49;&#x2e;&#x31;">&#x67;&#108;&#x74;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#50;&#46;&#49;&#x2e;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#x2e;&#x31;&#x2e;&#49;">&#103;&#108;&#116;&#x40;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#x2e;&#x31;&#x2e;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -268,6 +249,25 @@
       <tags>
         <tag>linux</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+<li></li>
+</ul>
+]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
   </entry>
   <entry>
     <title>go trace view trace 显示空白</title>
@@ -462,6 +462,31 @@
       </tags>
   </entry>
   <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>深度优先算法与广度优先算法</title>
     <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
     <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
@@ -501,70 +526,6 @@
       <tags>
         <tag>DFS</tag>
         <tag>BFS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>聊聊redis sds</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
-    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
-<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
-<span id="more"></span>
-
-<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
-<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
-<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
-<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
-<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
-<ol>
-<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
-<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
-</ol>
-<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
-<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
-<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
-<ol>
-<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
-<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
-</ol>
-<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
-<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
-<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
-<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
       </tags>
   </entry>
   <entry>
@@ -619,28 +580,83 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
+    <title>聊聊redis sds</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
+    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
+<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
+<span id="more"></span>
+
+<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
+<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
+<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
+<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
+<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
+<ol>
+<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
+<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
+</ol>
+<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
+<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
+<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
+<ol>
+<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
+<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
+</ol>
+<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
+<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
+<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
+<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
 </ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
       </categories>
       <tags>
+        <tag>算法</tag>
         <tag>arts</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -661,6 +677,31 @@
 <li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
 <li></li>
 </ul>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -701,47 +742,6 @@
       </categories>
       <tags>
         <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -818,15 +818,21 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
@@ -872,21 +878,15 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
@@ -946,34 +946,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-47</title>
     <url>/2023/11/20/arts/ARTS-2023-47/</url>
     <content><![CDATA[<blockquote>
@@ -1003,6 +975,34 @@
       </categories>
       <tags>
         <tag>atrs</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
