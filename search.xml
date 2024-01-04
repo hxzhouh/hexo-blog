@@ -1,78 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
-<blockquote>
-<p>本文基于 go 1.14 </p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
-<span id="more"></span>
-
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>年度总结</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20PProf/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-PProf"><a href="#Golang-大杀器之性能剖析-PProf" class="headerlink" title="Golang 大杀器之性能剖析 PProf"></a>Golang 大杀器之性能剖析 PProf</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了</p>
@@ -192,6 +120,78 @@
       </tags>
   </entry>
   <entry>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>年度总结</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 通过 Consul 实现分布式锁</title>
     <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
     <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
@@ -239,7 +239,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#x74;&#x40;&#x31;&#x30;&#46;&#x31;&#x31;&#x32;&#x2e;&#49;&#46;&#x31;">&#103;&#108;&#x74;&#x40;&#x31;&#x30;&#46;&#x31;&#x31;&#x32;&#x2e;&#49;&#46;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#x74;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#50;&#x2e;&#x31;&#46;&#49;">&#103;&#x6c;&#x74;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#50;&#x2e;&#x31;&#46;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -294,51 +294,6 @@
       <categories>
         <category>随笔</category>
       </categories>
-  </entry>
-  <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
   </entry>
   <entry>
     <title>aws ec2 切换到ipv6</title>
@@ -407,6 +362,51 @@
       </tags>
   </entry>
   <entry>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
+    <content><![CDATA[<blockquote>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
+</blockquote>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>leetcode解题笔记-114-原地算法</title>
     <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
     <content><![CDATA[<blockquote>
@@ -444,6 +444,45 @@
       <tags>
         <tag>算法</tag>
         <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>new跟make 的区别</title>
+    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
+<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
+</blockquote>
+<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
+<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
+
+<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
+<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
+</li>
+<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -487,45 +526,6 @@
       </tags>
   </entry>
   <entry>
-    <title>new跟make 的区别</title>
-    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
-<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
-</blockquote>
-<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
-
-<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
-<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
-
-<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
-<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
-<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
-</li>
-<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>深度优先算法与广度优先算法</title>
     <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
     <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
@@ -565,31 +565,6 @@
       <tags>
         <tag>DFS</tag>
         <tag>BFS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
       </tags>
   </entry>
   <entry>
@@ -644,6 +619,31 @@
       </tags>
   </entry>
   <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>聊聊redis sds</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
     <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
@@ -683,28 +683,43 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
+    <title>ARTS-2023-39</title>
+    <url>/2023/09/27/arts/ARTS-2023-39/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<ol>
+<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
+如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
+</ol>
+<blockquote>
+<ol>
+<li>打开Chrome浏览器。  </li>
+<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
+<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
+<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
+</ol>
+</blockquote>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
       </categories>
       <tags>
-        <tag>arts</tag>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -739,13 +754,13 @@
       </categories>
       <tags>
         <tag>算法</tag>
-        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
         <tag>工具</tag>
         <tag>碎碎念</tag>
         <tag>观点</tag>
+        <tag>arts</tag>
       </tags>
   </entry>
   <entry>
@@ -766,6 +781,31 @@
 <li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
 <li></li>
 </ul>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -796,6 +836,37 @@
 <li>我要坚持写长文博客。。</li>
 <li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -871,63 +942,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-45</title>
     <url>/2023/11/06/arts/ARTS-2023-45/</url>
     <content><![CDATA[<blockquote>
@@ -940,6 +954,32 @@
 <p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
@@ -1030,6 +1070,33 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-49</title>
+    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>leetcode 173: 也是中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
+<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+        <tag>工程师工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-48</title>
     <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
@@ -1087,73 +1154,6 @@
       <categories>
         <category>arts</category>
       </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-49</title>
-    <url>/2023/12/04/arts/ARTS-2023-49/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>leetcode 173: 也是中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
-<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-        <tag>工程师工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-39</title>
-    <url>/2023/09/27/arts/ARTS-2023-39/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<ol>
-<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
-如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
-</ol>
-<blockquote>
-<ol>
-<li>打开Chrome浏览器。  </li>
-<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
-<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
-<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
-</ol>
-</blockquote>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
   </entry>
   <entry>
     <title>ARTS-2023-51</title>
