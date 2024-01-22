@@ -209,6 +209,71 @@
       </tags>
   </entry>
   <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#49;&#x31;&#x32;&#x2e;&#49;&#x2e;&#x31;">&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#49;&#x31;&#x32;&#x2e;&#49;&#x2e;&#x31;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+  </entry>
+  <entry>
     <title>go trace view trace 显示空白</title>
     <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
     <content><![CDATA[<blockquote>
@@ -235,29 +300,6 @@
         <tag>Go</tag>
         <tag>最佳实践</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
   </entry>
   <entry>
     <title>go 怎么做stw</title>
@@ -345,45 +387,42 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#x74;&#64;&#49;&#x30;&#46;&#49;&#49;&#x32;&#x2e;&#x31;&#46;&#49;">&#x67;&#x6c;&#x74;&#64;&#49;&#x30;&#46;&#49;&#49;&#x32;&#x2e;&#x31;&#46;&#49;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+    <title>new跟make 的区别</title>
+    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
+<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
 </blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
 
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
+<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
+<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
+
+<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
+<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
+</li>
+<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
+</li>
+</ul>
 ]]></content>
       <categories>
-        <category>技术</category>
+        <category>go</category>
       </categories>
       <tags>
-        <tag>linux</tag>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -424,45 +463,6 @@
         <tag>反向代理</tag>
         <tag>密码托管</tag>
         <tag>docker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>new跟make 的区别</title>
-    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
-<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
-</blockquote>
-<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
-
-<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
-<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
-
-<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
-<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
-<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
-</li>
-<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -535,42 +535,47 @@
       </tags>
   </entry>
   <entry>
-    <title>aws ec2 切换到ipv6</title>
-    <url>/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/</url>
-    <content><![CDATA[<p>ipv6 出来已经很久了，工作中也处理过很多次ipv6的task，但是从来没想过把自己的ec2切换到ipv4，昨天再邮件回收站里面看到了一个邮件，aws 的ipv4 2024.2.1 要收费了，这就不能忽略了😄，刚好今天有空就把他切换成了ipv6，过程有点折腾。 本文不仅适用ec2，其他linux 主机应该也支持。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/12/c08e861b12930298c2ed4aea11b1c523.png" alt="image-20231212145049883"><span id="more"></span></p>
-<h1 id="为ec2-添加一个ipv6-地址"><a href="#为ec2-添加一个ipv6-地址" class="headerlink" title="为ec2 添加一个ipv6 地址"></a>为ec2 添加一个ipv6 地址</h1><p>我的ec2 的dns 解析在Cloudflare，所以主要是参考这篇博客。<a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon 的 20 亿 IPv4 税费 — 以及如何避免支付这笔费用</a></p>
-<p>以及<a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">将 VPC 从 IPv4 迁移到 IPv6</a>。</p>
-<p>需要注意的是<a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">将 VPC 从 IPv4 迁移到 IPv6</a>。这个demo中vpc是有一个公有子网以及一个私有子网，如果您像我一样只有一个公有子网，那这部分就不需要设置了。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/12/7c757c6ffdd0c2d7ffff2f4c00e93f29.png" alt="image-20231212145739848"></p>
-<p>不得不说，aws 的文档写的真好，这一点，需要多多学习。</p>
-<p>设置完成的结果应该是这样的。同时有ipv4 与ipv6 地址。在安全组中也为ipv6添加相同的规则。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/12/68699f4797ea3c86c62c3964407c0e3b.png" alt="image-20231212150653820"></p>
-<h1 id="应用支持"><a href="#应用支持" class="headerlink" title="应用支持"></a>应用支持</h1><p>我的ec2 上只跑了一个nginx + docker，平时用ssh登录。所以需要为Nginx 与sshd 添加 ipv6支持。</p>
-<h2 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h2><p>对于您的 HTTP 服务器块（监听端口 80 的那个），添加一行 <code>listen [::]:80;</code>。这使得 Nginx 同时监听 IPv4 和 IPv6 的 HTTP 流量。修改后的服务器块应该像这样：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 80;</span><br><span class="line">    listen [::]:80;</span><br><span class="line">    server_name hexo.hxzhouh.com;</span><br><span class="line">    return 301 https://$host$request_uri;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
+    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
+    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
+<span id="more"></span>
 
-<p>对于每个 HTTPS 服务器块（监听端口 443 的那些），在每个块中添加 <code>listen [::]:443 ssl;</code>。这将使得 Nginx 监听 IPv6 上的 HTTPS 流量。例如，对于第一个 HTTPS 服务器块，你需要做如下修改：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name hexo.hxzhouh.com;</span><br><span class="line">    # 其余配置...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>对每个 HTTPS <code>server</code> 块进行这样的修改。然后测试一下 <code>Nginx -t</code> 如果没问题就重新加载Nginx配置 <code>systemctl reload nginx</code></p>
-<h2 id="sshd"><a href="#sshd" class="headerlink" title="sshd"></a>sshd</h2><p>再sshd_config 修改，删除对<code>AddressFamily any</code>的注释（即删除前面的<code>#</code>），为 ssh 等应用程序开启 IPv6 监听。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">Port 22</span></span><br><span class="line">AddressFamily any</span><br><span class="line">AddressFamily inet</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
-
-<p>然后重启 sshd <code>sudo systemctl reload sshd </code>，执行<code>netstat -tupln</code>命令，若出现以下报文，表示查 ssh 已成功监听 IPv6。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/12/1b5feee3b3f881dbbb252e82e789838e.png" alt="image-20231212152302361"></p>
-<p>这样应用层就修改好了。</p>
-<h1 id="dns-设置"><a href="#dns-设置" class="headerlink" title="dns 设置"></a>dns 设置</h1><p>最后，在Cloudflare 里面设置 一下dns，把以前的ipv4 的A记录全部改成AAAA 的ipv6  就可以了。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/12/1df24903dda8dbb4996968d55286d099.png" alt="image-20231212151550030"></p>
-<h2 id="大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。"><a href="#大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。" class="headerlink" title="大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。"></a>大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。</h2><p>更新： 正在运行的实例无法删除ipv4地址，只能通过AMI 重建，折腾呀，但是aws 不再给我发邮件了。✌️  </p>
-<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from ec2 instances before February 2024? (IPv6)</a></p>
+<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
+<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
+</li>
+<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
+</li>
+<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
+</li>
+<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
+</li>
+<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
+</li>
+</ul>
+<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
+<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
+<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
+<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
+<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+别忘记 重新加载nginx 配置文件  </li>
+<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
+</ol>
+<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
+<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
+<hr>
+<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
-        <tag>linux</tag>
-        <tag>ipv6</tag>
+        <tag>github</tag>
+        <tag>copilot</tag>
+        <tag>chatgpt-4</tag>
       </tags>
   </entry>
   <entry>
@@ -667,50 +672,6 @@
       </tags>
   </entry>
   <entry>
-    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
-    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
-    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
-<span id="more"></span>
-
-<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
-<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
-</li>
-<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
-</li>
-<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
-</li>
-<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
-</li>
-<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
-</li>
-</ul>
-<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
-<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
-<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
-<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
-<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-别忘记 重新加载nginx 配置文件  </li>
-<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
-</ol>
-<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
-<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
-<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
-<hr>
-<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>github</tag>
-        <tag>copilot</tag>
-        <tag>chatgpt-4</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>聊聊redis sds</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
     <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
@@ -774,6 +735,45 @@
       </tags>
   </entry>
   <entry>
+    <title>aws ec2 切换到ipv6</title>
+    <url>/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/</url>
+    <content><![CDATA[<p>ipv6 出来已经很久了，工作中也处理过很多次ipv6的task，但是从来没想过把自己的ec2切换到ipv4，昨天再邮件回收站里面看到了一个邮件，aws 的ipv4 2024.2.1 要收费了，这就不能忽略了😄，刚好今天有空就把他切换成了ipv6，过程有点折腾。 本文不仅适用ec2，其他linux 主机应该也支持。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/12/c08e861b12930298c2ed4aea11b1c523.png" alt="image-20231212145049883"><span id="more"></span></p>
+<h1 id="为ec2-添加一个ipv6-地址"><a href="#为ec2-添加一个ipv6-地址" class="headerlink" title="为ec2 添加一个ipv6 地址"></a>为ec2 添加一个ipv6 地址</h1><p>我的ec2 的dns 解析在Cloudflare，所以主要是参考这篇博客。<a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon 的 20 亿 IPv4 税费 — 以及如何避免支付这笔费用</a></p>
+<p>以及<a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">将 VPC 从 IPv4 迁移到 IPv6</a>。</p>
+<p>需要注意的是<a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">将 VPC 从 IPv4 迁移到 IPv6</a>。这个demo中vpc是有一个公有子网以及一个私有子网，如果您像我一样只有一个公有子网，那这部分就不需要设置了。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/12/7c757c6ffdd0c2d7ffff2f4c00e93f29.png" alt="image-20231212145739848"></p>
+<p>不得不说，aws 的文档写的真好，这一点，需要多多学习。</p>
+<p>设置完成的结果应该是这样的。同时有ipv4 与ipv6 地址。在安全组中也为ipv6添加相同的规则。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/12/68699f4797ea3c86c62c3964407c0e3b.png" alt="image-20231212150653820"></p>
+<h1 id="应用支持"><a href="#应用支持" class="headerlink" title="应用支持"></a>应用支持</h1><p>我的ec2 上只跑了一个nginx + docker，平时用ssh登录。所以需要为Nginx 与sshd 添加 ipv6支持。</p>
+<h2 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h2><p>对于您的 HTTP 服务器块（监听端口 80 的那个），添加一行 <code>listen [::]:80;</code>。这使得 Nginx 同时监听 IPv4 和 IPv6 的 HTTP 流量。修改后的服务器块应该像这样：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 80;</span><br><span class="line">    listen [::]:80;</span><br><span class="line">    server_name hexo.hxzhouh.com;</span><br><span class="line">    return 301 https://$host$request_uri;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于每个 HTTPS 服务器块（监听端口 443 的那些），在每个块中添加 <code>listen [::]:443 ssl;</code>。这将使得 Nginx 监听 IPv6 上的 HTTPS 流量。例如，对于第一个 HTTPS 服务器块，你需要做如下修改：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name hexo.hxzhouh.com;</span><br><span class="line">    # 其余配置...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对每个 HTTPS <code>server</code> 块进行这样的修改。然后测试一下 <code>Nginx -t</code> 如果没问题就重新加载Nginx配置 <code>systemctl reload nginx</code></p>
+<h2 id="sshd"><a href="#sshd" class="headerlink" title="sshd"></a>sshd</h2><p>再sshd_config 修改，删除对<code>AddressFamily any</code>的注释（即删除前面的<code>#</code>），为 ssh 等应用程序开启 IPv6 监听。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">Port 22</span></span><br><span class="line">AddressFamily any</span><br><span class="line">AddressFamily inet</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
+
+<p>然后重启 sshd <code>sudo systemctl reload sshd </code>，执行<code>netstat -tupln</code>命令，若出现以下报文，表示查 ssh 已成功监听 IPv6。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/12/1b5feee3b3f881dbbb252e82e789838e.png" alt="image-20231212152302361"></p>
+<p>这样应用层就修改好了。</p>
+<h1 id="dns-设置"><a href="#dns-设置" class="headerlink" title="dns 设置"></a>dns 设置</h1><p>最后，在Cloudflare 里面设置 一下dns，把以前的ipv4 的A记录全部改成AAAA 的ipv6  就可以了。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/12/1df24903dda8dbb4996968d55286d099.png" alt="image-20231212151550030"></p>
+<h2 id="大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。"><a href="#大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。" class="headerlink" title="大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。"></a>大功告成，测试一下如果没问题的话，就可以把ipv4地址删了。省的扣钱。</h2><p>更新： 正在运行的实例无法删除ipv4地址，只能通过AMI 重建，折腾呀，但是aws 不再给我发邮件了。✌️  </p>
+<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from ec2 instances before February 2024? (IPv6)</a></p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>ipv6</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>玩转memos</title>
     <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
     <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
@@ -799,6 +799,31 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -816,31 +841,6 @@
 <li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
 <li></li>
 </ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -931,38 +931,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-40</title>
     <url>/2023/10/02/arts/ARTS-2023-40/</url>
     <content><![CDATA[<blockquote>
@@ -1030,19 +998,23 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1058,17 +1030,19 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1111,6 +1085,32 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1186,6 +1186,38 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2023-50</title>
     <url>/2023/12/11/arts/ARTS-2023-50/</url>
     <content><![CDATA[<blockquote>
@@ -1201,6 +1233,24 @@
 <p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
 <p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2024-01</title>
+    <url>/2024/01/02/arts/ARTS-2024-01/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<p>2024 第一次arts 加油</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/contains-duplicate-ii/">219. 存在重复元素 II</a> 🟢<br><a href="https://leetcode.cn/problems/longest-consecutive-sequence/">128. 最长连续序列</a> 🟡 将数组升序排列，或者放在一个map里面，然后在去获取长度。。</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://roytanck.com/2023/12/23/in-2024-please-switch-to-firefox/">In 2024, please switch to Firefox</a><br>firefox 好用，坚持隐私保护更加是为了维护 web 的开放标准<br>ps：有几个人会去主动选择浏览器呢？</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><blockquote>
+<p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
+</blockquote>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1234,32 +1284,15 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <title>ARTS-2024-02</title>
+    <url>/2024/01/09/arts/ARTS-2024-02/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
@@ -1281,39 +1314,6 @@
 <li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
 <li>devv.ai  面向程序员的AIGC 浏览器，</li>
 </ul>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2024-01</title>
-    <url>/2024/01/02/arts/ARTS-2024-01/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<p>2024 第一次arts 加油</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/contains-duplicate-ii/">219. 存在重复元素 II</a> 🟢<br><a href="https://leetcode.cn/problems/longest-consecutive-sequence/">128. 最长连续序列</a> 🟡 将数组升序排列，或者放在一个map里面，然后在去获取长度。。</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://roytanck.com/2023/12/23/in-2024-please-switch-to-firefox/">In 2024, please switch to Firefox</a><br>firefox 好用，坚持隐私保护更加是为了维护 web 的开放标准<br>ps：有几个人会去主动选择浏览器呢？</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><blockquote>
-<p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2024-02</title>
-    <url>/2024/01/09/arts/ARTS-2024-02/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
