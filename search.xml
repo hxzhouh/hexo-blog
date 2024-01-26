@@ -1,56 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
-<blockquote>
-<p>本文基于 go 1.14 </p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20PProf/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-PProf"><a href="#Golang-大杀器之性能剖析-PProf" class="headerlink" title="Golang 大杀器之性能剖析 PProf"></a>Golang 大杀器之性能剖析 PProf</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了</p>
@@ -209,6 +159,79 @@
       </tags>
   </entry>
   <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Linux 远程服务器免密登录</title>
     <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
     <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
@@ -217,7 +240,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#x40;&#49;&#x30;&#46;&#49;&#x31;&#50;&#x2e;&#49;&#46;&#49;">&#x67;&#x6c;&#116;&#x40;&#49;&#x30;&#46;&#49;&#x31;&#50;&#x2e;&#49;&#46;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#49;&#x2e;&#49;">&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#49;&#x2e;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -249,29 +272,6 @@
       <tags>
         <tag>linux</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
   </entry>
   <entry>
     <title>go trace view trace 显示空白</title>
@@ -426,6 +426,46 @@
       </tags>
   </entry>
   <entry>
+    <title>在VPS上搭建vaultwarden</title>
+    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
+    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
+<span id="more"></span>
+<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
+<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
+<blockquote>
+<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
+</blockquote>
+<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
+
+<p>然后查看一下配置的内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
+<p>这样就好了。</p>
+<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
+<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
+<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
+<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
+<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
+<hr>
+<p>Enjoy 😄</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>反向代理</tag>
+        <tag>密码托管</tag>
+        <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
     <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
     <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
@@ -467,88 +507,6 @@
         <tag>github</tag>
         <tag>copilot</tag>
         <tag>chatgpt-4</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>在VPS上搭建vaultwarden</title>
-    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
-    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
-<span id="more"></span>
-<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
-<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
-<blockquote>
-<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
-</blockquote>
-<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
-
-<p>然后查看一下配置的内容</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
-<p>这样就好了。</p>
-<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
-<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
-<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
-<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
-<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
-<hr>
-<p>Enjoy 😄</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>反向代理</tag>
-        <tag>密码托管</tag>
-        <tag>docker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>深度优先算法与广度优先算法</title>
-    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
-<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
-<p><strong>DFS属于盲目搜索</strong></p>
-<p>深度优先遍历图算法步骤：</p>
-<ul>
-<li>访问顶点v；</li>
-<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
-<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
-</ul>
-<p><strong>举个实例：</strong></p>
-<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
-<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
-<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
-<p>算法步骤：</p>
-<ol>
-<li>首先将根节点放入队列中。</li>
-<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
-<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
-<li>重复步骤2。</li>
-</ol>
-<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
-<p>代码实现</p>
-<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>数据结构&amp;算法</category>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>DFS</tag>
-        <tag>BFS</tag>
       </tags>
   </entry>
   <entry>
@@ -657,6 +615,48 @@
       <tags>
         <tag>linux</tag>
         <tag>ipv6</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深度优先算法与广度优先算法</title>
+    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
+<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
+<p><strong>DFS属于盲目搜索</strong></p>
+<p>深度优先遍历图算法步骤：</p>
+<ul>
+<li>访问顶点v；</li>
+<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
+<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
+</ul>
+<p><strong>举个实例：</strong></p>
+<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
+<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
+<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
+<p>算法步骤：</p>
+<ol>
+<li>首先将根节点放入队列中。</li>
+<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
+<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
+<li>重复步骤2。</li>
+</ol>
+<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
+<p>代码实现</p>
+<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>数据结构&amp;算法</category>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>DFS</tag>
+        <tag>BFS</tag>
       </tags>
   </entry>
   <entry>
@@ -774,57 +774,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0914-0920</title>
-    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
-    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
-<p>82</p>
-<p>83</p>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
-<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
-<li></li>
-</ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>玩转memos</title>
     <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
     <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
@@ -891,6 +840,31 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-39</title>
     <url>/2023/09/27/arts/ARTS-2023-39/</url>
     <content><![CDATA[<blockquote>
@@ -916,97 +890,6 @@
 </blockquote>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
 <p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1058,17 +941,76 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <title>ARTS 0914-0920</title>
+    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
+    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
+<p>82</p>
+<p>83</p>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
+<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
+<li></li>
+</ul>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1111,6 +1053,64 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
