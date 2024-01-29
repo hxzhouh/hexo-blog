@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20PProf/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-PProf"><a href="#Golang-大杀器之性能剖析-PProf" class="headerlink" title="Golang 大杀器之性能剖析 PProf"></a>Golang 大杀器之性能剖析 PProf</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了</p>
@@ -120,56 +170,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
-<blockquote>
-<p>本文基于 go 1.14 </p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Golang 通过 Consul 实现分布式锁</title>
     <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
     <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
@@ -240,7 +240,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#116;&#64;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#49;&#46;&#49;">&#x67;&#108;&#116;&#64;&#x31;&#x30;&#x2e;&#49;&#49;&#50;&#46;&#49;&#46;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#x74;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#x2e;&#x31;&#46;&#x31;">&#x67;&#x6c;&#x74;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#x2e;&#x31;&#46;&#x31;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -271,6 +271,58 @@
       </categories>
       <tags>
         <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>年度总结</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
+    <content><![CDATA[<blockquote>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+</blockquote>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
       </tags>
   </entry>
   <entry>
@@ -319,71 +371,43 @@
       </tags>
   </entry>
   <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+    <title>在VPS上搭建vaultwarden</title>
+    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
+    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
+<span id="more"></span>
+<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
+<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
+<blockquote>
+<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
 </blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
 
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+<p>然后查看一下配置的内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
 
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
+<p>这样就好了。</p>
+<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
+<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
+<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
+<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
+<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
+<hr>
+<p>Enjoy 😄</p>
 ]]></content>
       <categories>
-        <category>leetCode</category>
+        <category>blog</category>
       </categories>
       <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
-</blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
+        <tag>反向代理</tag>
+        <tag>密码托管</tag>
+        <tag>docker</tag>
       </tags>
   </entry>
   <entry>
@@ -426,67 +450,85 @@
       </tags>
   </entry>
   <entry>
-    <title>在VPS上搭建vaultwarden</title>
-    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
-    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
-<span id="more"></span>
-<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
-<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
-<blockquote>
-<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
 </blockquote>
-<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
 
-<p>然后查看一下配置的内容</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
-<p>这样就好了。</p>
-<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
-<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
-<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
-<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
-<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
-<hr>
-<p>Enjoy 😄</p>
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
 ]]></content>
       <categories>
-        <category>blog</category>
+        <category>leetCode</category>
       </categories>
       <tags>
-        <tag>反向代理</tag>
-        <tag>密码托管</tag>
-        <tag>docker</tag>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
       </tags>
   </entry>
   <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
-<span id="more"></span>
+    <title>深度优先算法与广度优先算法</title>
+    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
+<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
+<p><strong>DFS属于盲目搜索</strong></p>
+<p>深度优先遍历图算法步骤：</p>
+<ul>
+<li>访问顶点v；</li>
+<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
+<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
+</ul>
+<p><strong>举个实例：</strong></p>
+<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
+<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
+
+
+<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
+<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
+<p>算法步骤：</p>
+<ol>
+<li>首先将根节点放入队列中。</li>
+<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
+<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
+<li>重复步骤2。</li>
 </ol>
-]]></content>
+<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
+<p>代码实现</p>
+<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
       <categories>
-        <category>blog</category>
+        <category>数据结构&amp;算法</category>
+        <category>leetCode</category>
       </categories>
       <tags>
-        <tag>年度总结</tag>
+        <tag>DFS</tag>
+        <tag>BFS</tag>
       </tags>
   </entry>
   <entry>
@@ -559,45 +601,87 @@
       </tags>
   </entry>
   <entry>
-    <title>深度优先算法与广度优先算法</title>
-    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
-<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
-<p><strong>DFS属于盲目搜索</strong></p>
-<p>深度优先遍历图算法步骤：</p>
-<ul>
-<li>访问顶点v；</li>
-<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
-<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
+    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
+    <url>/2024/01/12/How%20to%20Set%20Up%20ChatGPT-4%20Service%20Using%20GitHub%20Copilot/</url>
+    <content><![CDATA[<p>How to Set Up ChatGPT-4 Service Using GitHub Copilot</p>
+<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
+<span id="more"></span>
+
+<h1 id="Open-Source-Components"><a href="#Open-Source-Components" class="headerlink" title="Open-Source Components"></a>Open-Source Components</h1><ul>
+<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</p>
+</li>
+<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
+</li>
+<li><p>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</p>
+</li>
+<li><p>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</p>
+</li>
+<li><p>Cloudflare: A free CDN service used for domain name resolution.</p>
+</li>
 </ul>
-<p><strong>举个实例：</strong></p>
-<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
-<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Obtaining-the-GitHub-Copilot-Token"><a href="#Obtaining-the-GitHub-Copilot-Token" class="headerlink" title="Obtaining the GitHub Copilot Token"></a>Obtaining the GitHub Copilot Token</h1><p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
 
-
-
-<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
-<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
-<p>算法步骤：</p>
-<ol>
-<li>首先将根节点放入队列中。</li>
-<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
-<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
-<li>重复步骤2。</li>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png" alt="Token"></p>
+<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
+<h1 id="Running-the-copilot-gpt4-service"><a href="#Running-the-copilot-gpt4-service" class="headerlink" title="Running the copilot-gpt4-service"></a>Running the copilot-gpt4-service</h1><ol>
+<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="Docker-compose"></li>
+<li>Add a server block in NGINX:</li>
 </ol>
-<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
-<p>代码实现</p>
-<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">    ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">    ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">        proxy_redirect off;</span><br><span class="line">        proxy_set_header Host $host;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Don’t forget to reload the NGINX configuration file.</p>
+<ol start="3">
+<li>Add a domain name resolution for “chat.example.com” on Cloudflare, pointing to the IP address of your NGINX server.</li>
+</ol>
+<h1 id="Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><a href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel" class="headerlink" title="Deploying the ChatGPT-Next-Web Service on Vercel"></a>Deploying the ChatGPT-Next-Web Service on Vercel</h1><p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
+<p>Once the deployment on Vercel is complete, you can add a custom domain name, such as “chatnext.example.com”.</p>
+<h1 id="Testing"><a href="#Testing" class="headerlink" title="Testing"></a>Testing</h1><p>Open your browser and enter “chatnext.example.com”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter “<a href="https://chat.example.com/">https://chat.example.com</a>“ as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
+<p>Note: I don’t know if this approach complies with the usage agreement of GitHub Copilot. I am doing this for my own convenience and will not share it with others. If you deploy your own service, please refrain from sharing it with others.</p>
+<hr>
+<p>If you found this article helpful, please consider following and applauding me. Your support is greatly appreciated. Thank you!</p>
+]]></content>
       <categories>
-        <category>数据结构&amp;算法</category>
-        <category>leetCode</category>
+        <category>blog</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>聊聊redis sds</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
+    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
+<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
+<span id="more"></span>
+
+<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
+<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
+<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
+<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
+<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
+<ol>
+<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
+<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
+</ol>
+<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
+<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
+<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
+<ol>
+<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
+<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
+</ol>
+<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
+<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
+<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
+<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
       </categories>
       <tags>
-        <tag>DFS</tag>
-        <tag>BFS</tag>
+        <tag>redis</tag>
       </tags>
   </entry>
   <entry>
@@ -637,6 +721,141 @@
       <tags>
         <tag>linux</tag>
         <tag>ipv6</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
+    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
+    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
+<span id="more"></span>
+
+<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
+<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
+</li>
+<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
+</li>
+<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
+</li>
+<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
+</li>
+<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
+</li>
+</ul>
+<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
+<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
+<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
+<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
+<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+别忘记 重新加载nginx 配置文件  </li>
+<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
+</ol>
+<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
+<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
+<hr>
+<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>github</tag>
+        <tag>copilot</tag>
+        <tag>chatgpt-4</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>arts</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -691,184 +910,6 @@
       </tags>
   </entry>
   <entry>
-    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
-    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
-    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
-<span id="more"></span>
-
-<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
-<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
-</li>
-<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
-</li>
-<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
-</li>
-<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
-</li>
-<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
-</li>
-</ul>
-<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
-<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
-<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
-<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
-<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-别忘记 重新加载nginx 配置文件  </li>
-<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
-</ol>
-<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
-<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
-<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
-<hr>
-<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>github</tag>
-        <tag>copilot</tag>
-        <tag>chatgpt-4</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>聊聊redis sds</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
-    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
-<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
-<span id="more"></span>
-
-<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
-<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
-<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
-<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
-<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
-<ol>
-<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
-<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
-</ol>
-<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
-<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
-<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
-<ol>
-<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
-<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
-</ol>
-<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
-<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
-<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
-<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
-    <url>/2024/01/12/How%20to%20Set%20Up%20ChatGPT-4%20Service%20Using%20GitHub%20Copilot/</url>
-    <content><![CDATA[<p>How to Set Up ChatGPT-4 Service Using GitHub Copilot</p>
-<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
-<span id="more"></span>
-
-<h1 id="Open-Source-Components"><a href="#Open-Source-Components" class="headerlink" title="Open-Source Components"></a>Open-Source Components</h1><ul>
-<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</p>
-</li>
-<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
-</li>
-<li><p>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</p>
-</li>
-<li><p>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</p>
-</li>
-<li><p>Cloudflare: A free CDN service used for domain name resolution.</p>
-</li>
-</ul>
-<h1 id="Obtaining-the-GitHub-Copilot-Token"><a href="#Obtaining-the-GitHub-Copilot-Token" class="headerlink" title="Obtaining the GitHub Copilot Token"></a>Obtaining the GitHub Copilot Token</h1><p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png" alt="Token"></p>
-<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
-<h1 id="Running-the-copilot-gpt4-service"><a href="#Running-the-copilot-gpt4-service" class="headerlink" title="Running the copilot-gpt4-service"></a>Running the copilot-gpt4-service</h1><ol>
-<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="Docker-compose"></li>
-<li>Add a server block in NGINX:</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">    ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">    ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">        proxy_redirect off;</span><br><span class="line">        proxy_set_header Host $host;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Don’t forget to reload the NGINX configuration file.</p>
-<ol start="3">
-<li>Add a domain name resolution for “chat.example.com” on Cloudflare, pointing to the IP address of your NGINX server.</li>
-</ol>
-<h1 id="Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><a href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel" class="headerlink" title="Deploying the ChatGPT-Next-Web Service on Vercel"></a>Deploying the ChatGPT-Next-Web Service on Vercel</h1><p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
-<p>Once the deployment on Vercel is complete, you can add a custom domain name, such as “chatnext.example.com”.</p>
-<h1 id="Testing"><a href="#Testing" class="headerlink" title="Testing"></a>Testing</h1><p>Open your browser and enter “chatnext.example.com”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter “<a href="https://chat.example.com/">https://chat.example.com</a>“ as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
-<p>Note: I don’t know if this approach complies with the usage agreement of GitHub Copilot. I am doing this for my own convenience and will not share it with others. If you deploy your own service, please refrain from sharing it with others.</p>
-<hr>
-<p>If you found this article helpful, please consider following and applauding me. Your support is greatly appreciated. Thank you!</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -892,47 +933,6 @@
       </categories>
       <tags>
         <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -1075,6 +1075,34 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-44</title>
     <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
@@ -1101,19 +1129,19 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
 <h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1171,34 +1199,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-47</title>
     <url>/2023/11/20/arts/ARTS-2023-47/</url>
     <content><![CDATA[<blockquote>
@@ -1231,23 +1231,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ARTS-2023-49</title>
     <url>/2023/12/04/arts/ARTS-2023-49/</url>
     <content><![CDATA[<blockquote>
@@ -1273,6 +1256,23 @@
         <tag>arts</tag>
         <tag>工程师工具</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
   </entry>
   <entry>
     <title>ARTS-2023-50</title>
@@ -1311,21 +1311,6 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2024-02</title>
-    <url>/2024/01/09/arts/ARTS-2024-02/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ARTS-2024-01</title>
     <url>/2024/01/02/arts/ARTS-2024-01/</url>
     <content><![CDATA[<blockquote>
@@ -1339,6 +1324,21 @@
 <p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
 </blockquote>
 ]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2024-02</title>
+    <url>/2024/01/09/arts/ARTS-2024-02/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
