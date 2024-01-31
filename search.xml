@@ -25,56 +25,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
-<blockquote>
-<p>本文基于 go 1.14 </p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20PProf/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-PProf"><a href="#Golang-大杀器之性能剖析-PProf" class="headerlink" title="Golang 大杀器之性能剖析 PProf"></a>Golang 大杀器之性能剖析 PProf</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了</p>
@@ -233,48 +183,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#49;&#x31;&#50;&#46;&#x31;&#x2e;&#x31;">&#103;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#49;&#x31;&#50;&#46;&#x31;&#x2e;&#x31;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
-</blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
-
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
-
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
-]]></content>
-      <categories>
-        <category>技术</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
     <url>/2024/01/12/How%20to%20Set%20Up%20ChatGPT-4%20Service%20Using%20GitHub%20Copilot/</url>
     <content><![CDATA[<p>How to Set Up ChatGPT-4 Service Using GitHub Copilot</p>
@@ -320,6 +228,71 @@
       </categories>
   </entry>
   <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#64;&#49;&#48;&#x2e;&#x31;&#x31;&#x32;&#46;&#49;&#46;&#x31;">&#103;&#108;&#116;&#64;&#49;&#48;&#x2e;&#x31;&#x31;&#x32;&#46;&#49;&#46;&#x31;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+  </entry>
+  <entry>
     <title>aws ec2 切换到ipv6</title>
     <url>/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/</url>
     <content><![CDATA[<p>ipv6 出来已经很久了，工作中也处理过很多次ipv6的task，但是从来没想过把自己的ec2切换到ipv4，昨天再邮件回收站里面看到了一个邮件，aws 的ipv4 2024.2.1 要收费了，这就不能忽略了😄，刚好今天有空就把他切换成了ipv6，过程有点折腾。 本文不仅适用ec2，其他linux 主机应该也支持。</p>
@@ -359,54 +332,53 @@
       </tags>
   </entry>
   <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
 </blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
 ]]></content>
       <categories>
-        <category>go</category>
+        <category>Go</category>
       </categories>
       <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
+        <tag>go</tag>
+        <tag>底层</tag>
       </tags>
   </entry>
   <entry>
@@ -455,6 +427,46 @@
       </tags>
   </entry>
   <entry>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -494,43 +506,31 @@
       </tags>
   </entry>
   <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
     <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
 </blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
 ]]></content>
       <categories>
-        <category>leetCode</category>
+        <category>go</category>
       </categories>
       <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
       </tags>
   </entry>
   <entry>
@@ -910,46 +910,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-39</title>
-    <url>/2023/09/27/arts/ARTS-2023-39/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<ol>
-<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
-如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
-</ol>
-<blockquote>
-<ol>
-<li>打开Chrome浏览器。  </li>
-<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
-<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
-<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
-</ol>
-</blockquote>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -976,23 +936,31 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <title>ARTS-2023-39</title>
+    <url>/2023/09/27/arts/ARTS-2023-39/</url>
     <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
 <ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
+如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
 </ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<blockquote>
+<ol>
+<li>打开Chrome浏览器。  </li>
+<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
+<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
+<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
+</ol>
+</blockquote>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1044,34 +1012,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-41</title>
     <url>/2023/10/09/arts/ARTS-2023-41/</url>
     <content><![CDATA[<blockquote>
@@ -1103,6 +1043,66 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-44</title>
     <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
@@ -1113,6 +1113,34 @@
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
 <h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
@@ -1156,34 +1184,6 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1290,6 +1290,27 @@
       </categories>
   </entry>
   <entry>
+    <title>ARTS-2023-50</title>
+    <url>/2023/12/11/arts/ARTS-2023-50/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
+<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
+<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2024-01</title>
     <url>/2024/01/02/arts/ARTS-2024-01/</url>
     <content><![CDATA[<blockquote>
@@ -1318,27 +1339,6 @@
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-50</title>
-    <url>/2023/12/11/arts/ARTS-2023-50/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
-<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
-<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
-]]></content>
       <categories>
         <category>arts</category>
       </categories>
