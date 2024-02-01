@@ -217,7 +217,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#46;&#49;&#46;&#x31;">&#x67;&#x6c;&#116;&#64;&#49;&#x30;&#46;&#x31;&#49;&#50;&#46;&#49;&#46;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#x32;&#x2e;&#x31;&#x2e;&#49;">&#x67;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#x32;&#x2e;&#x31;&#x2e;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -319,79 +319,6 @@
       </tags>
   </entry>
   <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
-</blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
-    <url>/2024/01/12/How%20to%20Set%20Up%20ChatGPT-4%20Service%20Using%20GitHub%20Copilot/</url>
-    <content><![CDATA[<p>How to Set Up ChatGPT-4 Service Using GitHub Copilot</p>
-<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
-<span id="more"></span>
-
-<h1 id="Open-Source-Components"><a href="#Open-Source-Components" class="headerlink" title="Open-Source Components"></a>Open-Source Components</h1><ul>
-<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</p>
-</li>
-<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
-</li>
-<li><p>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</p>
-</li>
-<li><p>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</p>
-</li>
-<li><p>Cloudflare: A free CDN service used for domain name resolution.</p>
-</li>
-</ul>
-<h1 id="Obtaining-the-GitHub-Copilot-Token"><a href="#Obtaining-the-GitHub-Copilot-Token" class="headerlink" title="Obtaining the GitHub Copilot Token"></a>Obtaining the GitHub Copilot Token</h1><p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png" alt="Token"></p>
-<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
-<h1 id="Running-the-copilot-gpt4-service"><a href="#Running-the-copilot-gpt4-service" class="headerlink" title="Running the copilot-gpt4-service"></a>Running the copilot-gpt4-service</h1><ol>
-<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="Docker-compose"></li>
-<li>Add a server block in NGINX:</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">    ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">    ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">        proxy_redirect off;</span><br><span class="line">        proxy_set_header Host $host;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Don’t forget to reload the NGINX configuration file.</p>
-<ol start="3">
-<li>Add a domain name resolution for “chat.example.com” on Cloudflare, pointing to the IP address of your NGINX server.</li>
-</ol>
-<h1 id="Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><a href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel" class="headerlink" title="Deploying the ChatGPT-Next-Web Service on Vercel"></a>Deploying the ChatGPT-Next-Web Service on Vercel</h1><p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
-<p>Once the deployment on Vercel is complete, you can add a custom domain name, such as “chatnext.example.com”.</p>
-<h1 id="Testing"><a href="#Testing" class="headerlink" title="Testing"></a>Testing</h1><p>Open your browser and enter “chatnext.example.com”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter “<a href="https://chat.example.com/">https://chat.example.com</a>“ as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
-<p>Note: I don’t know if this approach complies with the usage agreement of GitHub Copilot. I am doing this for my own convenience and will not share it with others. If you deploy your own service, please refrain from sharing it with others.</p>
-<hr>
-<p>If you found this article helpful, please consider following and applauding me. Your support is greatly appreciated. Thank you!</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-  </entry>
-  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -471,6 +398,34 @@
       </tags>
   </entry>
   <entry>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
+    <content><![CDATA[<blockquote>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+</blockquote>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>在VPS上搭建vaultwarden</title>
     <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
     <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
@@ -508,6 +463,30 @@
         <tag>反向代理</tag>
         <tag>密码托管</tag>
         <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>年度总结</tag>
       </tags>
   </entry>
   <entry>
@@ -592,28 +571,49 @@
       </tags>
   </entry>
   <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
+    <url>/2024/01/12/How%20to%20Set%20Up%20ChatGPT-4%20Service%20Using%20GitHub%20Copilot/</url>
+    <content><![CDATA[<p>How to Set Up ChatGPT-4 Service Using GitHub Copilot</p>
+<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
 <span id="more"></span>
 
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
+<h1 id="Open-Source-Components"><a href="#Open-Source-Components" class="headerlink" title="Open-Source Components"></a>Open-Source Components</h1><ul>
+<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</p>
+</li>
+<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
+</li>
+<li><p>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</p>
+</li>
+<li><p>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</p>
+</li>
+<li><p>Cloudflare: A free CDN service used for domain name resolution.</p>
+</li>
+</ul>
+<h1 id="Obtaining-the-GitHub-Copilot-Token"><a href="#Obtaining-the-GitHub-Copilot-Token" class="headerlink" title="Obtaining the GitHub Copilot Token"></a>Obtaining the GitHub Copilot Token</h1><p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png" alt="Token"></p>
+<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
+<h1 id="Running-the-copilot-gpt4-service"><a href="#Running-the-copilot-gpt4-service" class="headerlink" title="Running the copilot-gpt4-service"></a>Running the copilot-gpt4-service</h1><ol>
+<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="Docker-compose"></li>
+<li>Add a server block in NGINX:</li>
 </ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 443 ssl;</span><br><span class="line">    listen [::]:443 ssl;</span><br><span class="line">    server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">    ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">    ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">        proxy_redirect off;</span><br><span class="line">        proxy_set_header Host $host;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Don’t forget to reload the NGINX configuration file.</p>
+<ol start="3">
+<li>Add a domain name resolution for “chat.example.com” on Cloudflare, pointing to the IP address of your NGINX server.</li>
+</ol>
+<h1 id="Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><a href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel" class="headerlink" title="Deploying the ChatGPT-Next-Web Service on Vercel"></a>Deploying the ChatGPT-Next-Web Service on Vercel</h1><p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
+<p>Once the deployment on Vercel is complete, you can add a custom domain name, such as “chatnext.example.com”.</p>
+<h1 id="Testing"><a href="#Testing" class="headerlink" title="Testing"></a>Testing</h1><p>Open your browser and enter “chatnext.example.com”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter “<a href="https://chat.example.com/">https://chat.example.com</a>“ as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
+<p>Note: I don’t know if this approach complies with the usage agreement of GitHub Copilot. I am doing this for my own convenience and will not share it with others. If you deploy your own service, please refrain from sharing it with others.</p>
+<hr>
+<p>If you found this article helpful, please consider following and applauding me. Your support is greatly appreciated. Thank you!</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
-      <tags>
-        <tag>年度总结</tag>
-      </tags>
   </entry>
   <entry>
     <title>聊聊Redis  链表</title>
@@ -706,31 +706,6 @@
       </tags>
   </entry>
   <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
     <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
     <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
@@ -772,6 +747,31 @@
         <tag>github</tag>
         <tag>copilot</tag>
         <tag>chatgpt-4</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
       </tags>
   </entry>
   <entry>
@@ -935,6 +935,69 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-40</title>
     <url>/2023/10/02/arts/ARTS-2023-40/</url>
     <content><![CDATA[<blockquote>
@@ -956,37 +1019,6 @@
 <li>我要坚持写长文博客。。</li>
 <li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
 </ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1034,38 +1066,6 @@
       <tags>
         <tag>算法</tag>
         <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -1129,34 +1129,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-46</title>
     <url>/2023/11/13/arts/ARTS-2023-46/</url>
     <content><![CDATA[<blockquote>
@@ -1184,6 +1156,34 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1229,38 +1229,6 @@
       <tags>
         <tag>atrs</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
   </entry>
   <entry>
     <title>ARTS-2023-49</title>
@@ -1311,6 +1279,23 @@
       </categories>
   </entry>
   <entry>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2024-01</title>
     <url>/2024/01/02/arts/ARTS-2024-01/</url>
     <content><![CDATA[<blockquote>
@@ -1324,6 +1309,21 @@
 <p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
 </blockquote>
 ]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
