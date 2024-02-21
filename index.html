@@ -127,7 +127,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-count">44</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -714,6 +714,131 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/02/04/Go%20%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F%2005%20%E4%BF%AE%E9%A5%B0%E5%99%A8%EF%BC%88Decoration%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="hxzhouh">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="萝卜的博客">
+      <meta itemprop="description" content="关注后端开发，性能优化以及个人成长">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | 萝卜的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2024/02/04/Go%20%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F%2005%20%E4%BF%AE%E9%A5%B0%E5%99%A8%EF%BC%88Decoration%EF%BC%89/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-02-04 16:20:15" itemprop="dateCreated datePublished" datetime="2024-02-04T16:20:15+08:00">2024-02-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-02-21 16:47:25" itemprop="dateModified" datetime="2024-02-21T16:47:25+08:00">2024-02-21</time>
+    </span>
+
+  
+    <span id="/2024/02/04/Go%20%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F%2005%20%E4%BF%AE%E9%A5%B0%E5%99%A8%EF%BC%88Decoration%EF%BC%89/" class="post-meta-item twikoo_visitors" data-flag-title="" title="阅读次数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="twikoo_visitors"></span>
+    </span>
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>1.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Go 是一种静态类型的编译语言，它的设计目标是简洁、高效。虽然 Go 不是一种完全的面向对象语言，但是我们仍然可以使用一些设计模式来提高代码的可读性和可维护性。今天，我将介绍一种常见的设计模式：修饰器模式。</p>
+<h2 id="01-什么是修饰器模式？"><a href="#01-什么是修饰器模式？" class="headerlink" title="01 什么是修饰器模式？"></a>01 什么是修饰器模式？</h2><p>修饰器模式是一种设计模式，它允许我们在运行时动态地添加行为到对象上，而不改变其实现。这是通过创建一个包装对象或修饰器来实现的，这个修饰器包含了原始对象，并提供了一个增强的接口来添加新的行为。</p>
+<p>在 Go 中，我们可以使用函数作为修饰器，这是因为 Go 支持高阶函数，即函数可以作为参数传递，也可以作为返回值。</p>
+<h2 id="02-一个例子"><a href="#02-一个例子" class="headerlink" title="02 一个例子"></a>02 一个例子</h2><p>为了更好地理解修饰器模式，让我们通过一个例子来看看如何在 Go 中实现它。</p>
+<p>首先，我们定义一个函数类型 <code>Foo</code> 和一个修饰器类型 <code>FooDecorator</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">string</span>)</span></span> <span class="type">string</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> FooDecorator <span class="function"><span class="keyword">func</span><span class="params">(Foo)</span></span> Foo</span><br></pre></td></tr></table></figure>
+
+<p>然后，我们可以创建一个修饰器，它接受一个 <code>Foo</code> 类型的函数，并返回一个新的 <code>Foo</code> 函数，这个新的函数在调用原始函数之前和之后添加了一些行为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithLog</span><span class="params">(decorated Foo)</span></span> Foo &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;Before calling decorated function&quot;</span>)</span><br><span class="line">        result := decorated(s)</span><br><span class="line">        fmt.Println(<span class="string">&quot;After calling decorated function&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> result</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在，我们可以创建一个 <code>Foo</code> 函数，并使用修饰器来增强它：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    foo := <span class="function"><span class="keyword">func</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;Foo function called&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">    &#125;</span><br><span class="line">    foo = WithLog(foo)</span><br><span class="line">    foo(<span class="string">&quot;Hello, world!&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，我们创建了一个 <code>Foo</code> 函数，然后使用 <code>WithLog</code> 修饰器来增强它。当我们调用增强后的函数时，它会首先打印一条消息，然后调用原始的 <code>Foo</code> 函数，最后再打印一条消息。</p>
+<p>这就是 Go 中的修饰器模式。通过使用修饰器，我们可以在不修改原始函数的情况下，动态地添加新的行为。</p>
+<h1 id="HTTP-相关的一个示例"><a href="#HTTP-相关的一个示例" class="headerlink" title="HTTP 相关的一个示例"></a>HTTP 相关的一个示例</h1><p>接下来，我们再看一个处理 HTTP 请求的相关例子。先看一个简单的 HTTP Server 的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;log&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;strings&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithServerHeader</span><span class="params">(h http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        log.Println(<span class="string">&quot;---&gt;WithServerHeader()&quot;</span>)</span><br><span class="line">        w.Header().Set(<span class="string">&quot;Server&quot;</span>, <span class="string">&quot;HelloServer v0.0.1&quot;</span>)</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">hello</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    log.Printf(<span class="string">&quot;Recieved Request %s from %s\n&quot;</span>, r.URL.Path, r.RemoteAddr)</span><br><span class="line">    fmt.Fprintf(w, <span class="string">&quot;Hello, World! &quot;</span>+r.URL.Path)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/v1/hello&quot;</span>, WithServerHeader(hello))</span><br><span class="line">    err := http.ListenAndServe(<span class="string">&quot;:8080&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(<span class="string">&quot;ListenAndServe: &quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码中使用到了修饰器模式，WithServerHeader() 函数就是一个 Decorator，它会传入一个 http.HandlerFunc，然后返回一个改写的版本。这个例子还是比较简单的，用 WithServerHeader() 就可以加入一个 Response 的 Header。所以，这样的函数我们可以写出好多。如下所示，有写 HTTP 响应头的，有写认证 Cookie 的，有检查认证 Cookie 的，有打日志的……</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;log&quot;</span></span><br><span class="line">    <span class="string">&quot;net/http&quot;</span></span><br><span class="line">    <span class="string">&quot;strings&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithServerHeader</span><span class="params">(h http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        log.Println(<span class="string">&quot;---&gt;WithServerHeader()&quot;</span>)</span><br><span class="line">        w.Header().Set(<span class="string">&quot;Server&quot;</span>, <span class="string">&quot;HelloServer v0.0.1&quot;</span>)</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithAuthCookie</span><span class="params">(h http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        log.Println(<span class="string">&quot;---&gt;WithAuthCookie()&quot;</span>)</span><br><span class="line">        cookie := &amp;http.Cookie&#123;Name: <span class="string">&quot;Auth&quot;</span>, Value: <span class="string">&quot;Pass&quot;</span>, Path: <span class="string">&quot;/&quot;</span>&#125;</span><br><span class="line">        http.SetCookie(w, cookie)</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithBasicAuth</span><span class="params">(h http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        log.Println(<span class="string">&quot;---&gt;WithBasicAuth()&quot;</span>)</span><br><span class="line">        cookie, err := r.Cookie(<span class="string">&quot;Auth&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> || cookie.Value != <span class="string">&quot;Pass&quot;</span> &#123;</span><br><span class="line">            w.WriteHeader(http.StatusForbidden)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithDebugLog</span><span class="params">(h http.HandlerFunc)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        log.Println(<span class="string">&quot;---&gt;WithDebugLog&quot;</span>)</span><br><span class="line">        r.ParseForm()</span><br><span class="line">        log.Println(r.Form)</span><br><span class="line">        log.Println(<span class="string">&quot;path&quot;</span>, r.URL.Path)</span><br><span class="line">        log.Println(<span class="string">&quot;scheme&quot;</span>, r.URL.Scheme)</span><br><span class="line">        log.Println(r.Form[<span class="string">&quot;url_long&quot;</span>])</span><br><span class="line">        <span class="keyword">for</span> k, v := <span class="keyword">range</span> r.Form &#123;</span><br><span class="line">            log.Println(<span class="string">&quot;key:&quot;</span>, k)</span><br><span class="line">            log.Println(<span class="string">&quot;val:&quot;</span>, strings.Join(v, <span class="string">&quot;&quot;</span>))</span><br><span class="line">        &#125;</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">hello</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">    log.Printf(<span class="string">&quot;Recieved Request %s from %s\n&quot;</span>, r.URL.Path, r.RemoteAddr)</span><br><span class="line">    fmt.Fprintf(w, <span class="string">&quot;Hello, World! &quot;</span>+r.URL.Path)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/v1/hello&quot;</span>, WithServerHeader(WithAuthCookie(hello)))</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/v2/hello&quot;</span>, WithServerHeader(WithBasicAuth(hello)))</span><br><span class="line">    http.HandleFunc(<span class="string">&quot;/v3/hello&quot;</span>, WithServerHeader(WithBasicAuth(WithDebugLog(hello))))</span><br><span class="line">    err := http.ListenAndServe(<span class="string">&quot;:8080&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(<span class="string">&quot;ListenAndServe: &quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="多个修饰器的-Pipeline"><a href="#多个修饰器的-Pipeline" class="headerlink" title="多个修饰器的 Pipeline"></a>多个修饰器的 Pipeline</h2><p>在使用上，需要对函数一层层地套起来，看上去好像不是很好看，如果需要修饰器比较多的话，代码就会比较难看了。不过，我们可以重构一下。重构时，我们需要先写一个工具函数，用来遍历并调用各个修饰器：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> HttpHandlerDecorator <span class="function"><span class="keyword">func</span><span class="params">(http.HandlerFunc)</span></span> http.HandlerFunc</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Handler</span><span class="params">(h http.HandlerFunc, decors ...HttpHandlerDecorator)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> decors &#123;</span><br><span class="line">        d := decors[<span class="built_in">len</span>(decors)<span class="number">-1</span>-i] <span class="comment">// iterate in reverse</span></span><br><span class="line">        h = d(h)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> h</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后，我们就可以像下面这样使用了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http.HandleFunc(<span class="string">&quot;/v4/hello&quot;</span>, Handler(hello,</span><br><span class="line">                WithServerHeader, WithBasicAuth, WithDebugLog))</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>再这篇文章中，我用两个例子演示了修饰器模式，但是因为<code>Go</code>语言中不支持注解这个语法糖，所以使用装饰器还是有点丑陋的，不过这个思想还是挺重要的，我们日常开发中可以参考这种思想，写出更优质的代码来。</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/02/02/%E5%85%B3%E9%97%ADTCP%E8%BF%9E%E6%8E%A5%E7%9C%9F%E7%9A%84%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E5%98%9B%EF%BC%9F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1135,123 +1260,6 @@
 
 
 
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/02/arts/ARTS-2024-01/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="hxzhouh">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="萝卜的博客">
-      <meta itemprop="description" content="关注后端开发，性能优化以及个人成长">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | 萝卜的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/01/02/arts/ARTS-2024-01/" class="post-title-link" itemprop="url">ARTS-2024-01</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2024-01-02 09:38:58" itemprop="dateCreated datePublished" datetime="2024-01-02T09:38:58+08:00">2024-01-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-01-07 09:00:50" itemprop="dateModified" datetime="2024-01-07T09:00:50+08:00">2024-01-07</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/arts/" itemprop="url" rel="index"><span itemprop="name">arts</span></a>
-        </span>
-    </span>
-
-  
-    <span id="/2024/01/02/arts/ARTS-2024-01/" class="post-meta-item twikoo_visitors" data-flag-title="ARTS-2024-01" title="阅读次数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-eye"></i>
-      </span>
-      <span class="post-meta-item-text">阅读次数：</span>
-      <span id="twikoo_visitors"></span>
-    </span>
-  
-    <span class="post-meta-break"></span>
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>227</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/01/02/arts/ARTS-2024-01/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
   <nav class="pagination">
     <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" title="下一页" aria-label="下一页" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
@@ -1275,13 +1283,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="站点总字数">36k</span>
+    <span title="站点总字数">37k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">2:11</span>
+    <span title="站点阅读时长">2:16</span>
   </span>
 </div>
 
