@@ -170,6 +170,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#x40;&#x31;&#x30;&#x2e;&#x31;&#x31;&#x32;&#46;&#49;&#x2e;&#x31;">&#x67;&#x6c;&#116;&#x40;&#x31;&#x30;&#x2e;&#x31;&#x31;&#x32;&#46;&#49;&#x2e;&#x31;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 通过 Consul 实现分布式锁</title>
     <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
     <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
@@ -209,46 +251,27 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#116;&#64;&#49;&#x30;&#x2e;&#49;&#x31;&#50;&#46;&#x31;&#x2e;&#x31;">&#x67;&#108;&#116;&#64;&#49;&#x30;&#x2e;&#49;&#x31;&#50;&#46;&#x31;&#x2e;&#x31;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
-</blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
-
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
-
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
-]]></content>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
       <categories>
-        <category>技术</category>
+        <category>随笔</category>
       </categories>
-      <tags>
-        <tag>linux</tag>
-      </tags>
   </entry>
   <entry>
     <title>go trace view trace 显示空白</title>
@@ -276,74 +299,6 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -408,6 +363,115 @@
       </categories>
       <tags>
         <tag>年度总结</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
+    <content><![CDATA[<blockquote>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br> Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
+</blockquote>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>medium能让你快速的赚到钱？ 不可能</title>
+    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
+    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
+<span id="more"></span>
+
+<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
+<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
+<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
+<p>下面我将这样做</p>
+<ol>
+<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
+<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
+<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
+<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>medium</tag>
+        <tag>副业</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>new跟make 的区别</title>
+    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
+<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
+</blockquote>
+<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
+<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
+
+<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
+<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
+</li>
+<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -480,70 +544,6 @@
 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line">http.HandleFunc(<span class="string">&quot;/v4/hello&quot;</span>, Handler(hello,</span><br><span class="line">                WithServerHeader, WithBasicAuth, WithDebugLog))</span><br></pre></td></tr></table></figure>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>再这篇文章中，我用两个例子演示了修饰器模式，但是因为<code>Go</code>语言中不支持注解这个语法糖，所以使用装饰器还是有点丑陋的，不过这个思想还是挺重要的，我们日常开发中可以参考这种思想，写出更优质的代码来。</p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>new跟make 的区别</title>
-    <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
-<p>new 和 make 都可以用来分配空间，初始化类型，但是它们确有不同。</p>
-</blockquote>
-<h2 id="new-T-返回的是-T-的指针"><a href="#new-T-返回的是-T-的指针" class="headerlink" title="new(T) 返回的是 T 的指针"></a><strong>new(T) 返回的是 T 的指针</strong></h2><p>new(T) 为一个 T 类型新值分配空间并将此空间初始化为 T 的零值，返回的是新值的地址，也就是 T 类型的指针 *T，该指针指向 T 的新分配的零值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">p1 := <span class="built_in">new</span>(<span class="type">int</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 --&gt; %#v \n &quot;</span>, p1) <span class="comment">//(*int)(0xc42000e250)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p1 point to --&gt; %#v \n &quot;</span>, *p1) <span class="comment">//0</span></span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line">i := <span class="number">0</span></span><br><span class="line">p2 = &amp;i</span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 --&gt; %#v \n &quot;</span>, p2) <span class="comment">//(*int)(0xc42000e278)</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;p2 point to --&gt; %#v \n &quot;</span>, *p2) <span class="comment">//0</span></span><br></pre></td></tr></table></figure>
-
-<p>上面的代码是等价的，new(int) 将分配的空间初始化为 int 的零值，也就是 0，并返回 int 的指针，这和直接声明指针并初始化的效果是相同的。</p>
-<h2 id="make-只能用于-slice-map-channel"><a href="#make-只能用于-slice-map-channel" class="headerlink" title="make 只能用于 slice,map,channel"></a><strong>make 只能用于 slice,map,channel</strong></h2><p>make 只能用于 slice，map，channel 三种类型，make(T, args) 返回的是初始化之后的 T 类型的值，这个新值并不是 T 类型的零值，也不是指针 *T，是经过初始化之后的 T 的引用。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="type">int</span></span><br><span class="line"><span class="keyword">if</span> s1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s1 is nil --&gt; %#v \n &quot;</span>, s1) <span class="comment">// []int(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">if</span> s2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is nil --&gt; %#v \n &quot;</span>, s2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;s2 is not nill --&gt; %#v \n &quot;</span>, s2)<span class="comment">// []int&#123;0, 0, 0&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>slice 的零值是 nil，使用 make 之后 slice 是一个初始化的 slice，即 slice 的长度、容量、底层指向的 array 都被 make 完成初始化，此时 slice 内容被类型 int 的零值填充，形式是 [0 0 0]，map 和 channel 也是类似的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> m1 <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> m1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m1 is nil --&gt; %#v \n &quot;</span>, m1) <span class="comment">//map[int]string(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> c1 <span class="keyword">chan</span> <span class="type">string</span></span><br><span class="line"><span class="keyword">if</span> c1 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c1 is nil --&gt; %#v \n &quot;</span>, c1) <span class="comment">//(chan string)(nil)</span></span><br><span class="line">&#125;</span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)<span class="comment">//(chan string)(0xc420016120)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="make-T-args-返回的是-T-的-引用"><a href="#make-T-args-返回的是-T-的-引用" class="headerlink" title="make(T, args) 返回的是 T 的 引用"></a><strong>make(T, args) 返回的是 T 的 引用</strong></h2><p>如果不特殊声明，go 的函数默认都是按值穿参，即通过函数传递的参数是值的副本，在函数内部对值修改不影响值的本身，但是 make(T, args) 返回的值通过函数传递参数之后可以直接修改，即 map，slice，channel 通过函数穿参之后在函数内部修改将影响函数外部的值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifySlice</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	s[<span class="number">0</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line">s2 := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;0, 0, 0&#125;</span></span><br><span class="line">modifySlice(s2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%#v&quot;</span>, s2) <span class="comment">//[]int&#123;1, 0, 0&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>这说明 make(T, args) 返回的是引用类型，在函数内部可以直接更改原始值，对 map 和 channel 也是如此。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyMap</span><span class="params">(m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	m[<span class="number">0</span>] = <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyChan</span><span class="params">(c <span class="keyword">chan</span> <span class="type">string</span>)</span></span> &#123;</span><br><span class="line">	c &lt;- <span class="string">&quot;string&quot;</span></span><br><span class="line">&#125;</span><br><span class="line">m2 := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> m2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is nil --&gt; %#v \n &quot;</span>, m2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">//map[int]string&#123;&#125;</span></span><br><span class="line">&#125;</span><br><span class="line">modifyMap(m2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;m2 is not nill --&gt; %#v \n &quot;</span>, m2) <span class="comment">// map[int]string&#123;0:&quot;string&quot;&#125;</span></span><br><span class="line">c2 := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line"><span class="keyword">if</span> c2 == <span class="literal">nil</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is nil --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v \n &quot;</span>, c2)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> modifyChan(c2)</span><br><span class="line">fmt.Printf(<span class="string">&quot;c2 is not nill --&gt; %#v &quot;</span>, &lt;-c2) <span class="comment">//&quot;string&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="很少需要使用-new"><a href="#很少需要使用-new" class="headerlink" title="很少需要使用 new"></a><strong>很少需要使用 new</strong></h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span> &#123;</span><br><span class="line">name <span class="type">string</span></span><br><span class="line">age <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//声明初始化</span></span><br><span class="line"><span class="keyword">var</span> foo1 Foo</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo1 --&gt; %#v\n &quot;</span>, foo1) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo1.age = <span class="number">1</span></span><br><span class="line">fmt.Println(foo1.age)</span><br><span class="line"><span class="comment">//struct literal 初始化</span></span><br><span class="line">foo2 := Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo2 --&gt; %#v\n &quot;</span>, foo2) <span class="comment">//main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo2.age = <span class="number">2</span></span><br><span class="line">fmt.Println(foo2.age)</span><br><span class="line"><span class="comment">//指针初始化</span></span><br><span class="line">foo3 := &amp;Foo&#123;&#125;</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo3 --&gt; %#v\n &quot;</span>, foo3) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo3.age = <span class="number">3</span></span><br><span class="line">fmt.Println(foo3.age)</span><br><span class="line"><span class="comment">//new 初始化</span></span><br><span class="line">foo4 := <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo4 --&gt; %#v\n &quot;</span>, foo4) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo4.age = <span class="number">4</span></span><br><span class="line">fmt.Println(foo4.age)</span><br><span class="line"><span class="comment">//声明指针并用 new 初始化</span></span><br><span class="line"><span class="keyword">var</span> foo5 *Foo = <span class="built_in">new</span>(Foo)</span><br><span class="line">fmt.Printf(<span class="string">&quot;foo5 --&gt; %#v\n &quot;</span>, foo5) <span class="comment">//&amp;main.Foo&#123;age:0, name:&quot;&quot;&#125;</span></span><br><span class="line">foo5.age = <span class="number">5</span></span><br><span class="line">fmt.Println(foo5.age)</span><br></pre></td></tr></table></figure>
-
-<p>foo1 和 foo2 是同样的类型，都是 Foo 类型的值，foo1 是通过 var 声明，Foo 的 filed 自动初始化为每个类型的零值，foo2 是通过字面量的完成初始化。foo3，foo4 和 foo5 是一样的类型，都是 Foo 的指针 <em>Foo。</em>*<em>但是所有 foo 都可以直接使用 Foo 的 filed，读取或修改，为什么？</em>如果 x 是可寻址的，&amp;x 的 filed 集合包含 m，x.m 和 (&amp;x).m 是等同的，go 自动做转换，也就是 foo1.age 和 foo3.age 调用是等价的，go 在下面自动做了转换。因而可以直接使用 struct literal 的方式创建对象，能达到和 new 创建是一样的情况而不需要使用 new。</p>
-<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a><strong>小结</strong></h2><ul>
-<li><p>new(T) 返回 T 的指针 *T 并指向 T 的零值。</p>
-</li>
-<li><p>make(T) 返回的初始化的 T，只能用于 slice，map，channel。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>medium能让你快速的赚到钱？ 不可能</title>
-    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
-    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
-<span id="more"></span>
-
-<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
-<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
-<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
-<p>下面我将这样做</p>
-<ol>
-<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
-<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
-<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
-<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>medium</tag>
-        <tag>副业</tag>
-      </tags>
   </entry>
   <entry>
     <title>medium 写作一个月的心得</title>
@@ -709,6 +709,67 @@
       </tags>
   </entry>
   <entry>
+    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
+    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
+    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
+<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
+<span id="more"></span>
+<p>#go </p>
+<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
+<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
+<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Logger</code> 结构体的定义如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
+<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
+<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
+
+<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
+<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
+<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
+<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
+<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
+<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
+<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
+<ul>
+<li><code>Filename</code>：指定日志文件的存储路径。</li>
+<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
+<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
+<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
+<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
+</ul>
+<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
+<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
+
+<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
+<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>为什么TCP断开的时候需要四次挥手</title>
     <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
     <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
@@ -784,64 +845,47 @@
       </tags>
   </entry>
   <entry>
-    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
-    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
-    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
-<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
+    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
+    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
+    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
 <span id="more"></span>
-<p>#go </p>
-<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
-<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
-<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
 
-<p><code>Logger</code> 结构体的定义如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
-<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
-<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
-
-<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
-<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
-<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
-<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
-<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
-<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
-<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
-<ul>
-<li><code>Filename</code>：指定日志文件的存储路径。</li>
-<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
-<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
-<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
-<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
+<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
+<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
+</li>
+<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
+</li>
+<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
+</li>
+<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
+</li>
+<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
+</li>
 </ul>
-<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
-<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
-<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
-
-<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
-<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
+<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
+<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
+<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
+<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
+<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+别忘记 重新加载nginx 配置文件  </li>
+<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
+</ol>
+<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
+<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
+<hr>
+<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
-        <tag>go</tag>
+        <tag>github</tag>
+        <tag>copilot</tag>
+        <tag>chatgpt-4</tag>
       </tags>
   </entry>
   <entry>
@@ -893,50 +937,6 @@
       </categories>
       <tags>
         <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
-    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
-    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
-<span id="more"></span>
-
-<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
-<li><p><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</p>
-</li>
-<li><p><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></p>
-</li>
-<li><p>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</p>
-</li>
-<li><p>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</p>
-</li>
-<li><p>cloudflare 一个免费的cdn服务，我们用来解析域名。</p>
-</li>
-</ul>
-<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
-<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
-<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
-<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
-<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-别忘记 重新加载nginx 配置文件  </li>
-<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
-</ol>
-<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
-<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
-<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
-<hr>
-<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>github</tag>
-        <tag>copilot</tag>
-        <tag>chatgpt-4</tag>
       </tags>
   </entry>
   <entry>
@@ -1182,6 +1182,70 @@
       </tags>
   </entry>
   <entry>
+    <title>聊聊redis sds</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
+    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
+<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
+<span id="more"></span>
+
+<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
+<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
+<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
+<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
+<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
+<ol>
+<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
+<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
+</ol>
+<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
+<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
+<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
+<ol>
+<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
+<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
+</ol>
+<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
+<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
+<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
+<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>如何用汇编分析Go代码</title>
     <url>/2024/01/16/%E5%A6%82%E4%BD%95%E7%94%A8%E6%B1%87%E7%BC%96%E5%88%86%E6%9E%90Go%E4%BB%A3%E7%A0%81/</url>
     <content><![CDATA[<p>今天介绍几个常用的查看 Go 汇编代码、调试 Go 程序的命令和工具，</p>
@@ -1249,70 +1313,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>聊聊redis sds</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
-    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
-<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
-<span id="more"></span>
-
-<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
-<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
-<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
-<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
-<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
-<ol>
-<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
-<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
-</ol>
-<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
-<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
-<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
-<ol>
-<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
-<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
-</ol>
-<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
-<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
-<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
-<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
       </tags>
   </entry>
   <entry>
@@ -1516,19 +1516,50 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
 <h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1612,50 +1643,19 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
 <h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1751,21 +1751,6 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ARTS-2023-48</title>
     <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
@@ -1778,6 +1763,21 @@
 <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
 
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
