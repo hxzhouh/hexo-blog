@@ -265,6 +265,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#x74;&#x40;&#x31;&#x30;&#x2e;&#x31;&#49;&#x32;&#x2e;&#49;&#46;&#x31;">&#x67;&#x6c;&#x74;&#x40;&#x31;&#x30;&#x2e;&#x31;&#49;&#x32;&#x2e;&#49;&#46;&#x31;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Obsidian 最佳实践 -持续更新</title>
     <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
     <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
@@ -286,34 +328,6 @@
       <categories>
         <category>随笔</category>
       </categories>
-  </entry>
-  <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
-</blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
-      </tags>
   </entry>
   <entry>
     <title>aws ec2 切换到ipv6</title>
@@ -352,6 +366,76 @@
       <tags>
         <tag>linux</tag>
         <tag>ipv6</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
+    <content><![CDATA[<blockquote>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+</blockquote>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hash table 一个古老的经典数据结构</title>
+    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
+<span id="more"></span>
+<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
+<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
+<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
+<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
+<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
+<blockquote>
+<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
+</blockquote>
+<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
+<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
+<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
+<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
+<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
+<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
+<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
+<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
+<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
+<ol>
+<li>找到键相同的键值对 — 更新键对应的值；</li>
+<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
+</ol>
+<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
+<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
+<p><code>装载因子:=元素数量÷桶数量</code></p>
+<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>hash</tag>
       </tags>
   </entry>
   <entry>
@@ -487,73 +571,6 @@
       </tags>
   </entry>
   <entry>
-    <title>hash table 一个古老的经典数据结构</title>
-    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
-    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
-<span id="more"></span>
-<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
-<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
-<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
-<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
-<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
-<blockquote>
-<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
-</blockquote>
-<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
-<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
-<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
-<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
-<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
-<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
-<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
-<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
-<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
-<ol>
-<li>找到键相同的键值对 — 更新键对应的值；</li>
-<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
-</ol>
-<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
-<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
-<p><code>装载因子:=元素数量÷桶数量</code></p>
-<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>medium能让你快速的赚到钱？ 不可能</title>
-    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
-    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
-<span id="more"></span>
-
-<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
-<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
-<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
-<p>下面我将这样做</p>
-<ol>
-<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
-<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
-<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
-<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>medium</tag>
-        <tag>副业</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -590,6 +607,31 @@
       </categories>
       <tags>
         <tag>Go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>medium能让你快速的赚到钱？ 不可能</title>
+    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
+    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
+<span id="more"></span>
+
+<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
+<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
+<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
+<p>下面我将这样做</p>
+<ol>
+<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
+<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
+<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
+<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>medium</tag>
+        <tag>副业</tag>
       </tags>
   </entry>
   <entry>
@@ -700,88 +742,6 @@
     <content><![CDATA[<p>你们好，我是hxzhouh</p>
 <p>![[Pasted image 20240202224130.png]]</p>
 ]]></content>
-  </entry>
-  <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#x31;&#x30;&#x2e;&#49;&#x31;&#x32;&#x2e;&#49;&#46;&#49;">&#103;&#108;&#116;&#x40;&#x31;&#x30;&#x2e;&#49;&#x31;&#x32;&#x2e;&#49;&#46;&#49;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
-</blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
-
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
-
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
-]]></content>
-      <categories>
-        <category>技术</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>在VPS上搭建vaultwarden</title>
-    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
-    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
-<span id="more"></span>
-<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
-<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
-<blockquote>
-<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
-</blockquote>
-<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
-
-<p>然后查看一下配置的内容</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
-<p>这样就好了。</p>
-<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
-<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
-<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
-<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
-<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
-<hr>
-<p>Enjoy 😄</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>反向代理</tag>
-        <tag>密码托管</tag>
-        <tag>docker</tag>
-      </tags>
   </entry>
   <entry>
     <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
@@ -898,28 +858,43 @@
       </tags>
   </entry>
   <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+    <title>在VPS上搭建vaultwarden</title>
+    <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
+    <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
 <span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+<h2 id="Vaultwarden-部署"><a href="#Vaultwarden-部署" class="headerlink" title="Vaultwarden 部署"></a>Vaultwarden 部署</h2><p>使用docker-compose  部署。</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">vaultwarden:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">vaultwarden/server:latest</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">vaultwarden</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">8080</span><span class="string">:80</span></span><br><span class="line">      <span class="bullet">-</span> <span class="number">3012</span><span class="string">:3012</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">ADMIN_TOKEN:</span> <span class="string">V9ZE7sCSfR9hx8Pi3M+GhiBTSG1gag0G</span></span><br><span class="line">      <span class="attr">WEBSOCKET_ENABLED:</span> <span class="string">&quot;true&quot;</span> <span class="comment"># Enable WebSocket notifications.</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">backup:</span></span><br><span class="line">    <span class="comment">#备份服务</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">ttionya/vaultwarden-backup:latest</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">always</span></span><br><span class="line">    <span class="attr">environment:</span></span><br><span class="line">      <span class="attr">CRON:</span> <span class="string">&#x27;0 0 * * * ?&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_PASSWORD:</span> <span class="string">&#x27;123456&#x27;</span></span><br><span class="line">      <span class="attr">ZIP_TYPE:</span> <span class="string">&#x27;zip&#x27;</span></span><br><span class="line">      <span class="attr">BACKUP_FILE_SUFFIX:</span> <span class="string">&#x27;%Y%m%d&#x27;</span></span><br><span class="line">      <span class="attr">ACKUP_KEEP_DAYS:</span> <span class="number">7</span></span><br><span class="line">      <span class="comment">#   PING_URL: &#x27;&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_ENABLE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_SMTP_VARIABLES:</span> <span class="string">&#x27;  -S smtp-use-starttls \ -S smtp=smtp://smtp.164.com:587 \ -S smtp-auth=login \ -S smtp-auth-user=email-user \ -S smtp-auth-password=your-auth \ -S from=email-from(Vaultwarden_Backup)&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_TO:</span> <span class="string">&#x27;example@gmail.com&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_SUCCESS:</span> <span class="string">&#x27;FALSE&#x27;</span></span><br><span class="line">      <span class="attr">MAIL_WHEN_FAILURE:</span> <span class="string">&#x27;TRUE&#x27;</span></span><br><span class="line">      <span class="attr">TIMEZONE:</span> <span class="string">&#x27;Asia/Shanghai&#x27;</span></span><br><span class="line">      <span class="attr">DATA_DIR:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/data/vaultwarden/:/data/</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">vaultwarden-rclone-data:/config/</span></span><br><span class="line">    <span class="comment">#   - /path/to/env:/.env</span></span><br><span class="line"></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="attr">vaultwarden-data:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-data</span></span><br><span class="line">  <span class="attr">vaultwarden-rclone-data:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">vaultwarden-rclone-data</span></span><br></pre></td></tr></table></figure>
+<p>这个docker-compose.yaml 文件包含 了 vaultwarden ，以及vaultwarden-backup 两部分。<br>运行这个前，需要设置一下 rclone，这里以 rclone 连接 google drive为例。</p>
+<blockquote>
+<p>rclone是一款开源的命令行工具，用于在不同云存储服务之间同步、复制和管理文件。它支持多种云存储提供商，包括Google Drive、Dropbox、Amazon S3等，允许用户通过简单的命令实现文件的上传、下载和同步，还提供了加密和缓存等功能，是一个强大的云存储管理工具。</p>
+</blockquote>
+<p>运行 下面的指令，进入配置页面， 参考文章 <a href="https://pickstar.today/2022/05/vps%e4%bd%bf%e7%94%a8rclone%e6%8c%82%e8%bd%bdgoogle-drive%e8%af%a6%e7%bb%86%e8%ae%b0%e5%bd%95/">vps使用rclone挂载Google Drive详细记录</a>进行设置。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config</span><br></pre></td></tr></table></figure>
 
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+<p>然后查看一下配置的内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run --rm -it \</span><br><span class="line">  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \</span><br><span class="line">  ttionya/vaultwarden-backup:latest \</span><br><span class="line">  rclone config show</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/3781bb366cac1dcc520970ff606ff536.png" alt="image.png"></p>
+<p>这样就好了。</p>
+<p>再用docker-compose 启动vaultwarden 以及vaultwarden-backup。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2023/09/c79a80b302ac3bbaff32a97b0798ff81.png" alt="image.png"></p>
+<h2 id="cloudflare-反向代理"><a href="#cloudflare-反向代理" class="headerlink" title="cloudflare 反向代理"></a>cloudflare 反向代理</h2><p>vaultwarden 很多功能依赖 https 实现，所以我们需要给vps:8080端口套一个域名 + 证书，</p>
+<h3 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h3><p>为了方便起见，这里直接使用了 cloudflare 代理域名，同时可以前往 SSL&#x2F;TLS -&gt; 源服务器下载其生成的主机证书，用来加密 cloudflare 与主机间的通讯。</p>
+<p>将私钥与公钥分别保存在 <code>/etc/nginx/cert/private.key</code> <code>/etc/nginx/cert/public.pem</code>。<br>然后再VPS nginx 里面配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ubuntu@ip-172-31-20-69:~$ cat /etc/nginx/nginx.conf</span><br><span class="line">user www-data;</span><br><span class="line">worker_processes auto;</span><br><span class="line">pid /run/nginx.pid;</span><br><span class="line">include /etc/nginx/modules-enabled/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">	worker_connections 768;</span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">multi_accept on;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">	sendfile on;</span><br><span class="line">	tcp_nopush on;</span><br><span class="line">	types_hash_max_size 2048;</span><br><span class="line">	include /etc/nginx/mime.types;</span><br><span class="line">	default_type application/octet-stream;</span><br><span class="line">	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE</span><br><span class="line">	ssl_prefer_server_ciphers on;</span><br><span class="line">	access_log /var/log/nginx/access.log;</span><br><span class="line">	gzip on;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	include /etc/nginx/conf.d/*.conf;</span><br><span class="line">	include /etc/nginx/sites-enabled/*;</span><br><span class="line">	server &#123;</span><br><span class="line">    		listen 80;</span><br><span class="line">    		server_name vaultwarden.example.com;</span><br><span class="line">		return 301 https://$host$request_uri;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">	# </span><span class="language-bash">ssl配置</span></span><br><span class="line"></span><br><span class="line">	server &#123;</span><br><span class="line">		listen 443 ssl default_server;</span><br><span class="line">		server_name vaultwarden.example.com;</span><br><span class="line">		ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">		ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">		location / &#123;</span><br><span class="line">        		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">        		proxy_set_header Host $http_host;</span><br><span class="line">        		proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">        		proxy_set_header Range $http_range;</span><br><span class="line">        		proxy_set_header If-Range $http_if_range;</span><br><span class="line">        		proxy_redirect off;</span><br><span class="line">        		proxy_pass http://127.0.0.1:8080;</span><br><span class="line">    		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端设置"><a href="#客户端设置" class="headerlink" title="客户端设置"></a>客户端设置</h2><p><a href="https://bitwarden.com/">Bitwarden</a> 客户端支持全平台，包括浏览器。所以 可以把所有的密码都保存到vaultwarden 中来</p>
+<p>具体使用 ，请参考 <a href="https://blog.tsinbei.com/archives/731/#4-4%E3%80%81%E4%BD%BF%E7%94%A8"># Vaultwarden：安全私密的个人密码管理器</a></p>
+<hr>
+<p>Enjoy 😄</p>
 ]]></content>
       <categories>
-        <category>工具</category>
+        <category>blog</category>
       </categories>
       <tags>
-        <tag>memos</tag>
+        <tag>反向代理</tag>
+        <tag>密码托管</tag>
+        <tag>docker</tag>
       </tags>
   </entry>
   <entry>
@@ -1207,6 +1182,92 @@
       </tags>
   </entry>
   <entry>
+    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
+    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
+    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
+<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
+<span id="more"></span>
+<p>#go </p>
+<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
+<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
+<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Logger</code> 结构体的定义如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
+<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
+<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
+
+<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
+<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
+<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
+<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
+<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
+<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
+<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
+<ul>
+<li><code>Filename</code>：指定日志文件的存储路径。</li>
+<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
+<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
+<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
+<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
+</ul>
+<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
+<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
+
+<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
+<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>聊聊redis sds</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
     <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
@@ -1465,37 +1526,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-42</title>
     <url>/2023/10/16/arts/ARTS-2023-42/</url>
     <content><![CDATA[<blockquote>
@@ -1513,6 +1543,37 @@
 </ul>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1556,32 +1617,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-45</title>
     <url>/2023/11/06/arts/ARTS-2023-45/</url>
     <content><![CDATA[<blockquote>
@@ -1595,48 +1630,6 @@
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-46</title>
-    <url>/2023/11/13/arts/ARTS-2023-46/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<ol>
-<li><a href="https://leetcode.cn/problems/roman-to-integer/description/?envType=study-plan-v2&envId=top-interview-150">leetcode 13 </a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> symbolValues = <span class="keyword">map</span>[<span class="type">byte</span>]<span class="type">int</span>&#123;<span class="string">&#x27;I&#x27;</span>: <span class="number">1</span>, <span class="string">&#x27;V&#x27;</span>: <span class="number">5</span>, <span class="string">&#x27;X&#x27;</span>: <span class="number">10</span>, <span class="string">&#x27;L&#x27;</span>: <span class="number">50</span>, <span class="string">&#x27;C&#x27;</span>: <span class="number">100</span>, <span class="string">&#x27;D&#x27;</span>: <span class="number">500</span>, <span class="string">&#x27;M&#x27;</span>: <span class="number">1000</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 思路</span></span><br><span class="line"><span class="comment">// 正常来说，取出每个字符对应的值，然后判断前后大小，如果前面的比后面的小，那么就是减去前面的值，否则就是加上前面的值</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">romanToInt</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	n := <span class="built_in">len</span>(s)</span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> s &#123;</span><br><span class="line">		value := symbolValues[s[i]]</span><br><span class="line">		<span class="keyword">if</span> i &lt; n<span class="number">-1</span> &amp;&amp; value &lt; symbolValues[s[i+<span class="number">1</span>]] &#123;</span><br><span class="line">			ans -= value</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			ans += value</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>学习资料::<a href="https://braydie.gitbooks.io/how-to-be-a-programmer/content/zh/"># How to be a Programmer 中文版</a></p>
-<p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<ol>
-<li>Microsoft InShellisense插件<br><a href="https://github.com/microsoft/inshellisense">inshellisense</a> 为 shell 提供 IDE 风格的自动完成功能。它是一个用于自动完成的终端本机运行时，支持 600 多个命令行工具。 inshellisense 支持 Windows、Linux 和 MacOS。</li>
-</ol>
-<p>这个插件 需要适应一下，哈哈，对以前的一些习惯侵入蛮大的。<br> 2. git删除没被跟踪的 文件<br> git clean -f -d -x  git 删除 没被跟踪的文件，有时候有用把。比如频繁切换分支。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<ol>
-<li>昨晚（2023-11-12） 阿里云故障了，当时在做饭，听到这个事情后，觉得不可思议，后面有哈哈大笑，嘲讽max，到了今天，感觉我有什么资格笑的出来，阿里云已经很伟大了，我能写出这样的系统？不过还是得出下面的教训<ol>
-<li>云不是万能的，云也很贵。</li>
-<li>保持敬畏。</li>
-</ol>
-</li>
-<li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
-</ol>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1684,6 +1677,74 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-46</title>
+    <url>/2023/11/13/arts/ARTS-2023-46/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<ol>
+<li><a href="https://leetcode.cn/problems/roman-to-integer/description/?envType=study-plan-v2&envId=top-interview-150">leetcode 13 </a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> symbolValues = <span class="keyword">map</span>[<span class="type">byte</span>]<span class="type">int</span>&#123;<span class="string">&#x27;I&#x27;</span>: <span class="number">1</span>, <span class="string">&#x27;V&#x27;</span>: <span class="number">5</span>, <span class="string">&#x27;X&#x27;</span>: <span class="number">10</span>, <span class="string">&#x27;L&#x27;</span>: <span class="number">50</span>, <span class="string">&#x27;C&#x27;</span>: <span class="number">100</span>, <span class="string">&#x27;D&#x27;</span>: <span class="number">500</span>, <span class="string">&#x27;M&#x27;</span>: <span class="number">1000</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 思路</span></span><br><span class="line"><span class="comment">// 正常来说，取出每个字符对应的值，然后判断前后大小，如果前面的比后面的小，那么就是减去前面的值，否则就是加上前面的值</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">romanToInt</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	n := <span class="built_in">len</span>(s)</span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="keyword">range</span> s &#123;</span><br><span class="line">		value := symbolValues[s[i]]</span><br><span class="line">		<span class="keyword">if</span> i &lt; n<span class="number">-1</span> &amp;&amp; value &lt; symbolValues[s[i+<span class="number">1</span>]] &#123;</span><br><span class="line">			ans -= value</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			ans += value</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>学习资料::<a href="https://braydie.gitbooks.io/how-to-be-a-programmer/content/zh/"># How to be a Programmer 中文版</a></p>
+<p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<ol>
+<li>Microsoft InShellisense插件<br><a href="https://github.com/microsoft/inshellisense">inshellisense</a> 为 shell 提供 IDE 风格的自动完成功能。它是一个用于自动完成的终端本机运行时，支持 600 多个命令行工具。 inshellisense 支持 Windows、Linux 和 MacOS。</li>
+</ol>
+<p>这个插件 需要适应一下，哈哈，对以前的一些习惯侵入蛮大的。<br> 2. git删除没被跟踪的 文件<br> git clean -f -d -x  git 删除 没被跟踪的文件，有时候有用把。比如频繁切换分支。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<ol>
+<li>昨晚（2023-11-12） 阿里云故障了，当时在做饭，听到这个事情后，觉得不可思议，后面有哈哈大笑，嘲讽max，到了今天，感觉我有什么资格笑的出来，阿里云已经很伟大了，我能写出这样的系统？不过还是得出下面的教训<ol>
+<li>云不是万能的，云也很贵。</li>
+<li>保持敬畏。</li>
+</ol>
+</li>
+<li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-48</title>
     <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
@@ -1696,6 +1757,27 @@
 <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
 
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-50</title>
+    <url>/2023/12/11/arts/ARTS-2023-50/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
+<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
+<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
+]]></content>
       <categories>
         <category>arts</category>
       </categories>
@@ -1725,103 +1807,6 @@
       <tags>
         <tag>arts</tag>
         <tag>工程师工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-50</title>
-    <url>/2023/12/11/arts/ARTS-2023-50/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
-<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
-<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
-    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
-    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
-<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
-<span id="more"></span>
-<p>#go </p>
-<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
-<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
-<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
-
-<p><code>Logger</code> 结构体的定义如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
-<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
-<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
-
-<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
-<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
-<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
-<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
-<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
-<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
-<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
-<ul>
-<li><code>Filename</code>：指定日志文件的存储路径。</li>
-<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
-<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
-<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
-<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
-</ul>
-<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
-<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
-<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
-
-<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
-<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -1874,6 +1859,21 @@
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
