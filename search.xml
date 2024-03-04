@@ -273,7 +273,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#49;&#x30;&#46;&#49;&#x31;&#x32;&#46;&#49;&#x2e;&#x31;">&#103;&#108;&#116;&#x40;&#49;&#x30;&#46;&#49;&#x31;&#x32;&#46;&#49;&#x2e;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#x74;&#x40;&#x31;&#48;&#x2e;&#49;&#x31;&#50;&#x2e;&#49;&#x2e;&#x31;">&#x67;&#x6c;&#x74;&#x40;&#x31;&#48;&#x2e;&#49;&#x31;&#50;&#x2e;&#49;&#x2e;&#x31;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -442,6 +442,46 @@
       </tags>
   </entry>
   <entry>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>hash table 一个古老的经典数据结构</title>
     <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
     <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
@@ -481,46 +521,6 @@
       <tags>
         <tag>go</tag>
         <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
-</blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
-]]></content>
-      <categories>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
       </tags>
   </entry>
   <entry>
@@ -596,6 +596,32 @@
       </tags>
   </entry>
   <entry>
+    <title>为什么TCP断开的时候需要四次挥手</title>
+    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
+    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
+<span id="more"></span>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br>![[Pasted image 20240201170632.png]]</p>
+<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
+<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
+<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
+<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
+<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
+<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -632,32 +658,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>为什么TCP断开的时候需要四次挥手</title>
-    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
-    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
-<span id="more"></span>
-<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br>![[Pasted image 20240201170632.png]]</p>
-<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
-<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
-<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
-<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
-<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
-<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
       </tags>
   </entry>
   <entry>
@@ -898,70 +898,64 @@
       </tags>
   </entry>
   <entry>
-    <title>深度优先算法与广度优先算法</title>
-    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
-<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
-<p><strong>DFS属于盲目搜索</strong></p>
-<p>深度优先遍历图算法步骤：</p>
-<ul>
-<li>访问顶点v；</li>
-<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
-<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
-</ul>
-<p><strong>举个实例：</strong></p>
-<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
-<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
-<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
-<p>算法步骤：</p>
-<ol>
-<li>首先将根节点放入队列中。</li>
-<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
-<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
-<li>重复步骤2。</li>
-</ol>
-<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
-<p>代码实现</p>
-<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>数据结构&amp;算法</category>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>DFS</tag>
-        <tag>BFS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
+    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
+    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
+<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
 <span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+<p>#go </p>
+<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
+<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
+<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
 
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+<p><code>Logger</code> 结构体的定义如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
+<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
+<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
+
+<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
+<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
+<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
+<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
+<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
+<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
+<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
+<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
+<ul>
+<li><code>Filename</code>：指定日志文件的存储路径。</li>
+<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
+<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
+<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
+<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
+</ul>
+<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
+<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
+<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
+
+<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
+
+<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
+<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
 ]]></content>
       <categories>
-        <category>工具</category>
+        <category>blog</category>
       </categories>
       <tags>
-        <tag>memos</tag>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -1207,6 +1201,73 @@
       </tags>
   </entry>
   <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深度优先算法与广度优先算法</title>
+    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
+<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
+<p><strong>DFS属于盲目搜索</strong></p>
+<p>深度优先遍历图算法步骤：</p>
+<ul>
+<li>访问顶点v；</li>
+<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
+<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
+</ul>
+<p><strong>举个实例：</strong></p>
+<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
+<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
+<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
+<p>算法步骤：</p>
+<ol>
+<li>首先将根节点放入队列中。</li>
+<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
+<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
+<li>重复步骤2。</li>
+</ol>
+<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
+<p>代码实现</p>
+<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>数据结构&amp;算法</category>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>DFS</tag>
+        <tag>BFS</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>聊聊Redis  链表</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8ARedis%20%20%E9%93%BE%E8%A1%A8/</url>
     <content><![CDATA[<p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。</p>
@@ -1297,67 +1358,6 @@
       </tags>
   </entry>
   <entry>
-    <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
-    <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
-    <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
-<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
-<span id="more"></span>
-<p>#go </p>
-<h1 id="浅析-logrus、zap-和-slog-的设计"><a href="#浅析-logrus、zap-和-slog-的设计" class="headerlink" title="浅析 logrus、zap 和 slog 的设计"></a>浅析 logrus、zap 和 slog 的设计</h1><p>在对 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 这几个日志库的设计进行对比分析时，一个显著的共同点是它们都包含了 <code>io.Writer</code> 这个关键的属性。这一属性在日志框架设计中起着核心作用，它决定了日志输出的目标位置。</p>
-<h2 id="logrus-日志库"><a href="#logrus-日志库" class="headerlink" title="logrus 日志库"></a>logrus 日志库</h2><p><code>logrus</code> 是一个功能丰富的Go语言日志库，它提供了结构化日志记录、日志级别控制等功能。</p>
-<p>当使用 <code>logrus</code> 时，可以调用 <code>logrus.New()</code> 函数来创建 <code>Logger</code> 实例。通过该实例我们执行很多操作，例如自定义日志输出的位置和打印日志等。我们看看下面的代码：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">logger := logrus.New()  </span><br><span class="line">logger.Out = os.Stdout <span class="comment">// stdout  </span></span><br><span class="line"><span class="comment">// or redirects to file</span></span><br><span class="line"><span class="comment">//out, err := os.OpenFile(&quot;file.log&quot;, os.O_CREATE|os.O_WRONLY, 0666)  </span></span><br><span class="line"><span class="comment">//if err != nil &#123;  </span></span><br><span class="line"><span class="comment">// panic(err)  </span></span><br><span class="line"><span class="comment">//&#125;  </span></span><br><span class="line"><span class="comment">//logger.Out = out</span></span><br></pre></td></tr></table></figure>
-
-<p><code>Logger</code> 结构体的定义如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;  </span><br><span class="line">Out io.Writer  </span><br><span class="line">Hooks LevelHooks  </span><br><span class="line">Formatter Formatter  </span><br><span class="line"><span class="comment">// other field...  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>关键属性 <code>Out</code>，其类型为 <code>io.Writer</code>，这一属性用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="zap-日志库"><a href="#zap-日志库" class="headerlink" title="zap 日志库"></a>zap 日志库</h2><p><code>zap</code> 是一个性能极高的日志库。它提供了结构化日志记录、多级别日志控制，以及灵活的配置选项。</p>
-<p>与 <code>logrus</code> 类似，<code>zap</code> 也允许支持通过配置来决定日志输出的位置，但实现方式略有不同。在 <code>zap</code> 中，日志输出是通过配置 <code>zapcore.Core</code> 实现的。在创建 <code>zapcore.Core</code> 实例时，需要指定一个 <code>zapcore.WriteSyncer</code> 接口实现作为参数，这个参数直接决定了日志的输出目标。要创建 <code>zapcore.WriteSyncer</code> 实例，通常使用 <code>zapcore.AddSync()</code> 函数，它接收一个类型为 <code>io.Writer</code> 的参数。</p>
-<p>下面是一个使用 <code>zap</code> 创建日志实例的基本示例：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">writer := zapcore.AddSync(os.Stdout) <span class="comment">// use stdout  </span></span><br><span class="line">core := zapcore.NewCore(  </span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),  </span><br><span class="line">writer,  </span><br><span class="line">zap.InfoLevel,  </span><br><span class="line">)  </span><br><span class="line">logger := zap.New(core)  </span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// 刷新任何缓冲的日志条目  </span></span><br><span class="line">  </span><br><span class="line"><span class="comment">// user logger </span></span><br></pre></td></tr></table></figure>
-
-<p>关键在于 <code>zapcore.AddSync()</code> 函数，该函数接收一个类型为 <code>io.Writer</code> 的参数，这一参数用于指定日志的输出目标，无论是标准输出、文件，还是其他自定义的输出载体。</p>
-<h2 id="slog-日志库"><a href="#slog-日志库" class="headerlink" title="slog 日志库"></a>slog 日志库</h2><p><code>slog</code> 是在 <code>go 1.21.0</code> 版本引入的一个官网日志库，它提供了结构化日志。如果想要更详细地了解 <code>slog</code> 日志库，</p>
-<p>与 <code>logrus</code> 和 <code>zap</code> 类似，<code>slog</code> 也允许用户通过指定 <code>io.Writer</code> 参数来设置日志输出的目标。这一设置是在创建 <code>slog.Handler</code> 接口的实现时进行的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">textLogger := slog.New(slog.NewTextHandler(os.Stdout, <span class="literal">nil</span>))  </span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(os.Stdout, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>在这两个函数中，<code>slog.NewTextHandler</code> 和 <code>slog.NewJSONHandler</code> 第一个参数的类型都是 <code>io.Writer</code>。</p>
-<h2 id="浅析总结"><a href="#浅析总结" class="headerlink" title="浅析总结"></a>浅析总结</h2><p>在对 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 这三个主流日志库的分析中，我们可以发现一个关键的共同点：它们在处理日志输出时均依赖于 <code>io.Writer</code> 接口。这些日志库通过将 <code>io.Writer</code>接口作为关键参数的类型，以便设置日志的输出目标。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/f3e3b50c2247e4d57f5b0946497fbba8.png" alt="Pasted image 20240212220811"></p>
-<h1 id="日志轮转与切割功能的实现机制与实践"><a href="#日志轮转与切割功能的实现机制与实践" class="headerlink" title="日志轮转与切割功能的实现机制与实践"></a>日志轮转与切割功能的实现机制与实践</h1><h2 id="实现机制"><a href="#实现机制" class="headerlink" title="实现机制"></a>实现机制</h2><p>在浅析了 <code>logurs</code>、<code>zap</code> 和 <code>slog</code> 日志库的设计后，我们发现了它们的共同点。现在，让我们深入了解日志轮转与切割功能的实现机制。</p>
-<p>为了实现 <strong>日志文件的轮转与切割</strong>，通常我们会借助第三方库，如 lumberjack，当然还有其他类似的库可供选择，这里就不一一列举了。</p>
-<p><code>lumberjack</code> 是一个专门设计用于日志轮转和切割的库，其作用可以类比于一个可插拔的组件。我们可以通过配置该组件，并将其 <strong>集成</strong> 到所选的日志库中，从而实现日志文件的轮转与切割功能。</p>
-<p>初始化 <code>lumberjack</code> 组件的代码如下所示：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;  </span><br><span class="line">Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of the log file</span></span><br><span class="line">MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这个例子中，我们创建了一个 <code>lumberjack.Logger</code> 实例，并设置了以下参数：</p>
-<ul>
-<li><code>Filename</code>：指定日志文件的存储路径。</li>
-<li><code>MaxSize</code>：日志文件达到多少 <code>MB</code> 后进行轮转。</li>
-<li><code>MaxBackups</code>：最多保留多少个旧日志文件。</li>
-<li><code>MaxAge</code>：旧文件保留的最长时间（天）。</li>
-<li><code>Compress</code>：是否压缩旧文件（如转换为.gz）。</li>
-</ul>
-<p>需要特别注意的是， <code>lumberjack</code> 的 <code>Logger</code> 结构体实现了 <code>io.Writer</code> 接口。这意味着所有关于日志文件的轮转与切割的核心逻辑都封装在 <code>Write</code> 方法中。这一实现也方便 <code>Logger</code> 结构体被集成到任何支持 <code>io.Writer</code> 参数的日志库中。</p>
-<p>明白了这些，想必你已经知道如何实现日志轮转与切割的功能了吧。<code>lumberjack</code> 的 <code>logger</code>  结构体实现了 <code>io.Writer</code> 接口，因此将它传递到第三方库中，就能完成集成配置了。</p>
-<h2 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h2><h3 id="logrus-日志库的实现"><a href="#logrus-日志库的实现" class="headerlink" title="logrus 日志库的实现"></a>logrus 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">logger := logrus.New()</span><br><span class="line">logger.Out = log</span><br></pre></td></tr></table></figure>
-
-<h3 id="zap-日志库的实现"><a href="#zap-日志库的实现" class="headerlink" title="zap 日志库的实现"></a>zap 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// location of log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size in MB</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files to keep</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to retain old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// create timestamps using local time</span></span><br><span class="line">&#125;</span><br><span class="line">writer := zapcore.AddSync(log)</span><br><span class="line">core := zapcore.NewCore(</span><br><span class="line">zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),</span><br><span class="line">NewJSONEncoder(zap.</span><br><span class="line">zap.InfoLevel.</span><br><span class="line">)</span><br><span class="line">logger := zap.New(core)</span><br><span class="line"><span class="keyword">defer</span> logger.Sync() <span class="comment">// Flush any buffered log entries.</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="slog-日志库的实现"><a href="#slog-日志库的实现" class="headerlink" title="slog 日志库的实现"></a>slog 日志库的实现</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">Log := &amp;lumberjack.Logger&#123;</span><br><span class="line">	Filename: <span class="string">&quot;/path/file.log&quot;</span>, <span class="comment">// Location of the log file</span></span><br><span class="line">	MaxSize: <span class="number">10</span>, <span class="comment">// Maximum file size (in MB)</span></span><br><span class="line">	MaxBackups: <span class="number">3</span>, <span class="comment">// Maximum number of old files retained</span></span><br><span class="line">	MaxAge: <span class="number">28</span>, <span class="comment">// Maximum number of days to keep old files</span></span><br><span class="line">	Compress: <span class="literal">true</span>, <span class="comment">// Whether to compress/archive old files</span></span><br><span class="line">	LocalTime: <span class="literal">true</span>, <span class="comment">// Create a timestamp with local time</span></span><br><span class="line">&#125;</span><br><span class="line">textLogger := slog.New(slog.NewTextHandler(log, <span class="literal">nil</span>))</span><br><span class="line">jsonLogger := slog.New(slog.NewJSONHandler(log, <span class="literal">nil</span>))</span><br></pre></td></tr></table></figure>
-
-<p>本文对三个热门的日志库 <code>logrus</code>、<code>zap</code> 和 <code>slog</code> 设计要素进行浅析，我们发现虽然它们在创建日志实例的细节上有所差异，但它们共同依赖于 <code>io.Writer</code> 接口参数来处理日志的输出。掌握如何配置 <code>io.Writer</code> 参数，并结合 <code>lumberjack</code> 库的使用，我们就可以实现日志文件的轮转与切割功能。</p>
-<p>即使后面推出新的日志库，我们也可以通过类似的方法，快速地集成日志文件的轮转与切割功能。</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -1409,47 +1409,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-40</title>
     <url>/2023/10/02/arts/ARTS-2023-40/</url>
     <content><![CDATA[<blockquote>
@@ -1471,46 +1430,6 @@
 <li>我要坚持写长文博客。。</li>
 <li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
 </ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-39</title>
-    <url>/2023/09/27/arts/ARTS-2023-39/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<ol>
-<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
-如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
-</ol>
-<blockquote>
-<ol>
-<li>打开Chrome浏览器。  </li>
-<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
-<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
-<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
-</ol>
-</blockquote>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1617,25 +1536,38 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
       </categories>
       <tags>
         <tag>算法</tag>
+        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -1668,6 +1600,66 @@
         <tag>工具</tag>
         <tag>碎碎念</tag>
         <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-47</title>
+    <url>/2023/11/20/arts/ARTS-2023-47/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
+<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
+<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
+<ol>
+<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>atrs</tag>
       </tags>
   </entry>
   <entry>
@@ -1730,6 +1722,46 @@
       </categories>
   </entry>
   <entry>
+    <title>ARTS-2023-39</title>
+    <url>/2023/09/27/arts/ARTS-2023-39/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<ol>
+<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
+如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
+</ol>
+<blockquote>
+<ol>
+<li>打开Chrome浏览器。  </li>
+<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
+<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
+<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
+</ol>
+</blockquote>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-49</title>
     <url>/2023/12/04/arts/ARTS-2023-49/</url>
     <content><![CDATA[<blockquote>
@@ -1757,36 +1789,25 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-47</title>
-    <url>/2023/11/20/arts/ARTS-2023-47/</url>
+    <title>ARTS-2023-52</title>
+    <url>/2023/12/25/arts/ARTS-2023-52/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h3 id="leetcode-383"><a href="#leetcode-383" class="headerlink" title="leetcode 383"></a>leetcode 383</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">canConstruct</span><span class="params">(ransomNote <span class="type">string</span>, magazine <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;  </span><br><span class="line">    h := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">26</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> magazine &#123;  </span><br><span class="line">       h[v-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> ransomNote &#123;  </span><br><span class="line">       <span class="keyword">if</span> h[v-<span class="string">&#x27;a&#x27;</span>] &gt; <span class="number">0</span> &#123;  </span><br><span class="line">          h[v-<span class="string">&#x27;a&#x27;</span>]--  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          <span class="keyword">return</span> <span class="literal">false</span>  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="49"><a href="#49" class="headerlink" title="49"></a>49</h3><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">groupAnagrams</span><span class="params">(strs []<span class="type">string</span>)</span></span> [][]<span class="type">string</span> &#123;  </span><br><span class="line">  </span><br><span class="line">    r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">string</span>, <span class="number">1000</span>)  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> strs &#123;  </span><br><span class="line">       key := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">26</span>, <span class="number">26</span>)  </span><br><span class="line">       <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> v &#123;  </span><br><span class="line">          key[v1-<span class="string">&#x27;a&#x27;</span>]++  </span><br><span class="line">       &#125;  </span><br><span class="line">       <span class="keyword">if</span> _, ok := r[<span class="type">string</span>(key)]; ok &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = <span class="built_in">append</span>(r[<span class="type">string</span>(key)], v)  </span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">          r[<span class="type">string</span>(key)] = []<span class="type">string</span>&#123;v&#125;  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := [][]<span class="type">string</span>&#123;&#125;  </span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> r &#123;  </span><br><span class="line">       result = <span class="built_in">append</span>(result, v)  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>1.<a href="https://medium.com/gitconnected/awesome-terminal-applications-e4a06022dffa"> Awesome Terminal Applications</a><br>    基于mac 系统，介绍了终端工具，看上去蛮酷的，目前再用 tldr</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#浏览器插件 <strong><a href="https://chromewebstore.google.com/detail/egejbknaophaadmhijkepokfchkbnelc?hl=en">Medium Parser</a> - 一个用于查看 Medium 付费文章的浏览器插件</strong>它的原理是通过 Google Web 缓存查看 Medium 付费文章。</p>
-<h3 id="linux-sar"><a href="#linux-sar" class="headerlink" title="#linux sar"></a>#linux sar</h3><p><strong>sar命令</strong> 是Linux下系统运行状态统计工具，它将指定的操作系统状态计数器显示到标准输出设备。sar工具将对系统当前的状态进行取样，然后通过计算数据和比例来表达系统的当前运行状态。它的特点是可以连续对系统取样，获得大量的取样数据。取样数据和分析的结果都可以存入文件，使用它时消耗的系统资源很小。<br>它提供了一下的选项。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-A: 显示所有的报告信息；</span><br><span class="line">-b: 显示I/O速率；</span><br><span class="line">-B: 显示换页状态；</span><br><span class="line">-c: 显示进程创建活动；</span><br><span class="line">-d: 显示每个块设备的状态；</span><br><span class="line">-e: 设置显示报告的结束时间；</span><br><span class="line">-f: 从指定文件提取报告；</span><br><span class="line">-i: 设状态信息刷新的间隔时间；</span><br><span class="line">-n: 报告网络统计信息。</span><br><span class="line">-P: 报告每个CPU的状态；</span><br><span class="line">-R: 显示内存状态；</span><br><span class="line">-u: 显示CPU利用率；</span><br><span class="line">-v: 显示索引节点，文件和其他内核表的状态；</span><br><span class="line">-w: 显示交换分区状态；</span><br><span class="line">-x: 显示给定进程的状态。</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">-r: 以分页方式显示输出，每页最多显示 100 行。 </span><br><span class="line">-o: 输出选项，指定要显示的列。例如，`-o mrk,prt,cvg` 将显示 CPU 使用率、进程标识符、磁盘使用率 和 网络流量。 </span><br><span class="line">-t: 时间戳选项，指定要在输出中添加时间戳。 </span><br><span class="line">-s: 统计选项，指定要显示的统计数据的类型。例如，`-s us,ms` 将显示 CPU 使用率的 us 和 ms 时间段的平均值。 </span><br><span class="line">-c: 选项用于指定要发送的命令。例如，`-c ls` 将显示当前目录中的文件和子目录列表。</span><br></pre></td></tr></table></figure>
-<p>使用实例：<br>sar 可以用来观测很多 比较细致的指标，比如：</p>
-<ol>
-<li>查看系统当前的网络吞吐量和 PPS <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">数字1表示每隔1秒输出一组数据</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sar -n DEV 1</span></span><br><span class="line">Linux 4.15.0-1035 (ubuntu)   01/06/19   _x86_64_  (2 CPU)</span><br><span class="line"></span><br><span class="line">13:21:40        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil</span><br><span class="line">13:21:41         eth0     18.00     20.00      5.79      4.25      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41      docker0      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br><span class="line">13:21:41           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00</span><br></pre></td></tr></table></figure></li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rxpck/s 和 txpck/s 分别是接收和发送的 PPS，单位为包 / 秒。</span><br><span class="line">rxkB/s 和 txkB/s 分别是接收和发送的吞吐量，单位是 KB/ 秒。</span><br><span class="line">rxcmp/s 和 txcmp/s 分别是接收和发送的压缩数据包数，单位是包 / 秒。</span><br><span class="line"><span class="meta prompt_">%</span><span class="language-bash">ifutil 是网络接口的使用率，即半双工模式下为 (rxkB/s+txkB/s)/Bandwidth，而全双工模式下为 max(rxkB/s, txkB/s)/Bandwidth。</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#go101 log.fatal 调用的是os.exit（）defer 不会生效。<br>![[Pasted image 20231122202715.png]]<br>#go101  数据的发送者，才能决定channel 什么时候关闭。</p>
-]]></content>
+<p>最后一周了，2024开始。。。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/happy-number/">202. 快乐数</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isHappy</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	m := <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">bool</span>&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> ; n != <span class="number">1</span> &amp;&amp; !m[n]; n, m[n] = step(n), <span class="literal">true</span> &#123; &#125;</span><br><span class="line">	<span class="keyword">return</span> n == <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">step</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	sum := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">		sum += (n%<span class="number">10</span>) * (n%<span class="number">10</span>)</span><br><span class="line">		n = n/<span class="number">10</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/ref/mem">https://go.dev/ref/mem</a>   go内存模型，终于把这篇博客看完了。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><ul>
+<li>#tools ripgrep + fzf，搜什么都快。</li>
+<li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
+<li>devv.ai  面向程序员的AIGC 浏览器，</li>
+</ul>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
-      <tags>
-        <tag>atrs</tag>
-      </tags>
   </entry>
   <entry>
     <title>ARTS-2023-51</title>
@@ -1804,21 +1825,15 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2023-52</title>
-    <url>/2023/12/25/arts/ARTS-2023-52/</url>
+    <title>ARTS-2024-02</title>
+    <url>/2024/01/09/arts/ARTS-2024-02/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
-<p>最后一周了，2024开始。。。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/happy-number/">202. 快乐数</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isHappy</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	m := <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">bool</span>&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> ; n != <span class="number">1</span> &amp;&amp; !m[n]; n, m[n] = step(n), <span class="literal">true</span> &#123; &#125;</span><br><span class="line">	<span class="keyword">return</span> n == <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">step</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	sum := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">		sum += (n%<span class="number">10</span>) * (n%<span class="number">10</span>)</span><br><span class="line">		n = n/<span class="number">10</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/ref/mem">https://go.dev/ref/mem</a>   go内存模型，终于把这篇博客看完了。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><ul>
-<li>#tools ripgrep + fzf，搜什么都快。</li>
-<li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
-<li>devv.ai  面向程序员的AIGC 浏览器，</li>
-</ul>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
@@ -1859,21 +1874,6 @@
 <p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
 ]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2024-02</title>
-    <url>/2024/01/09/arts/ARTS-2024-02/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
