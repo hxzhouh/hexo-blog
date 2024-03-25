@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
     <url>/2022/09/30/Golang%20%E5%A4%A7%E6%9D%80%E5%99%A8%E4%B9%8B%E6%80%A7%E8%83%BD%E5%89%96%E6%9E%90%20pprof/</url>
     <content><![CDATA[<h1 id="Golang-大杀器之性能剖析-pprof"><a href="#Golang-大杀器之性能剖析-pprof" class="headerlink" title="Golang 大杀器之性能剖析 pprof"></a>Golang 大杀器之性能剖析 pprof</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>写了几吨代码，实现了几百个接口。功能测试也通过了，终于成功的部署上线了<br>结果，性能不佳，什么鬼？😭</p>
@@ -156,7 +206,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#x74;&#64;&#x31;&#x30;&#46;&#x31;&#x31;&#50;&#x2e;&#49;&#46;&#x31;">&#x67;&#108;&#x74;&#64;&#x31;&#x30;&#46;&#x31;&#x31;&#50;&#x2e;&#49;&#46;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#116;&#x40;&#49;&#48;&#46;&#x31;&#x31;&#x32;&#46;&#49;&#46;&#49;">&#x67;&#108;&#116;&#x40;&#49;&#48;&#46;&#x31;&#x31;&#x32;&#46;&#49;&#46;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -213,46 +263,27 @@
       </categories>
   </entry>
   <entry>
-    <title>Go tool: expvar 自定义度量数据，辅助定位性能瓶颈点</title>
-    <url>/2024/03/15/Go%20tool%EF%BC%9Aexpvar%20%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%A6%E9%87%8F%E6%95%B0%E6%8D%AE%EF%BC%8C%E8%BE%85%E5%8A%A9%E5%AE%9A%E4%BD%8D%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E7%82%B9/</url>
-    <content><![CDATA[<p>介绍 go 内置工具包 expvar 的使用，能够帮我们实现什么功能，以及它跟pprof 的区别</p>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
 <span id="more"></span>
-<p>#go #监控 #自定义<br>在开发过程中，要想对Go应用存在的性能瓶颈进行剖析，首先就要使用pprof 对不同类型的性能数据进行收集和采样。有两种收集和采样数据的方法。</p>
-<ul>
-<li>在微观层面，采用通过运行性能基准测试收集和采样数据的方法，这种方法适用于定位函数或方法实现中存在性能瓶颈点的情形；</li>
-<li>在宏观层面，采用独立程序收集和采样数据的方法。但通过独立程序进行性能数据采样时，往往很难快速捕捉到真正的瓶颈点，尤其是对于那些内部结构复杂、业务逻辑过多、内部有较多并发的Go程序。我们在对这样的程序进行性能采样时，真正的瓶颈点很可能被其他数据遮盖。<br><strong>那么如何能更高效地捕捉到应用的性能瓶颈点呢？</strong><br>我们可以通过部署agent或者其他方式，通过查询应用外部特征而获取的探针类（probing）数据（比如查看应用某端口是否有响应并返回正确的数据或状态码），相比于这些消息，我们可能还想知道一些内省的消息，比如更多的有关应用程序状态的上下文信息。这些上下文信息可以是应用对各类资源的占用信息，比如应用运行占用了多少内存空间，也可以是自定义的性能指标信息，比如单位时间处理的外部请求数量、应答延迟、队列积压量等。<br>这个时候，我们就需要 go 官方的另外一个包 <a href="https://pkg.go.dev/expvar">expvar</a></li>
-</ul>
-<blockquote>
-<p>Package expvar provides a standardized interface to public variables, such as operation counters in servers. It exposes these variables via HTTP at &#x2F;debug&#x2F;vars in JSON format.</p>
-</blockquote>
-<p>我们可以轻松地使用Go标准库提供的expvar包按统一接口、统一数据格式、一致的指标定义方法输出自定义的度量数据。在本篇博客中，我们就一起来看看如何使用expvar输出自定义的性能度量数据。  </p>
-<h1 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h1><p>我们首先来看一个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>然后我们访问一下<code>http://localhost:8080/debug/vars</code><br><img src="https://images.hxzhouh.com/blog-images/2024/03/a74e96c20015c0490c2668b06451c1b6.png" alt="Pasted image 20240314192240"><br>expvar 返回的是标准格式的JSON。<br>在默认返回的状态数据中包含了两个字段：cmdline和memstats。<br>这两个输出数据是expvar包在init函数中就已经发布（Publish）了的变量：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">src/expvar/expvar.<span class="keyword">go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">  http.HandleFunc(<span class="string">&quot;/debug/vars&quot;</span>, expvarHandler)  </span><br><span class="line">  Publish(<span class="string">&quot;cmdline&quot;</span>, Func(cmdline))  </span><br><span class="line">  Publish(<span class="string">&quot;memstats&quot;</span>, Func(memstats))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><strong><a href="https://pkg.go.dev/os#Args">cmdline</a></strong> 字段的含义是输出数据的应用名，这里因为是通过go run运行的应用，所以cmdline的值是一个临时路径下的应用。<br><strong><a href="https://pkg.go.dev/runtime#MemStats">memstats</a></strong> 输出的数据对应的是runtime.Memstats结构体，反映的是应用在运行期间堆内存分配、栈内存分配及GC的状态。runtime.Memstats结构体的字段可能会随着Go版本的演进而发生变化，其字段具体含义可以参考Memstats结构体中的注释。</p>
-<h1 id="通过expvar输出自定义度量数据"><a href="#通过expvar输出自定义度量数据" class="headerlink" title="通过expvar输出自定义度量数据"></a>通过expvar输出自定义度量数据</h1><p>同样，我们用一个例子说明 如何自定义度量数据。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">var</span> customVar = <span class="built_in">new</span>(expvar.Map).Init()  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    customVar.Set(<span class="string">&quot;hi_count&quot;</span>, <span class="built_in">new</span>(expvar.Int))  </span><br><span class="line">    expvar.Publish(<span class="string">&quot;custom&quot;</span>, customVar)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          customVar.Add(<span class="string">&quot;hi_count&quot;</span>, <span class="number">1</span>)  </span><br><span class="line">       &#125;()  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如以上示例所示，定义一个expvar.Map类型变量后，可以向该复合指标变量中添加指标，比如示例中的“hi_count”<br>然后重新运行例子。先调用两次 localhost:8080&#x2F;hi</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi</span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi                </span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl http://localhost:8080/debug/vars </span><br><span class="line">&#123;</span><br><span class="line">&quot;cmdline&quot;: [&quot;/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_expvar&quot;],</span><br><span class="line">&quot;custom&quot;: &#123;&quot;hi_count&quot;: 2&#125;,</span><br><span class="line">&quot;memstats&quot;:&quot;.....&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>expvar 输出了我们想要的结果。实际上expvar 可以输出任何我们想要的结果，这里就不展开描述。</p>
-<h1 id="输出数据的展示"><a href="#输出数据的展示" class="headerlink" title="输出数据的展示"></a>输出数据的展示</h1><p>通过&#x2F;debug&#x2F;vars服务端点，我们可以得到标准JSON格式的应用内部状态数据，数据采集出来后可根据不同开发者的需求进行转换和展示。JSON格式文本很容易反序列化，开发者可自行解析后使用，比如：编写一个Prometheus exporter，将数据导入Prometheus背后的存储（比如InfluxDB）中，并利用一些基于Web图形化的方式直观展示出来；或者导入Elasticsearch，再通过Kibana或Grafana的页面展示出来。<br>我们这里展示go开发者<a href="https://twitter.com/idanyliuk">Ivan Daniluk</a> 开发的 expvarmon， 首先安装它</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go get github.com/divan/expvarmon</span><br></pre></td></tr></table></figure>
-
-<p>然后查看数据</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">expvarmon -ports=&quot;8080&quot; -vars=&quot;custom.hi_count,mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs&quot;</span><br></pre></td></tr></table></figure>
-<p>结果很geek<br><img src="https://images.hxzhouh.com/blog-images/2024/03/07330c38becc77adad1a63bc7503bb7b.png" alt="Pasted image 20240314195301"></p>
-<p>expvar包不仅可用于辅助缩小定位性能瓶颈的范围，还可以用来输出度量数据以对应用的运行状态进行监控，这样当程序出现问题时，我们可以快速发现问题并利用输出的度量数据对程序进行诊断并快速定位问题</p>
-<h1 id="跟-pprof-的区别"><a href="#跟-pprof-的区别" class="headerlink" title="跟 pprof 的区别"></a>跟 pprof 的区别</h1><p><code>pprof</code> 是 Go 语言另一个内置的性能剖析工具，主要用于分析程序的 CPU 使用情况和内存占用情况。与 <code>expvar</code> 提供实时监控服务内部变量不同，<code>pprof</code> 更多地用于性能分析和优化。简而言之，<code>expvar</code> 能够帮助我们观察程序的”活动”数据，而 <code>pprof</code> 专注于程序的”性能”数据。<br><code>expvar</code> 以简单的方式公开应用程序的实时状态数据，如当前活跃连接数或已处理请求的计数器。其设计意图是长期运行以监控应用状态，对于想要快速了解应用健康状况的开发者而言，这是一个非常直接的工具。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>expvar 是一个很强大的工具，他可以帮助我们实现应用内情况的监控，并且很方便的跟其他监控平台对接，是每个gopher 都应该掌握的工具。</p>
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
-        <tag>go</tag>
-        <tag>监控</tag>
+        <tag>年度总结</tag>
       </tags>
   </entry>
   <entry>
@@ -329,53 +360,45 @@
       </tags>
   </entry>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+    <title>hash table 一个古老的经典数据结构</title>
+    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
+<span id="more"></span>
+<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
+<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
+<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
+<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
+<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
 <blockquote>
-<p>本文基于 go 1.14 </p>
+<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
 </blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
+<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
+<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
+<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
+<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
+<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
+<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
+<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
+<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
+<ol>
+<li>找到键相同的键值对 — 更新键对应的值；</li>
+<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
+</ol>
+<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
+<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
+<p><code>装载因子:=元素数量÷桶数量</code></p>
+<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
 ]]></content>
       <categories>
-        <category>Go</category>
+        <category>blog</category>
       </categories>
       <tags>
         <tag>go</tag>
-        <tag>底层</tag>
+        <tag>hash</tag>
       </tags>
   </entry>
   <entry>
@@ -419,69 +442,46 @@
       </tags>
   </entry>
   <entry>
-    <title>hash table 一个古老的经典数据结构</title>
-    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
-    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
+    <title>Go tool: expvar 自定义度量数据，辅助定位性能瓶颈点</title>
+    <url>/2024/03/15/Go%20tool%EF%BC%9Aexpvar%20%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%A6%E9%87%8F%E6%95%B0%E6%8D%AE%EF%BC%8C%E8%BE%85%E5%8A%A9%E5%AE%9A%E4%BD%8D%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E7%82%B9/</url>
+    <content><![CDATA[<p>介绍 go 内置工具包 expvar 的使用，能够帮我们实现什么功能，以及它跟pprof 的区别</p>
 <span id="more"></span>
-<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
-<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
-<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
-<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
-<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
+<p>#go #监控 #自定义<br>在开发过程中，要想对Go应用存在的性能瓶颈进行剖析，首先就要使用pprof 对不同类型的性能数据进行收集和采样。有两种收集和采样数据的方法。</p>
+<ul>
+<li>在微观层面，采用通过运行性能基准测试收集和采样数据的方法，这种方法适用于定位函数或方法实现中存在性能瓶颈点的情形；</li>
+<li>在宏观层面，采用独立程序收集和采样数据的方法。但通过独立程序进行性能数据采样时，往往很难快速捕捉到真正的瓶颈点，尤其是对于那些内部结构复杂、业务逻辑过多、内部有较多并发的Go程序。我们在对这样的程序进行性能采样时，真正的瓶颈点很可能被其他数据遮盖。<br><strong>那么如何能更高效地捕捉到应用的性能瓶颈点呢？</strong><br>我们可以通过部署agent或者其他方式，通过查询应用外部特征而获取的探针类（probing）数据（比如查看应用某端口是否有响应并返回正确的数据或状态码），相比于这些消息，我们可能还想知道一些内省的消息，比如更多的有关应用程序状态的上下文信息。这些上下文信息可以是应用对各类资源的占用信息，比如应用运行占用了多少内存空间，也可以是自定义的性能指标信息，比如单位时间处理的外部请求数量、应答延迟、队列积压量等。<br>这个时候，我们就需要 go 官方的另外一个包 <a href="https://pkg.go.dev/expvar">expvar</a></li>
+</ul>
 <blockquote>
-<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
+<p>Package expvar provides a standardized interface to public variables, such as operation counters in servers. It exposes these variables via HTTP at &#x2F;debug&#x2F;vars in JSON format.</p>
 </blockquote>
-<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
-<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
-<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
-<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
-<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
-<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
-<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
-<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
-<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
-<ol>
-<li>找到键相同的键值对 — 更新键对应的值；</li>
-<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
-</ol>
-<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
-<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
-<p><code>装载因子:=元素数量÷桶数量</code></p>
-<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
+<p>我们可以轻松地使用Go标准库提供的expvar包按统一接口、统一数据格式、一致的指标定义方法输出自定义的度量数据。在本篇博客中，我们就一起来看看如何使用expvar输出自定义的性能度量数据。  </p>
+<h1 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h1><p>我们首先来看一个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后我们访问一下<code>http://localhost:8080/debug/vars</code><br><img src="https://images.hxzhouh.com/blog-images/2024/03/a74e96c20015c0490c2668b06451c1b6.png" alt="Pasted image 20240314192240"><br>expvar 返回的是标准格式的JSON。<br>在默认返回的状态数据中包含了两个字段：cmdline和memstats。<br>这两个输出数据是expvar包在init函数中就已经发布（Publish）了的变量：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">src/expvar/expvar.<span class="keyword">go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">  http.HandleFunc(<span class="string">&quot;/debug/vars&quot;</span>, expvarHandler)  </span><br><span class="line">  Publish(<span class="string">&quot;cmdline&quot;</span>, Func(cmdline))  </span><br><span class="line">  Publish(<span class="string">&quot;memstats&quot;</span>, Func(memstats))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><a href="https://pkg.go.dev/os#Args">cmdline</a></strong> 字段的含义是输出数据的应用名，这里因为是通过go run运行的应用，所以cmdline的值是一个临时路径下的应用。<br><strong><a href="https://pkg.go.dev/runtime#MemStats">memstats</a></strong> 输出的数据对应的是runtime.Memstats结构体，反映的是应用在运行期间堆内存分配、栈内存分配及GC的状态。runtime.Memstats结构体的字段可能会随着Go版本的演进而发生变化，其字段具体含义可以参考Memstats结构体中的注释。</p>
+<h1 id="通过expvar输出自定义度量数据"><a href="#通过expvar输出自定义度量数据" class="headerlink" title="通过expvar输出自定义度量数据"></a>通过expvar输出自定义度量数据</h1><p>同样，我们用一个例子说明 如何自定义度量数据。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">var</span> customVar = <span class="built_in">new</span>(expvar.Map).Init()  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    customVar.Set(<span class="string">&quot;hi_count&quot;</span>, <span class="built_in">new</span>(expvar.Int))  </span><br><span class="line">    expvar.Publish(<span class="string">&quot;custom&quot;</span>, customVar)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          customVar.Add(<span class="string">&quot;hi_count&quot;</span>, <span class="number">1</span>)  </span><br><span class="line">       &#125;()  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如以上示例所示，定义一个expvar.Map类型变量后，可以向该复合指标变量中添加指标，比如示例中的“hi_count”<br>然后重新运行例子。先调用两次 localhost:8080&#x2F;hi</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi</span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi                </span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl http://localhost:8080/debug/vars </span><br><span class="line">&#123;</span><br><span class="line">&quot;cmdline&quot;: [&quot;/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_expvar&quot;],</span><br><span class="line">&quot;custom&quot;: &#123;&quot;hi_count&quot;: 2&#125;,</span><br><span class="line">&quot;memstats&quot;:&quot;.....&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>expvar 输出了我们想要的结果。实际上expvar 可以输出任何我们想要的结果，这里就不展开描述。</p>
+<h1 id="输出数据的展示"><a href="#输出数据的展示" class="headerlink" title="输出数据的展示"></a>输出数据的展示</h1><p>通过&#x2F;debug&#x2F;vars服务端点，我们可以得到标准JSON格式的应用内部状态数据，数据采集出来后可根据不同开发者的需求进行转换和展示。JSON格式文本很容易反序列化，开发者可自行解析后使用，比如：编写一个Prometheus exporter，将数据导入Prometheus背后的存储（比如InfluxDB）中，并利用一些基于Web图形化的方式直观展示出来；或者导入Elasticsearch，再通过Kibana或Grafana的页面展示出来。<br>我们这里展示go开发者<a href="https://twitter.com/idanyliuk">Ivan Daniluk</a> 开发的 expvarmon， 首先安装它</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go get github.com/divan/expvarmon</span><br></pre></td></tr></table></figure>
+
+<p>然后查看数据</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">expvarmon -ports=&quot;8080&quot; -vars=&quot;custom.hi_count,mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs&quot;</span><br></pre></td></tr></table></figure>
+<p>结果很geek<br><img src="https://images.hxzhouh.com/blog-images/2024/03/07330c38becc77adad1a63bc7503bb7b.png" alt="Pasted image 20240314195301"></p>
+<p>expvar包不仅可用于辅助缩小定位性能瓶颈的范围，还可以用来输出度量数据以对应用的运行状态进行监控，这样当程序出现问题时，我们可以快速发现问题并利用输出的度量数据对程序进行诊断并快速定位问题</p>
+<h1 id="跟-pprof-的区别"><a href="#跟-pprof-的区别" class="headerlink" title="跟 pprof 的区别"></a>跟 pprof 的区别</h1><p><code>pprof</code> 是 Go 语言另一个内置的性能剖析工具，主要用于分析程序的 CPU 使用情况和内存占用情况。与 <code>expvar</code> 提供实时监控服务内部变量不同，<code>pprof</code> 更多地用于性能分析和优化。简而言之，<code>expvar</code> 能够帮助我们观察程序的”活动”数据，而 <code>pprof</code> 专注于程序的”性能”数据。<br><code>expvar</code> 以简单的方式公开应用程序的实时状态数据，如当前活跃连接数或已处理请求的计数器。其设计意图是长期运行以监控应用状态，对于想要快速了解应用健康状况的开发者而言，这是一个非常直接的工具。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>expvar 是一个很强大的工具，他可以帮助我们实现应用内情况的监控，并且很方便的跟其他监控平台对接，是每个gopher 都应该掌握的工具。</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
         <tag>go</tag>
-        <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
-<span id="more"></span>
-
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>年度总结</tag>
+        <tag>监控</tag>
       </tags>
   </entry>
   <entry>
@@ -563,6 +563,31 @@
       </tags>
   </entry>
   <entry>
+    <title>medium能让你快速的赚到钱？ 不可能</title>
+    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
+    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
+<span id="more"></span>
+
+<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
+<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
+<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
+<p>下面我将这样做</p>
+<ol>
+<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
+<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
+<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
+<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>medium</tag>
+        <tag>副业</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Go 编程模式 05 修饰器（Decoration）</title>
     <url>/2024/03/04/Go%20%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F%2005%20%E4%BF%AE%E9%A5%B0%E5%99%A8%EF%BC%88Decoration%EF%BC%89/</url>
     <content><![CDATA[<p>Go 是一种静态类型的编译语言，它的设计目标是简洁、高效。虽然 Go 不是一种完全的面向对象语言，但是我们仍然可以使用一些设计模式来提高代码的可读性和可维护性。今天，我将介绍一种常见的设计模式：修饰器模式。</p>
@@ -601,6 +626,34 @@
         <tag>go</tag>
         <tag>编程模式</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>什么是medium 的 publication</title>
+    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
+<span id="more"></span>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
+<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
+<ul>
+<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
+<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
+<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
+</ul>
+<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
+<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
+<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
+<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
+<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
+<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
+<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
+<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
+</ol>
+]]></content>
   </entry>
   <entry>
     <title>medium 写作一个月的心得</title>
@@ -650,57 +703,6 @@
       </tags>
   </entry>
   <entry>
-    <title>为什么TCP断开的时候需要四次挥手</title>
-    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
-    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
-<span id="more"></span>
-<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br>![[Pasted image 20240201170632.png]]</p>
-<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
-<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
-<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
-<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
-<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
-<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>medium能让你快速的赚到钱？ 不可能</title>
-    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
-    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
-<span id="more"></span>
-
-<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
-<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
-<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
-<p>下面我将这样做</p>
-<ol>
-<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
-<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
-<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
-<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>medium</tag>
-        <tag>副业</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>在VPS上搭建vaultwarden</title>
     <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
     <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
@@ -738,6 +740,108 @@
         <tag>反向代理</tag>
         <tag>密码托管</tag>
         <tag>docker</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>为什么TCP断开的时候需要四次挥手</title>
+    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
+    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
+<span id="more"></span>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br>![[Pasted image 20240201170632.png]]</p>
+<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
+<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
+<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
+<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
+<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
+<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>为什么TCP连接时需要3次握手</title>
+    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E8%BF%9E%E6%8E%A5%E6%97%B6%E9%9C%80%E8%A6%813%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
+    <content><![CDATA[<p>TCP 协议是我们几乎每天都会接触到的网络协议，绝大多数网络连接的建立都是基于 TCP 协议的，学过计算机网络或者对 TCP 协议稍有了解的人都知道 —— 使用 TCP 协议建立连接需要经过三次握手（three-way handshake）。</p>
+<p>如果让我们简单说说 TCP 建立连接的过程，相信很多准备过面试的人都会非常了解，但是一旦想要深究『为什么 TCP 建立连接需要三次握手？』，作者相信大多数人都没有办法回答这个问题或者会给出错误的答案，这边文章就会讨论究竟为什么我们需要三次握手才能建立 TCP 连接？而不是四次、或者两次？</p>
+<span id="more"></span>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在具体分析今天的问题之前，我们首先可以了解一下最常见的错误类比，这个对 TCP 连接过程的错误比喻误导了很多人，作者在比较长的一段时间内也认为它能够很好地描述 TCP 建立连接为什么需要三次握手：</p>
+<ol>
+<li>你听得到吗？</li>
+<li>我能听到，你听得到？</li>
+<li>我也能听到；<br>这种用类比来解释问题往往就会面临『十个类比九个错』的尴尬局面，如果别人用类比回答你的为什么，你需要仔细想一想它的类比里究竟哪里有漏洞；类比带来的解释往往只能有片面的相似性，我们永远也无法找到绝对正确的类比，它只在我们想要通俗易懂地展示事物的特性时才能发挥较大的作用，我们在文章的后面会介绍为什么这里的类比有问题，各位读者也可以带着疑问来阅读剩下的内容。</li>
+</ol>
+<p>很多人尝试回答或者思考这个问题的时候其实关注点都放在了三次握手中的<strong>三次</strong>上面，这确实很重要，但是如果重新审视这个问题，我们对于『什么是连接』真的清楚？只有知道<strong>连接的定义</strong>，我们才能去尝试回答为什么 TCP 建立连接需要三次握手。</p>
+<blockquote>
+<p>The reliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection.</p>
+</blockquote>
+<p><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol</a> 文档中非常清楚地定义了 TCP 中的连接是什么，我们简单总结一下：<strong>用于保证可靠性和流控制机制的信息，包括 Socket、序列号以及窗口大小叫做连接</strong>。</p>
+<p>所以，建立 TCP 连接就是通信的双方需要对上述的三种信息达成共识，连接中的一对 Socket 是由互联网地址标志符和端口组成的，窗口大小主要用来做流控制，最后的序列号是用来追踪通信发起方发送的数据包序号，接收方可以通过序列号向发送方确认某个数据包的成功接收。</p>
+<p>到这里，我们将原有的问题转换成了『为什么需要通过三次握手才可以初始化 Sockets、窗口大小和初始序列号？』，那么接下来我们就开始对这个细化的问题进行分析并寻找解释。</p>
+<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>这篇文章主要会从以下几个方面介绍为什么我们需要通过三次握手才可以初始化 Sockets、窗口大小、初始序列号并建立 TCP 连接：</p>
+<ul>
+<li>通过三次握手才能阻止重复历史连接的初始化；</li>
+<li>通过三次握手才能对通信双方的初始序列号进行初始化；</li>
+<li>讨论其他次数握手建立连接的可能性；<br>这几个论点中的第一个是 TCP 选择使用三次握手的最主要原因，其他的几个原因相比之下都是次要的原因，我们在这里对它们的讨论只是为了让整个视角更加丰富，通过多方面理解这一有趣的设计决策。</li>
+</ul>
+<h3 id="历史连接"><a href="#历史连接" class="headerlink" title="历史连接"></a>历史连接</h3><p><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol</a> 其实就指出了 TCP 连接使用三次握手的首要原因 —— 为了阻止历史的重复连接初始化造成的混乱问题，防止使用 TCP 协议通信的双方建立了错误的连接。</p>
+<blockquote>
+<p>The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion.</p>
+</blockquote>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/25f77d0eeb97056245cda65f64a9883b.png" alt="Pasted image 20240130105811"></p>
+<p>想象一下这个场景，如果通信双方的通信次数只有两次，那么发送方一旦发出建立连接的请求之后它就没有办法撤回这一次请求，如果在网络状况复杂或者较差的网络中，发送方连续发送多次建立连接的请求，如果 TCP 建立连接只能通信两次，那么接收方只能选择接受或者拒绝发送方发起的请求，它并不清楚这一次请求是不是由于网络拥堵而早早过期的连接。</p>
+<p>所以，TCP 选择使用三次握手来建立连接并在连接引入了 <code>RST</code> 这一控制消息，接收方当收到请求时会将发送方发来的 <code>SEQ+1</code> 发送给对方，这时由发送方来判断当前连接是否是历史连接：</p>
+<ul>
+<li>如果当前连接是历史连接，即 <code>SEQ</code> 过期或者超时，那么发送方就会直接发送 <code>RST</code> 控制消息中止这一次连接；</li>
+<li>如果当前连接不是历史连接，那么发送方就会发送 <code>ACK</code> 控制消息，通信双方就会成功建立连接；</li>
+</ul>
+<p>使用三次握手和 <code>RST</code> 控制消息将是否建立连接的最终控制权交给了发送方，因为只有发送方有足够的上下文来判断当前连接是否是错误的或者过期的，这也是 TCP 使用三次握手建立连接的最主要原因。</p>
+<h3 id="初始序列号"><a href="#初始序列号" class="headerlink" title="初始序列号"></a>初始序列号</h3><p>另一个使用三次握手的重要的原因就是通信双方都需要获得一个用于发送信息的初始化序列号，作为一个可靠的传输层协议，TCP 需要在不稳定的网络环境中构建一个可靠的传输层，网络的不确定性可能会导致数据包的缺失和顺序颠倒等问题，常见的问题可能包括：</p>
+<ul>
+<li>数据包被发送方多次发送造成数据的重复；</li>
+<li>数据包在传输的过程中被路由或者其他节点丢失；</li>
+<li>数据包到达接收方可能无法按照发送顺序；</li>
+</ul>
+<p>为了解决上述这些可能存在的问题，TCP 协议要求发送方在数据包中加入『序列号』字段，有了数据包对应的序列号，我们就可以：</p>
+<ul>
+<li>接收方可以通过序列号对重复的数据包进行去重；</li>
+<li>发送方会在对应数据包未被 ACK 时进行重复发送；</li>
+<li>接收方可以根据数据包的序列号对它们进行重新排序；</li>
+</ul>
+<p>序列号在 TCP 连接中有着非常重要的作用，初始序列号作为 TCP 连接的一部分也需要在三次握手期间进行初始化，由于 TCP 连接通信的双方都需要获得初始序列号，所以它们其实需要向对方发送 <code>SYN</code> 控制消息并携带自己期望的初始化序列号 <code>SEQ</code>，对方在收到 <code>SYN</code> 消息之后会通过 <code>ACK</code> 控制消息以及 <code>SEQ+1</code> 来进行确认。</p>
+<p>如上图所示，通信双方的两个 <code>TCP A/B</code> 分别向对方发送 <code>SYN</code> 和 <code>ACK</code> 控制消息，等待通信双方都获取到了自己期望的初始化序列号之后就可以开始通信了，由于 TCP 消息头的设计，我们可以将中间的两次通信合成一个，<code>TCP B</code> 可以向 <code>TCP A</code> 同时发送 <code>ACK</code> 和 <code>SYN</code> 控制消息，这也就帮助我们将四次通信减少至三次。</p>
+<blockquote>
+<p>A three way handshake is necessary because sequence numbers are not tied to a global clock in the network, and TCPs may have different mechanisms for picking the ISN’s. The receiver of the first SYN has no way of knowing whether the segment was an old delayed one or not, unless it remembers the last sequence number used on the connection (which is not always possible), and so it must ask the sender to verify this SYN. The three way handshake and the advantages of a clock-driven scheme are discussed in [3].</p>
+</blockquote>
+<p>除此之外，网络作为一个分布式的系统，其中并不存在一个用于计数的全局时钟，而 TCP 可以通过不同的机制来初始化序列号，作为 TCP 连接的接收方我们无法判断对方传来的初始化序列号是否过期，所以我们需要交由对方来判断，TCP 连接的发起方可以通过保存发出的序列号判断连接是否过期，如果让接收方来保存并判断序列号却是不现实的，这也再一次强化了我们在上一节中提出的观点 —— 避免历史错连接的初始化。</p>
+<h3 id="通信次数"><a href="#通信次数" class="headerlink" title="通信次数"></a>通信次数</h3><p>当我们讨论 TCP 建立连接需要的通信次数时，我们经常会执着于为什么通信三次才可以建立连接，而不是两次或者四次；讨论使用更多的通信次数来建立连接往往是没有意义的，因为我们总可以<strong>使用更多的通信次数交换相同的信息</strong>，所以使用四次、五次或者更多次数建立连接在技术上都是完全可以实现的。<br>这种增加 TCP 连接通信次数的问题往往没有讨论的必要性，我们追求的其实是用更少的通信次数（理论上的边界）完成信息的交换，也就是为什么我们在上两节中也一再强调使用『两次握手』没有办法建立 TCP 连接，使用三次握手是建立连接所需要的最小次数。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我们在这篇文章中讨论了为什么 TCP 建立连接需要经过三次握手，在具体分析这个问题之前，我们首先重新思考了 TCP 连接究竟是什么，<a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a> 对 TCP 连接有着非常清楚的定义 —— 用于保证可靠性和流控制机制的数据，包括 Socket、序列号以及窗口大小。</p>
+<p>TCP 建立连接时通过三次握手可以有效地避免历史错误连接的建立，减少通信双方不必要的资源消耗，三次握手能够帮助通信双方获取初始化序列号，它们能够保证数据包传输的不重不丢，还能保证它们的传输顺序，不会因为网络传输的问题发生混乱，到这里不使用『两次握手』和『四次握手』的原因已经非常清楚了：</p>
+<ul>
+<li>『两次握手』：无法避免历史错误连接的初始化，浪费接收方的资源；</li>
+<li>『四次握手』：TCP 协议的设计可以让我们同时传递 <code>ACK</code> 和 <code>SYN</code> 两个控制信息，减少了通信次数，所以不需要使用更多的通信次数传输相同的信息；</li>
+</ul>
+<p>我们重新回到在文章开头提的问题，为什么使用类比解释 TCP 使用三次握手是错误的？这主要还是因为，这个类比没有解释清楚核心问题 —— 避免历史上的重复连接。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24068/why-do-we-need-a-3-way-handshake-why-not-just-2-way">Why do we need a 3-way handshake? Why not just 2-way?</a></li>
+<li><a href="https://www.geeksforgeeks.org/tcp-3-way-handshake-process/"># TCP 3-Way Handshake Process</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
       </tags>
   </entry>
   <entry>
@@ -983,6 +1087,45 @@
       </tags>
   </entry>
   <entry>
+    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
+    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
+    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
+<span id="more"></span>
+
+<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
+<li><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</li>
+<li><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></li>
+<li>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</li>
+<li>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</li>
+<li>cloudflare 一个免费的cdn服务，我们用来解析域名。</li>
+</ul>
+<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
+<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
+<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
+<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
+<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+别忘记 重新加载nginx 配置文件  </li>
+<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
+</ol>
+<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
+<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
+<hr>
+<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>github</tag>
+        <tag>copilot</tag>
+        <tag>chatgpt-4</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</title>
     <url>/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/</url>
     <content><![CDATA[<p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
@@ -1044,34 +1187,6 @@
       </tags>
   </entry>
   <entry>
-    <title>什么是medium 的 publication</title>
-    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
-<span id="more"></span>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
-<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
-<ul>
-<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
-<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
-<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
-</ul>
-<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
-<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
-<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
-<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
-<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
-<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
-<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
-<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
-</ol>
-]]></content>
-  </entry>
-  <entry>
     <title>深度优先算法与广度优先算法</title>
     <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
     <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
@@ -1112,103 +1227,6 @@
         <tag>DFS</tag>
         <tag>BFS</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>聊聊Redis  链表</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8ARedis%20%20%E9%93%BE%E8%A1%A8/</url>
-    <content><![CDATA[<p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。</p>
-<p>链表在 Redis 中的应用非常广泛， 比如列表键的底层实现之一就是链表： 当一个列表键包含了数量比较多的元素， 又或者列表中包含的元素都是比较长的字符串时， Redis 就会使用链表作为列表键的底层实现。</p>
-<span id="more"></span>
-
-<p>由于C语言自身没有链表的实现，redis 自定定义了一套链表的实现</p>
-<h1 id="链表的定义"><a href="#链表的定义" class="headerlink" title="链表的定义"></a>链表的定义</h1><p>每个链表节点使用一个 <code>adlist.h/listNode</code> 结构来表示：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 前置节点</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 后置节点</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点的值</span></span><br><span class="line">    <span class="type">void</span> *value;</span><br><span class="line"></span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure>
-
-<p>多个 <code>listNode</code> 可以通过 <code>prev</code> 和 <code>next</code> 指针组成双端链表</p>
-<img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200316215937.png" alt="链表" style="zoom:200%;" />
-
-<p>redis 还有一个数据结构来简化链表的操作</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ypedef <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 表头节点</span></span><br><span class="line">    listNode *head;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 表尾节点</span></span><br><span class="line">    listNode *tail;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 链表所包含的节点数量</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> len;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值复制函数</span></span><br><span class="line">    <span class="type">void</span> *(*dup)(<span class="type">void</span> *ptr);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值释放函数</span></span><br><span class="line">    <span class="type">void</span> (*<span class="built_in">free</span>)(<span class="type">void</span> *ptr);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值对比函数</span></span><br><span class="line">    <span class="type">int</span> (*match)(<span class="type">void</span> *ptr, <span class="type">void</span> *key);</span><br><span class="line"></span><br><span class="line">&#125; <span class="built_in">list</span>;</span><br></pre></td></tr></table></figure>
-
-<p><code>list</code> 结构为链表提供了表头指针 <code>head</code> 、表尾指针 <code>tail</code> ， 以及链表长度计数器 <code>len</code> ， 而 <code>dup</code> 、 <code>free</code> 和 <code>match</code> 成员则是用于实现多态链表所需的类型特定函数：</p>
-<ul>
-<li><code>dup</code> 函数用于复制链表节点所保存的值；</li>
-<li><code>free</code> 函数用于释放链表节点所保存的值；</li>
-<li><code>match</code> 函数则用于对比链表节点所保存的值和另一个输入值是否相等。</li>
-</ul>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200316220205.png"></p>
-<p>Redis 的链表实现的特性可以总结如下：</p>
-<ul>
-<li>双端： 链表节点带有 <code>prev</code> 和 <code>next</code> 指针， 获取某个节点的前置节点和后置节点的复杂度都是 O(1) 。</li>
-<li>无环： 表头节点的 <code>prev</code> 指针和表尾节点的 <code>next</code> 指针都指向 <code>NULL</code> ， 对链表的访问以 <code>NULL</code> 为终点。</li>
-<li>带表头指针和表尾指针： 通过 <code>list</code> 结构的 <code>head</code> 指针和 <code>tail</code> 指针， 程序获取链表的表头节点和表尾节点的复杂度为 O(1) 。</li>
-<li>带链表长度计数器： 程序使用 <code>list</code> 结构的 <code>len</code> 属性来对 <code>list</code> 持有的链表节点进行计数， 程序获取链表中节点数量的复杂度为 O(1) 。</li>
-<li>多态： 链表节点使用 <code>void*</code> 指针来保存节点值， 并且可以通过 <code>list</code> 结构的 <code>dup</code> 、 <code>free</code> 、 <code>match</code> 三个属性为节点值设置类型特定函数， 所以链表可以用于保存各种不同类型的值。</li>
-</ul>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
-<li>链表被广泛用于实现 Redis 的各种功能， 比如列表键， 发布与订阅， 慢查询， 监视器， 等等。</li>
-<li>每个链表节点由一个 <code>listNode</code> 结构来表示， 每个节点都有一个指向前置节点和后置节点的指针， 所以 Redis 的链表实现是双端链表。</li>
-<li>每个链表使用一个 <code>list</code> 结构来表示， 这个结构带有表头节点指针、表尾节点指针、以及链表长度等信息。</li>
-<li>因为链表表头节点的前置节点和表尾节点的后置节点都指向 <code>NULL</code> ， 所以 Redis 的链表实现是无环链表。</li>
-<li>通过为链表设置不同的类型特定函数（指针）， Redis 的链表可以用于保存各种不同类型的值。</li>
-</ul>
-<p>参考文档：</p>
-<ol>
-<li>《<a href="http://redisbook.com/preview/adlist/implementation.html">redis 设计与实现</a>》</li>
-</ol>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>聊聊redis sds</title>
-    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
-    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
-<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
-<span id="more"></span>
-
-<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
-<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
-<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
-<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
-<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
-<ol>
-<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
-<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
-</ol>
-<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
-<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
-<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
-<ol>
-<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
-<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
-</ol>
-<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
-<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
-<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
-<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
-<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
-]]></content>
-      <categories>
-        <category>redis</category>
-      </categories>
-      <tags>
-        <tag>redis</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title></title>
-    <url>/2024/02/02/%E5%85%B3%E9%97%ADTCP%E8%BF%9E%E6%8E%A5%E7%9C%9F%E7%9A%84%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E5%98%9B%EF%BC%9F/</url>
-    <content><![CDATA[<p>你们好，我是hxzhouh</p>
-<p>![[Pasted image 20240202224130.png]]</p>
-]]></content>
   </entry>
   <entry>
     <title>如何用汇编分析Go代码</title>
@@ -1431,6 +1449,103 @@
       </tags>
   </entry>
   <entry>
+    <title>聊聊Redis  链表</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8ARedis%20%20%E9%93%BE%E8%A1%A8/</url>
+    <content><![CDATA[<p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。</p>
+<p>链表在 Redis 中的应用非常广泛， 比如列表键的底层实现之一就是链表： 当一个列表键包含了数量比较多的元素， 又或者列表中包含的元素都是比较长的字符串时， Redis 就会使用链表作为列表键的底层实现。</p>
+<span id="more"></span>
+
+<p>由于C语言自身没有链表的实现，redis 自定定义了一套链表的实现</p>
+<h1 id="链表的定义"><a href="#链表的定义" class="headerlink" title="链表的定义"></a>链表的定义</h1><p>每个链表节点使用一个 <code>adlist.h/listNode</code> 结构来表示：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 前置节点</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">prev</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 后置节点</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">listNode</span> *<span class="title">next</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点的值</span></span><br><span class="line">    <span class="type">void</span> *value;</span><br><span class="line"></span><br><span class="line">&#125; listNode;</span><br></pre></td></tr></table></figure>
+
+<p>多个 <code>listNode</code> 可以通过 <code>prev</code> 和 <code>next</code> 指针组成双端链表</p>
+<img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200316215937.png" alt="链表" style="zoom:200%;" />
+
+<p>redis 还有一个数据结构来简化链表的操作</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ypedef <span class="class"><span class="keyword">struct</span> <span class="title">list</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 表头节点</span></span><br><span class="line">    listNode *head;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 表尾节点</span></span><br><span class="line">    listNode *tail;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 链表所包含的节点数量</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> len;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值复制函数</span></span><br><span class="line">    <span class="type">void</span> *(*dup)(<span class="type">void</span> *ptr);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值释放函数</span></span><br><span class="line">    <span class="type">void</span> (*<span class="built_in">free</span>)(<span class="type">void</span> *ptr);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点值对比函数</span></span><br><span class="line">    <span class="type">int</span> (*match)(<span class="type">void</span> *ptr, <span class="type">void</span> *key);</span><br><span class="line"></span><br><span class="line">&#125; <span class="built_in">list</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>list</code> 结构为链表提供了表头指针 <code>head</code> 、表尾指针 <code>tail</code> ， 以及链表长度计数器 <code>len</code> ， 而 <code>dup</code> 、 <code>free</code> 和 <code>match</code> 成员则是用于实现多态链表所需的类型特定函数：</p>
+<ul>
+<li><code>dup</code> 函数用于复制链表节点所保存的值；</li>
+<li><code>free</code> 函数用于释放链表节点所保存的值；</li>
+<li><code>match</code> 函数则用于对比链表节点所保存的值和另一个输入值是否相等。</li>
+</ul>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200316220205.png"></p>
+<p>Redis 的链表实现的特性可以总结如下：</p>
+<ul>
+<li>双端： 链表节点带有 <code>prev</code> 和 <code>next</code> 指针， 获取某个节点的前置节点和后置节点的复杂度都是 O(1) 。</li>
+<li>无环： 表头节点的 <code>prev</code> 指针和表尾节点的 <code>next</code> 指针都指向 <code>NULL</code> ， 对链表的访问以 <code>NULL</code> 为终点。</li>
+<li>带表头指针和表尾指针： 通过 <code>list</code> 结构的 <code>head</code> 指针和 <code>tail</code> 指针， 程序获取链表的表头节点和表尾节点的复杂度为 O(1) 。</li>
+<li>带链表长度计数器： 程序使用 <code>list</code> 结构的 <code>len</code> 属性来对 <code>list</code> 持有的链表节点进行计数， 程序获取链表中节点数量的复杂度为 O(1) 。</li>
+<li>多态： 链表节点使用 <code>void*</code> 指针来保存节点值， 并且可以通过 <code>list</code> 结构的 <code>dup</code> 、 <code>free</code> 、 <code>match</code> 三个属性为节点值设置类型特定函数， 所以链表可以用于保存各种不同类型的值。</li>
+</ul>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>链表被广泛用于实现 Redis 的各种功能， 比如列表键， 发布与订阅， 慢查询， 监视器， 等等。</li>
+<li>每个链表节点由一个 <code>listNode</code> 结构来表示， 每个节点都有一个指向前置节点和后置节点的指针， 所以 Redis 的链表实现是双端链表。</li>
+<li>每个链表使用一个 <code>list</code> 结构来表示， 这个结构带有表头节点指针、表尾节点指针、以及链表长度等信息。</li>
+<li>因为链表表头节点的前置节点和表尾节点的后置节点都指向 <code>NULL</code> ， 所以 Redis 的链表实现是无环链表。</li>
+<li>通过为链表设置不同的类型特定函数（指针）， Redis 的链表可以用于保存各种不同类型的值。</li>
+</ul>
+<p>参考文档：</p>
+<ol>
+<li>《<a href="http://redisbook.com/preview/adlist/implementation.html">redis 设计与实现</a>》</li>
+</ol>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>聊聊redis sds</title>
+    <url>/2022/09/30/%E8%81%8A%E8%81%8Aredis%20sds/</url>
+    <content><![CDATA[<p>SDS全拼为：<code>simple dynamic string</code>，解释为：简单动态字符串</p>
+<p>​    C语言字符串使用长度为n+1的字符数组来表示长度为n的字符串，并且字符数组的最后一个元素总是空字符’\0’，因为这种字符串表示方式不能满足Redis对字符串在安全性、效率以及功能方面的要求，所以Redis自己构建了SDS，用于满足其需求。在Redis里，C语言字符串只用于一些无须对字符串值进行修改的地方，比如：日志。在Redis中，包含字符串值的键值对都是使用SDS实现的，除此之外，SDS还被用于AOF缓冲区、客户端状态的输入缓冲区。</p>
+<span id="more"></span>
+
+<h1 id="SDS定义"><a href="#SDS定义" class="headerlink" title="SDS定义"></a>SDS定义</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">struct sdshdr&#123;</span><br><span class="line">     //字节数组</span><br><span class="line">     char buf[]; </span><br><span class="line">     //buf数组中已使用字节数量</span><br><span class="line">     int len;</span><br><span class="line">     //buf数组中未使用字节数量</span><br><span class="line">     int free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213825.png"></p>
+<p>​    上图展示了一个SDS实例，len表示该SDS保存了一个5字节长度（不包含结束符）的字符串，free表示该SDS还有5个字节的未使用空间，buf是一个char类型的数组，保存了该SDS所存储的字符串值</p>
+<h1 id="为什么使用SDS"><a href="#为什么使用SDS" class="headerlink" title="为什么使用SDS"></a><strong>为什么使用SDS</strong></h1><h2 id="1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1"><a href="#1-相比C语言字符串，使获取字符串长度时间复杂度降为O-1" class="headerlink" title="1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)"></a><strong>1. 相比C语言字符串，使获取字符串长度时间复杂度降为O(1)</strong></h2><p>​    C语言字符串不记录自身长度，如果想获取自身长度必须遍历整个字符串，对每个字符进行计数，这个操作时间复杂度是O(n)。相比较而言，Redis程序只要访问SDS的len属性就可以直接获取到字符串长度，时间复杂度为O(1)，确保获取字符串长度不会成为Redis性能瓶颈，比如对字符串键反复执行strlen命令。如：获取“Redis”字符串长度时程序会直接访问len属性即可，该字符串长度为5。</p>
+<h2 id="2-杜绝缓冲区溢出"><a href="#2-杜绝缓冲区溢出" class="headerlink" title="2. 杜绝缓冲区溢出"></a><strong>2. 杜绝缓冲区溢出</strong></h2><p>​    假设程序里有两个在内存中紧邻的字符串s1和s2，s1的值为Redis，底层数组的值为[‘R’,’e’,’d’,’i’,’s’,’\0’]，s2的值为Memcache，底层数组的值为[‘M’,’e’,’m’,’c’,’a’,’c’,’h’,’e’,’\0’]，在C语言中如果要执行strcat(s1, “ cluster”)把s1修改为Redis cluster，如果忘记在执行strcat命令之前为s1重新分配空间，那么在执行完strcat命令之后，s1底层数组的值变为[‘R’,’e’,’d’,’i’,’s’,’ ‘,’c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’]，s2底层数组的值变为[‘c’,’l’,’u’,’s’,’t’,’e’,’r’,’\0’,’\0’]，s1的数据溢出到s2所在的内存空间，s2的值被意外修改。与C语言不同，当SDS API需要对SDS进行修改时，API会先检查SDS当前剩余空间是否满足修改之后所需的空间，如果不满足的话API会自动将SDS的空间扩展至修改之后所需空间大小，然后再执行实际的修改操作，所以SDS不会出现缓冲区溢出问题。（缓冲区扩充并非是直接扩充到所需要的空间大小，它和SDS空间分配策略有关，参见下一小节）</p>
+<h2 id="3-减少修改字符串时带来的内存重分配次数"><a href="#3-减少修改字符串时带来的内存重分配次数" class="headerlink" title="3. 减少修改字符串时带来的内存重分配次数"></a><strong>3. 减少修改字符串时带来的内存重分配次数</strong></h2><p>​    C语言字符串底层是使用一个n+1个字符长度的char类型数据实现的，所以每次增长或缩短一个C语言字符串，程序都要对这个字符串数组进行一次内存重分配操作：</p>
+<ol>
+<li>如果程序执行的是增长字符串操作，比如strcat操作，在执行这个操作之前需要通过内存重分配扩展底层数组，如果忘记了则会造成缓冲区溢出。</li>
+<li>如果程序执行的是缩短字符串操作，比如trim操作，在执行这个操作之前需要通过内存重分配释放字符串不再使用的内存空间，如果忘记了则会造成内存泄漏。</li>
+</ol>
+<p>​            因为内存重分配涉及复杂的算法，并且可能需要执行系统调用，所以它通常是一个比较耗时的操作。Redis经常被用于速度要求严苛、数据被频繁修改的场合，如果每次修改字符串都需要执行一次内存重分配的话，那么对于性能会造成很大影响。</p>
+<p>​            在SDS中通过未使用空间解除了字符串长度和底层数组长度之间的关联，在SDS中，buf数组长度不一定是字符串长度加1，数组中可能包含未使用的字节，这些字节的数量就是由SDS的free属性记录。通过未使用空间，SDS实现了空间预分配和惰性空间释放两种优化策略。</p>
+<h3 id="3-1-空间预分配"><a href="#3-1-空间预分配" class="headerlink" title="3.1 空间预分配"></a><strong>3.1 空间预分配</strong></h3><p>​    用于字符串增长操作，当字符串增长时，程序会先检查需不需要对SDS空间进行扩展，如果需要扩展，程序不仅会为SDS分配修改所必要的空间，还会为SDS分配额外的未使用空间，额外分配的未使用空间公式如下：</p>
+<ol>
+<li>如果对SDS修改之后，SDS的长度（修改之后len属性的值）小于1MB，那么则分配和len属性同样大小的未使用空间，这时SDS的len属性和free属性的值相同。如：如果修改之后SDS的len将变为10字节，那么程序也会分配10字节的未使用空间，SDS的buf数组实际长度变为10 + 10 + 1 &#x3D; 21（额外一个字节用于保存结束符\n）</li>
+<li>如果对SDS修改之后，SDS的长度大于等于1MB，那么程序会分配1MB的未使用空间。如：修改之后的len将变为10MB，那么程序会分配1MB的未使用空间，SDS的bug数组长度为10MB + 1MB + 1byte</li>
+</ol>
+<h3 id="3-2-惰性空间释放"><a href="#3-2-惰性空间释放" class="headerlink" title="3.2 惰性空间释放"></a><strong>3.2 惰性空间释放</strong></h3><p>​    用于优化SDS的字符串收缩操作，当字符串收缩时，程序不会立即执行内存重分配来回收收缩后内存多出来的空间，而是使用free属性记录下来，以备将来使用。</p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213934.png"></p>
+<p><img src="/../../../%E6%88%91%E7%9A%84%E5%9D%9A%E6%9E%9C%E4%BA%91/Typro%20%E6%96%87%E6%A1%A3%E5%BA%93/%E5%9B%BE%E7%89%87/20200313213920.png"></p>
+<p>​    通过空间预分配，Redis可以减少连续执行字符串增长操作所需的内存重分配次数，通过惰性空间释放，SDS避免了缩短字符串时所需的内存重分配操作，并为将来由可能的增长操作提供了优化。</p>
+<h3 id="3-3-二进制安全"><a href="#3-3-二进制安全" class="headerlink" title="3.3 二进制安全"></a>3.3 二进制安全</h3><p>C语言的字符串不能使用\0结尾，导致C语言字符串不能保存 图片等二进制数据。</p>
+<p>redis 使用字符数组来保存字符串，不会对数据做任何限制、过滤、假设，使得redis兼容性更强。</p>
+]]></content>
+      <categories>
+        <category>redis</category>
+      </categories>
+      <tags>
+        <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2024/02/02/%E5%85%B3%E9%97%ADTCP%E8%BF%9E%E6%8E%A5%E7%9C%9F%E7%9A%84%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E5%98%9B%EF%BC%9F/</url>
+    <content><![CDATA[<p>你们好，我是hxzhouh</p>
+<p>![[Pasted image 20240202224130.png]]</p>
+]]></content>
+  </entry>
+  <entry>
     <title>玩转memos</title>
     <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
     <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
@@ -1453,121 +1568,6 @@
       </categories>
       <tags>
         <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>为什么TCP连接时需要3次握手</title>
-    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E8%BF%9E%E6%8E%A5%E6%97%B6%E9%9C%80%E8%A6%813%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
-    <content><![CDATA[<p>TCP 协议是我们几乎每天都会接触到的网络协议，绝大多数网络连接的建立都是基于 TCP 协议的，学过计算机网络或者对 TCP 协议稍有了解的人都知道 —— 使用 TCP 协议建立连接需要经过三次握手（three-way handshake）。</p>
-<p>如果让我们简单说说 TCP 建立连接的过程，相信很多准备过面试的人都会非常了解，但是一旦想要深究『为什么 TCP 建立连接需要三次握手？』，作者相信大多数人都没有办法回答这个问题或者会给出错误的答案，这边文章就会讨论究竟为什么我们需要三次握手才能建立 TCP 连接？而不是四次、或者两次？</p>
-<span id="more"></span>
-<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在具体分析今天的问题之前，我们首先可以了解一下最常见的错误类比，这个对 TCP 连接过程的错误比喻误导了很多人，作者在比较长的一段时间内也认为它能够很好地描述 TCP 建立连接为什么需要三次握手：</p>
-<ol>
-<li>你听得到吗？</li>
-<li>我能听到，你听得到？</li>
-<li>我也能听到；<br>这种用类比来解释问题往往就会面临『十个类比九个错』的尴尬局面，如果别人用类比回答你的为什么，你需要仔细想一想它的类比里究竟哪里有漏洞；类比带来的解释往往只能有片面的相似性，我们永远也无法找到绝对正确的类比，它只在我们想要通俗易懂地展示事物的特性时才能发挥较大的作用，我们在文章的后面会介绍为什么这里的类比有问题，各位读者也可以带着疑问来阅读剩下的内容。</li>
-</ol>
-<p>很多人尝试回答或者思考这个问题的时候其实关注点都放在了三次握手中的<strong>三次</strong>上面，这确实很重要，但是如果重新审视这个问题，我们对于『什么是连接』真的清楚？只有知道<strong>连接的定义</strong>，我们才能去尝试回答为什么 TCP 建立连接需要三次握手。</p>
-<blockquote>
-<p>The reliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection.</p>
-</blockquote>
-<p><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol</a> 文档中非常清楚地定义了 TCP 中的连接是什么，我们简单总结一下：<strong>用于保证可靠性和流控制机制的信息，包括 Socket、序列号以及窗口大小叫做连接</strong>。</p>
-<p>所以，建立 TCP 连接就是通信的双方需要对上述的三种信息达成共识，连接中的一对 Socket 是由互联网地址标志符和端口组成的，窗口大小主要用来做流控制，最后的序列号是用来追踪通信发起方发送的数据包序号，接收方可以通过序列号向发送方确认某个数据包的成功接收。</p>
-<p>到这里，我们将原有的问题转换成了『为什么需要通过三次握手才可以初始化 Sockets、窗口大小和初始序列号？』，那么接下来我们就开始对这个细化的问题进行分析并寻找解释。</p>
-<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>这篇文章主要会从以下几个方面介绍为什么我们需要通过三次握手才可以初始化 Sockets、窗口大小、初始序列号并建立 TCP 连接：</p>
-<ul>
-<li>通过三次握手才能阻止重复历史连接的初始化；</li>
-<li>通过三次握手才能对通信双方的初始序列号进行初始化；</li>
-<li>讨论其他次数握手建立连接的可能性；<br>这几个论点中的第一个是 TCP 选择使用三次握手的最主要原因，其他的几个原因相比之下都是次要的原因，我们在这里对它们的讨论只是为了让整个视角更加丰富，通过多方面理解这一有趣的设计决策。</li>
-</ul>
-<h3 id="历史连接"><a href="#历史连接" class="headerlink" title="历史连接"></a>历史连接</h3><p><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol</a> 其实就指出了 TCP 连接使用三次握手的首要原因 —— 为了阻止历史的重复连接初始化造成的混乱问题，防止使用 TCP 协议通信的双方建立了错误的连接。</p>
-<blockquote>
-<p>The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion.</p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/25f77d0eeb97056245cda65f64a9883b.png" alt="Pasted image 20240130105811"></p>
-<p>想象一下这个场景，如果通信双方的通信次数只有两次，那么发送方一旦发出建立连接的请求之后它就没有办法撤回这一次请求，如果在网络状况复杂或者较差的网络中，发送方连续发送多次建立连接的请求，如果 TCP 建立连接只能通信两次，那么接收方只能选择接受或者拒绝发送方发起的请求，它并不清楚这一次请求是不是由于网络拥堵而早早过期的连接。</p>
-<p>所以，TCP 选择使用三次握手来建立连接并在连接引入了 <code>RST</code> 这一控制消息，接收方当收到请求时会将发送方发来的 <code>SEQ+1</code> 发送给对方，这时由发送方来判断当前连接是否是历史连接：</p>
-<ul>
-<li>如果当前连接是历史连接，即 <code>SEQ</code> 过期或者超时，那么发送方就会直接发送 <code>RST</code> 控制消息中止这一次连接；</li>
-<li>如果当前连接不是历史连接，那么发送方就会发送 <code>ACK</code> 控制消息，通信双方就会成功建立连接；</li>
-</ul>
-<p>使用三次握手和 <code>RST</code> 控制消息将是否建立连接的最终控制权交给了发送方，因为只有发送方有足够的上下文来判断当前连接是否是错误的或者过期的，这也是 TCP 使用三次握手建立连接的最主要原因。</p>
-<h3 id="初始序列号"><a href="#初始序列号" class="headerlink" title="初始序列号"></a>初始序列号</h3><p>另一个使用三次握手的重要的原因就是通信双方都需要获得一个用于发送信息的初始化序列号，作为一个可靠的传输层协议，TCP 需要在不稳定的网络环境中构建一个可靠的传输层，网络的不确定性可能会导致数据包的缺失和顺序颠倒等问题，常见的问题可能包括：</p>
-<ul>
-<li>数据包被发送方多次发送造成数据的重复；</li>
-<li>数据包在传输的过程中被路由或者其他节点丢失；</li>
-<li>数据包到达接收方可能无法按照发送顺序；</li>
-</ul>
-<p>为了解决上述这些可能存在的问题，TCP 协议要求发送方在数据包中加入『序列号』字段，有了数据包对应的序列号，我们就可以：</p>
-<ul>
-<li>接收方可以通过序列号对重复的数据包进行去重；</li>
-<li>发送方会在对应数据包未被 ACK 时进行重复发送；</li>
-<li>接收方可以根据数据包的序列号对它们进行重新排序；</li>
-</ul>
-<p>序列号在 TCP 连接中有着非常重要的作用，初始序列号作为 TCP 连接的一部分也需要在三次握手期间进行初始化，由于 TCP 连接通信的双方都需要获得初始序列号，所以它们其实需要向对方发送 <code>SYN</code> 控制消息并携带自己期望的初始化序列号 <code>SEQ</code>，对方在收到 <code>SYN</code> 消息之后会通过 <code>ACK</code> 控制消息以及 <code>SEQ+1</code> 来进行确认。</p>
-<p>如上图所示，通信双方的两个 <code>TCP A/B</code> 分别向对方发送 <code>SYN</code> 和 <code>ACK</code> 控制消息，等待通信双方都获取到了自己期望的初始化序列号之后就可以开始通信了，由于 TCP 消息头的设计，我们可以将中间的两次通信合成一个，<code>TCP B</code> 可以向 <code>TCP A</code> 同时发送 <code>ACK</code> 和 <code>SYN</code> 控制消息，这也就帮助我们将四次通信减少至三次。</p>
-<blockquote>
-<p>A three way handshake is necessary because sequence numbers are not tied to a global clock in the network, and TCPs may have different mechanisms for picking the ISN’s. The receiver of the first SYN has no way of knowing whether the segment was an old delayed one or not, unless it remembers the last sequence number used on the connection (which is not always possible), and so it must ask the sender to verify this SYN. The three way handshake and the advantages of a clock-driven scheme are discussed in [3].</p>
-</blockquote>
-<p>除此之外，网络作为一个分布式的系统，其中并不存在一个用于计数的全局时钟，而 TCP 可以通过不同的机制来初始化序列号，作为 TCP 连接的接收方我们无法判断对方传来的初始化序列号是否过期，所以我们需要交由对方来判断，TCP 连接的发起方可以通过保存发出的序列号判断连接是否过期，如果让接收方来保存并判断序列号却是不现实的，这也再一次强化了我们在上一节中提出的观点 —— 避免历史错连接的初始化。</p>
-<h3 id="通信次数"><a href="#通信次数" class="headerlink" title="通信次数"></a>通信次数</h3><p>当我们讨论 TCP 建立连接需要的通信次数时，我们经常会执着于为什么通信三次才可以建立连接，而不是两次或者四次；讨论使用更多的通信次数来建立连接往往是没有意义的，因为我们总可以<strong>使用更多的通信次数交换相同的信息</strong>，所以使用四次、五次或者更多次数建立连接在技术上都是完全可以实现的。<br>这种增加 TCP 连接通信次数的问题往往没有讨论的必要性，我们追求的其实是用更少的通信次数（理论上的边界）完成信息的交换，也就是为什么我们在上两节中也一再强调使用『两次握手』没有办法建立 TCP 连接，使用三次握手是建立连接所需要的最小次数。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我们在这篇文章中讨论了为什么 TCP 建立连接需要经过三次握手，在具体分析这个问题之前，我们首先重新思考了 TCP 连接究竟是什么，<a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a> 对 TCP 连接有着非常清楚的定义 —— 用于保证可靠性和流控制机制的数据，包括 Socket、序列号以及窗口大小。</p>
-<p>TCP 建立连接时通过三次握手可以有效地避免历史错误连接的建立，减少通信双方不必要的资源消耗，三次握手能够帮助通信双方获取初始化序列号，它们能够保证数据包传输的不重不丢，还能保证它们的传输顺序，不会因为网络传输的问题发生混乱，到这里不使用『两次握手』和『四次握手』的原因已经非常清楚了：</p>
-<ul>
-<li>『两次握手』：无法避免历史错误连接的初始化，浪费接收方的资源；</li>
-<li>『四次握手』：TCP 协议的设计可以让我们同时传递 <code>ACK</code> 和 <code>SYN</code> 两个控制信息，减少了通信次数，所以不需要使用更多的通信次数传输相同的信息；</li>
-</ul>
-<p>我们重新回到在文章开头提的问题，为什么使用类比解释 TCP 使用三次握手是错误的？这主要还是因为，这个类比没有解释清楚核心问题 —— 避免历史上的重复连接。</p>
-<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24068/why-do-we-need-a-3-way-handshake-why-not-just-2-way">Why do we need a 3-way handshake? Why not just 2-way?</a></li>
-<li><a href="https://www.geeksforgeeks.org/tcp-3-way-handshake-process/"># TCP 3-Way Handshake Process</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
-    <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
-    <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
-<span id="more"></span>
-
-<h1 id="本文涉及的开源组建"><a href="#本文涉及的开源组建" class="headerlink" title="本文涉及的开源组建"></a>本文涉及的开源组建</h1><ul>
-<li><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a> One-Click to get a well-designed cross-platform ChatGPT web UI, with GPT3, GPT4 &amp; Gemini Pro support.</li>
-<li><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></li>
-<li>一个 aws ec2 服务器， 我们需要再上面运行 copilot-gpt4-service 服务，您也可以选择您喜欢的云服务商。或者在本地运行都可以。</li>
-<li>Vercel 一个免费的静态网站托管服务，我们需要再上面部署 ChatGPT-Next-Web 服务</li>
-<li>cloudflare 一个免费的cdn服务，我们用来解析域名。</li>
-</ul>
-<h1 id="获取-GitHub-Copilot-token"><a href="#获取-GitHub-Copilot-token" class="headerlink" title="获取 GitHub Copilot token"></a>获取 GitHub Copilot token</h1><p>请参考这个文档 [GitHub Copilot token](<a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token%EF%BC%89">https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token）</a><br>在 mac 电脑上，您可以使用下面的命令获取 token</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/d3343f8fc1b209783fb653e11ff4577a.png"></p>
-<p>如图所示。您需要将token 复制到剪切板，后面会用到。</p>
-<h1 id="运行-copilot-gpt4-service-服务"><a href="#运行-copilot-gpt4-service-服务" class="headerlink" title="运行 copilot-gpt4-service 服务"></a>运行 copilot-gpt4-service 服务</h1><ol>
-<li>copilot-gpt4-service  支持docker部署，官方提供 <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> 文件，我们只需要修改一下环境变量即可。<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6807404147e2cf24aab940f711af877c.png" alt="image-20240112110203576"></li>
-<li>再nginx 上添加一个server<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen 443 ssl;</span><br><span class="line">        listen [::]:443 ssl;</span><br><span class="line">        server_name chat.example.com;</span><br><span class="line"></span><br><span class="line">        ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">        ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">        location / &#123;</span><br><span class="line">                proxy_pass http://127.0.0.1:8086/;  # copilot-gpt4-service  addr </span><br><span class="line">                rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                proxy_redirect off;</span><br><span class="line">                proxy_set_header Host $host;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-别忘记 重新加载nginx 配置文件  </li>
-<li>再cloudflare 上添加一个域名解析 chat.example.com  解析到nginx 服务器的ip地址</li>
-</ol>
-<h1 id="再-Vercel-上部署-ChatGPT-Next-Web-服务"><a href="#再-Vercel-上部署-ChatGPT-Next-Web-服务" class="headerlink" title="再 Vercel 上部署 ChatGPT-Next-Web 服务"></a>再 Vercel 上部署 ChatGPT-Next-Web 服务</h1><p>ChatGPT-Next-Web 支持 一键部署到vercel。 您不用改动任何东西。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/53e4d610736d7d7784c66113bfee8cf1.png">部署完成后，您可以在vercel 上添加一个个性化的域名。比如 chatnext.example.com</p>
-<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>打开浏览器，输入 chatnext.example.com， 点击左下角的设置按钮，选择自定义接口，输入 <a href="https://chat.example.com,/">https://chat.example.com，</a> api token 使用 第一步复制的 GitHub Copilot token， 点击保存，然后就可以开始聊天了。</p>
-<p>ps： 我不知道这种做法是不是符合github copilot 的使用协议，但是我这么做只是为了方便我的使用，我不会分享给其他人使用，如果您也部署了 自己的服务，也请不要分享给其他人使用。</p>
-<hr>
-<p>如果您喜欢我的文章，麻烦给我follow、鼓掌，这对我很有帮助。谢谢！</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>github</tag>
-        <tag>copilot</tag>
-        <tag>chatgpt-4</tag>
       </tags>
   </entry>
   <entry>
@@ -1663,19 +1663,31 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-43</title>
-    <url>/2023/10/23/arts/ARTS-2023-43/</url>
+    <title>ARTS-2023-39</title>
+    <url>/2023/09/27/arts/ARTS-2023-39/</url>
     <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<ol>
+<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
+如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
+</ol>
+<blockquote>
+<ol>
+<li>打开Chrome浏览器。  </li>
+<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
+<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
+<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
+</ol>
+</blockquote>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1727,48 +1739,19 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
+    <title>ARTS-2023-43</title>
+    <url>/2023/10/23/arts/ARTS-2023-43/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
+<p>本周再备考以及交接的事情，arts 基本上都搁置了。。。。。 🤔</p>
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -1816,18 +1799,16 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
 <h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
@@ -1886,6 +1867,124 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-49</title>
+    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>leetcode 173: 也是中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
+<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+        <tag>工程师工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-50</title>
+    <url>/2023/12/11/arts/ARTS-2023-50/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
+<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
+<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-52</title>
+    <url>/2023/12/25/arts/ARTS-2023-52/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<p>最后一周了，2024开始。。。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/happy-number/">202. 快乐数</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isHappy</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	m := <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">bool</span>&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> ; n != <span class="number">1</span> &amp;&amp; !m[n]; n, m[n] = step(n), <span class="literal">true</span> &#123; &#125;</span><br><span class="line">	<span class="keyword">return</span> n == <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">step</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	sum := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">		sum += (n%<span class="number">10</span>) * (n%<span class="number">10</span>)</span><br><span class="line">		n = n/<span class="number">10</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/ref/mem">https://go.dev/ref/mem</a>   go内存模型，终于把这篇博客看完了。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><ul>
+<li>#tools ripgrep + fzf，搜什么都快。</li>
+<li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
+<li>devv.ai  面向程序员的AIGC 浏览器，</li>
+</ul>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2024-01</title>
+    <url>/2024/01/02/arts/ARTS-2024-01/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<p>2024 第一次arts 加油</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/contains-duplicate-ii/">219. 存在重复元素 II</a> 🟢<br><a href="https://leetcode.cn/problems/longest-consecutive-sequence/">128. 最长连续序列</a> 🟡 将数组升序排列，或者放在一个map里面，然后在去获取长度。。</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://roytanck.com/2023/12/23/in-2024-please-switch-to-firefox/">In 2024, please switch to Firefox</a><br>firefox 好用，坚持隐私保护更加是为了维护 web 的开放标准<br>ps：有几个人会去主动选择浏览器呢？</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><blockquote>
+<p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2023-47</title>
     <url>/2023/11/20/arts/ARTS-2023-47/</url>
     <content><![CDATA[<blockquote>
@@ -1918,48 +2017,17 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-49</title>
-    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
 
-<p>leetcode 173: 也是中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
-<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-        <tag>工程师工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-52</title>
-    <url>/2023/12/25/arts/ARTS-2023-52/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<p>最后一周了，2024开始。。。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/happy-number/">202. 快乐数</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isHappy</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	m := <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">bool</span>&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> ; n != <span class="number">1</span> &amp;&amp; !m[n]; n, m[n] = step(n), <span class="literal">true</span> &#123; &#125;</span><br><span class="line">	<span class="keyword">return</span> n == <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">step</span><span class="params">(n <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	sum := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">		sum += (n%<span class="number">10</span>) * (n%<span class="number">10</span>)</span><br><span class="line">		n = n/<span class="number">10</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/ref/mem">https://go.dev/ref/mem</a>   go内存模型，终于把这篇博客看完了。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><ul>
-<li>#tools ripgrep + fzf，搜什么都快。</li>
-<li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
-<li>devv.ai  面向程序员的AIGC 浏览器，</li>
-</ul>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
@@ -1981,102 +2049,6 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2024-01</title>
-    <url>/2024/01/02/arts/ARTS-2024-01/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<p>2024 第一次arts 加油</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/contains-duplicate-ii/">219. 存在重复元素 II</a> 🟢<br><a href="https://leetcode.cn/problems/longest-consecutive-sequence/">128. 最长连续序列</a> 🟡 将数组升序排列，或者放在一个map里面，然后在去获取长度。。</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://roytanck.com/2023/12/23/in-2024-please-switch-to-firefox/">In 2024, please switch to Firefox</a><br>firefox 好用，坚持隐私保护更加是为了维护 web 的开放标准<br>ps：有几个人会去主动选择浏览器呢？</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><blockquote>
-<p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-50</title>
-    <url>/2023/12/11/arts/ARTS-2023-50/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
-<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
-<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-39</title>
-    <url>/2023/09/27/arts/ARTS-2023-39/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<ol>
-<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
-如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
-</ol>
-<blockquote>
-<ol>
-<li>打开Chrome浏览器。  </li>
-<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
-<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
-<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
-</ol>
-</blockquote>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-51</title>
     <url>/2023/12/18/arts/ARTS-2023-51/</url>
     <content><![CDATA[<blockquote>
@@ -2090,5 +2062,33 @@
       <categories>
         <category>arts</category>
       </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
   </entry>
 </search>
