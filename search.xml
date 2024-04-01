@@ -1,53 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
 <hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
-<blockquote>
-<p>本文基于 go 1.14 </p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-
-<p>在 select 的每次迭代中，case 都会被打乱：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
 ]]></content>
       <categories>
-        <category>Go</category>
+        <category>blog</category>
       </categories>
       <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
+        <tag>年度总结</tag>
       </tags>
   </entry>
   <entry>
@@ -290,6 +264,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Linux 远程服务器免密登录</title>
+    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
+    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<span id="more"></span>
+
+<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
+<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
+<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#x6c;&#116;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#x32;&#46;&#x31;&#x2e;&#x31;">&#x67;&#x6c;&#116;&#x40;&#x31;&#x30;&#46;&#x31;&#49;&#x32;&#46;&#x31;&#x2e;&#x31;</a></p>
+<blockquote>
+<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
+</blockquote>
+<ol>
+<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
+<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
+</ol>
+<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
+<ol>
+<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
+<li>检查文件权限</li>
+</ol>
+<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
+<p>3.查看配置文件sshd_config  :   </p>
+<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
+
+<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
+<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
+<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
+<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以使用ssh glt   进行远程登录。</p>
+]]></content>
+      <categories>
+        <category>技术</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 通过 Consul 实现分布式锁</title>
     <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
     <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
@@ -329,48 +345,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Linux 远程服务器免密登录</title>
-    <url>/2023/09/22/Linux%20%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/</url>
-    <content><![CDATA[<h1 id="Linux-远程服务器免密登录"><a href="#Linux-远程服务器免密登录" class="headerlink" title="Linux 远程服务器免密登录"></a>Linux 远程服务器免密登录</h1><p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<span id="more"></span>
-
-<p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
-<h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
-<p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#64;&#49;&#x30;&#46;&#49;&#x31;&#50;&#x2e;&#x31;&#x2e;&#x31;">&#103;&#108;&#116;&#64;&#49;&#x30;&#46;&#49;&#x31;&#50;&#x2e;&#x31;&#x2e;&#x31;</a></p>
-<blockquote>
-<p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
-</blockquote>
-<ol>
-<li>把专用密钥添加到ssh-agent的高速缓存中：<br><code>ssh-add</code></li>
-<li>重启ssh服务<br><code>service sshd restart</code><br>或者<br><code>systemctl  restart  sshd</code></li>
-</ol>
-<p>6.使用ssh登录远程服务器系统<br><code>ssh 服务器用户名@服务器地址</code><br>补充：<br>如果上述配置失败。</p>
-<ol>
-<li>先在本地配置，配置自身服务器的免密登录，自己连接自己。</li>
-<li>检查文件权限</li>
-</ol>
-<p>将authorized_keys 文件的权限修改为600： <code>chmod 600 authorized_keys</code><br>将 .ssh  文件夹的权限修改为700： <code>chmod 700  .ssh</code></p>
-<p>3.查看配置文件sshd_config  :   </p>
-<p>vim &#x2F;etc&#x2F;ssh&#x2F;sshd_config</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">RSAAuthentication yes        #RSA认证</span><br><span class="line">PubkeyAuthentication yes     #公钥认证</span><br><span class="line">AuthorizedKeysFile .ssh/authorized_keys #公钥认证文件路径</span><br></pre></td></tr></table></figure>
-
-<p>如果用root用户有失败的情况，检查PermitRootLogin yes  这个配置选项（注意，这是root用户的远程登录，比较危险）。</p>
-<p>4.修改配置文件后，让配置文件生效<br>立即生效：source &#x2F;etc&#x2F;ssh&#x2F;sshd_coonfig<br>重启ssh服务：sudo &#x2F;etc&#x2F;init.d&#x2F;ssh restart  </p>
-<h2 id="本地配置免密登录"><a href="#本地配置免密登录" class="headerlink" title="本地配置免密登录"></a>本地配置免密登录</h2><p>5.给远程登录配置别名</p>
-<p>进入本地机器的目录～&#x2F;.ssh下找到config文件（若不存在，则创建一个touch config）, 按如下进行配置</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Host  glt                                  # 给远程服务器取一个别名</span><br><span class="line">HostName  10.1.1.1       #目的机器的ip</span><br><span class="line">User username              #ssh登录时的用户名</span><br><span class="line">Port   22                         #ssh所使用的端口，默认是22</span><br><span class="line">IdentityFile  /home/用户名/.ssh/id_rsa.pub     #对应服务器公钥的本地私钥文件路径</span><br></pre></td></tr></table></figure>
-
-<p>接下来就可以使用ssh glt   进行远程登录。</p>
-]]></content>
-      <categories>
-        <category>技术</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Obsidian 最佳实践 -持续更新</title>
     <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
     <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
@@ -392,6 +366,34 @@
       <categories>
         <category>随笔</category>
       </categories>
+  </entry>
+  <entry>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
+    <content><![CDATA[<blockquote>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+</blockquote>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
   </entry>
   <entry>
     <title>aws ec2 切换到ipv6</title>
@@ -430,34 +432,6 @@
       <tags>
         <tag>linux</tag>
         <tag>ipv6</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
-</blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
       </tags>
   </entry>
   <entry>
@@ -544,6 +518,96 @@
       </tags>
   </entry>
   <entry>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>hash table 一个古老的经典数据结构</title>
     <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
     <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
@@ -583,46 +647,6 @@
       <tags>
         <tag>go</tag>
         <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
-</blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
-]]></content>
-      <categories>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
       </tags>
   </entry>
   <entry>
@@ -839,34 +863,6 @@
       </tags>
   </entry>
   <entry>
-    <title>什么是medium 的 publication</title>
-    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
-<span id="more"></span>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
-<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
-<ul>
-<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
-<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
-<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
-</ul>
-<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
-<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
-<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
-<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
-<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
-<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
-<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
-<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
-</ol>
-]]></content>
-  </entry>
-  <entry>
     <title>在VPS上搭建vaultwarden</title>
     <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
     <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
@@ -905,6 +901,34 @@
         <tag>密码托管</tag>
         <tag>docker</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>什么是medium 的 publication</title>
+    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
+<span id="more"></span>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
+<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
+<ul>
+<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
+<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
+<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
+</ul>
+<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
+<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
+<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
+<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
+<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
+<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
+<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
+<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
+</ol>
+]]></content>
   </entry>
   <entry>
     <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
@@ -1013,156 +1037,6 @@
       </categories>
       <tags>
         <tag>Go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>每个人都应该考虑采用的 Linux 内核安全可调</title>
-    <url>/2024/03/15/%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E5%BA%94%E8%AF%A5%E8%80%83%E8%99%91%E9%87%87%E7%94%A8%E7%9A%84%20Linux%20%E5%86%85%E6%A0%B8%E5%AE%89%E5%85%A8%E5%8F%AF%E8%B0%83/</url>
-    <content><![CDATA[<h1 id="每个人都应该考虑采用的Linux内核安全可调"><a href="#每个人都应该考虑采用的Linux内核安全可调" class="headerlink" title="每个人都应该考虑采用的Linux内核安全可调"></a>每个人都应该考虑采用的Linux内核安全可调</h1><p>原文连接：<a href="https://blog.cloudflare.com/linux-kernel-hardening/">https://blog.cloudflare.com/linux-kernel-hardening/</a></p>
-<p>本文介绍了一些Linux内核的功能，这些功能帮助我们保持生产系统更安全。我们将深入探讨它们的工作原理以及为什么您也应该考虑启用它们。</p>
-<span id="more"></span>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/b6bf3148716461c32a9f1e5447cb2c62.png" alt="Linux内核安全调整：每个人都应该考虑采用的方法"></p>
-<p>Linux内核是许多现代生产系统的核心。它决定了何时允许运行任何代码以及哪些程序&#x2F;用户可以访问哪些资源。它管理内存，调解对硬件的访问，并在程序运行时的幕后代表程序执行大部分工作。由于内核始终参与任何代码执行，它处于最佳位置来保护系统免受恶意程序的侵害，执行所需的系统安全策略，并为更安全的生产环境提供安全功能。</p>
-<p>在本文中，我们将回顾Cloudflare在Linux内核安全配置方面的一些使用方法，以及它们如何帮助阻止或减少潜在的系统妥协。</p>
-<h2 id="安全启动"><a href="#安全启动" class="headerlink" title="安全启动"></a>安全启动</h2><p>当机器（无论是笔记本还是服务器）启动时，它经历了几个引导阶段：</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/a960262885fbf648dbdc2bd800cde2ca.png" alt="image3-17"></p>
-<p>在安全启动架构中，上图中的每个阶段在传递执行权之前都会验证下一个阶段的完整性，从而形成所谓的安全启动链。这样，“可信度”就扩展到引导链中的每个组件，因为如果我们验证了特定阶段的代码完整性，我们可以相信该代码可以验证下一个阶段的完整性。</p>
-<p>我们之前已经介绍过Cloudflare在引导过程的初始阶段实现安全启动的方法。在本文中，我们将重点介绍Linux内核。</p>
-<p>安全启动是任何操作系统安全机制的基石。Linux内核是操作系统安全配置和策略的主要执行者，因此我们必须确保Linux内核本身没有被篡改。在我们之前关于安全启动的文章中，我们展示了如何使用UEFI Secure Boot来确保Linux内核的完整性。</p>
-<p>但接下来会发生什么呢？内核执行后，它可能尝试加载其他驱动程序，或者在Linux世界中称为内核模块。内核模块加载不仅限于引导过程。模块可以在运行时的任何时候加载——当插入新设备并需要驱动程序时，需要对网络堆栈进行一些附加扩展（例如，用于细粒度防火墙规则），或者只是由系统管理员手动加载。</p>
-<p>然而，不受控制的内核模块加载可能对系统完整性构成重大风险。与常规程序不同，内核模块是直接注入并在Linux内核地址空间中直接执行的代码片段。在不同的内核模块和核心内核子系统中，代码和数据之间没有分离，因此一切都可以访问一切。这意味着一个恶意的内核模块可以完全使操作系统的可信度失效，并使安全启动变得无效。例如，考虑一个简单的Debian 12（Bookworm安装），但启用了SELinux配置和强制执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ lsb_release --all</span><br><span class="line">No LSB modules are available.</span><br><span class="line">Distributor ID:	Debian</span><br><span class="line">Description:	Debian GNU/Linux 12 (bookworm)</span><br><span class="line">Release:	12</span><br><span class="line">Codename:	bookworm</span><br><span class="line">ignat@dev:~$ <span class="built_in">uname</span> -a</span><br><span class="line">Linux dev 6.1.0-18-cloud-amd64 <span class="comment">#1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64 GNU/Linux</span></span><br><span class="line">ignat@dev:~$ sudo getenforce</span><br><span class="line">Enforcing</span><br></pre></td></tr></table></figure>
-
-<p>现在我们需要进行一些研究。首先，我们看到我们正在运行6.1.76 Linux内核。如果我们探索源代码，我们会发现<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/hooks.c#L107">在内核内部，SELinux配置存储在一个单例结构中</a>，该结构<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/include/security.h#L92">定义如下</a>：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">selinux_state</span> &#123;</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY_SELINUX_DISABLE</span></span><br><span class="line">	<span class="type">bool</span> disabled;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY_SELINUX_DEVELOP</span></span><br><span class="line">	<span class="type">bool</span> enforcing;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="type">bool</span> checkreqprot;</span><br><span class="line">	<span class="type">bool</span> initialized;</span><br><span class="line">	<span class="type">bool</span> policycap[__POLICYDB_CAP_MAX];</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">status_page</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">status_lock</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">selinux_avc</span> *<span class="title">avc</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">selinux_policy</span> __<span class="title">rcu</span> *<span class="title">policy</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">policy_mutex</span>;</span></span><br><span class="line">&#125; __randomize_layout;</span><br></pre></td></tr></table></figure>
-
-<p>从上面可以看出，如果内核配置启用了<code>CONFIG_SECURITY_SELINUX_DEVELOP</code>，则该结构将具有一个名为<code>enforcing</code>的布尔变量，该变量控制SELinux在运行时的强制执行状态。这正是上面的<code>$ sudo getenforce</code>命令返回的内容。我们可以再次检查Debian内核确实已启用该配置选项：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep CONFIG_SECURITY_SELINUX_DEVELOP /boot/config-`<span class="built_in">uname</span> -r` CONFIG_SECURITY_SELINUX_DEVELOP=y</span><br></pre></td></tr></table></figure>
-
-<p>很好！现在我们在内核中有一个变量，负责某种安全执行，我们可以尝试攻击它。但有一个问题是<code>__randomize_layout</code>属性：由于我们的Debian内核实际上没有设置<code>CONFIG_SECURITY_SELINUX_DISABLE</code>，因此<code>enforcing</code>实际上将是结构体的第一个成员。因此，如果我们知道结构体的位置，我们立即就知道了<code>enforcing</code>标志的位置。使用<code>__randomize_layout</code>，在内核编译期间，编译器可能会将成员放置在结构体的任意位置，因此创建通用的漏洞利用变得更加困难。但是，在内核中任意结构体随机化<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/Kconfig.hardening#L301">可能会引入性能影响</a>，因此通常被禁用，并且对于Debian内核而言，它是被禁用的：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep RANDSTRUCT /boot/config-`<span class="built_in">uname</span> -r` CONFIG_RANDSTRUCT_NONE=y</span><br></pre></td></tr></table></figure>
-
-<p>我们还可以使用<a href="https://git.kernel.org/pub/scm/devel/pahole/pahole.git/">pahole工具</a>和内核调试符号（如果可用）或（在现代内核上，如果启用）内核<a href="https://www.kernel.org/doc/html/next/bpf/btf.html">BTF</a>信息来确认<code>enforcing</code>标志的编译位置。我们将使用后者：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ pahole -C selinux_state /sys/kernel/btf/vmlinux</span><br><span class="line">struct selinux_state &#123;</span><br><span class="line">	bool                       enforcing;            /*     0     1 */</span><br><span class="line">	bool                       checkreqprot;         /*     1     1 */</span><br><span class="line">	bool                       initialized;          /*     2     1 */</span><br><span class="line">	bool                       policycap[8];         /*     3     8 */</span><br><span class="line"></span><br><span class="line">	/* XXX 5 bytes hole, try to pack */</span><br><span class="line"></span><br><span class="line">	struct page *              status_page;          /*    16     8 */</span><br><span class="line">	struct mutex               status_lock;          /*    24    32 */</span><br><span class="line">	struct selinux_avc *       avc;                  /*    56     8 */</span><br><span class="line">	/* --- cacheline 1 boundary (64 bytes) --- */</span><br><span class="line">	struct selinux_policy *    policy;               /*    64     8 */</span><br><span class="line">	struct mutex               policy_mutex;         /*    72    32 */</span><br><span class="line"></span><br><span class="line">	/* size: 104, cachelines: 2, members: 9 */</span><br><span class="line">	/* <span class="built_in">sum</span> members: 99, holes: 1, <span class="built_in">sum</span> holes: 5 */</span><br><span class="line">	/* last cacheline: 40 bytes */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-
-<p>因此，<code>enforcing</code>确实位于结构体的开头，我们甚至不需要成为特权用户即可确认这一点。</p>
-<p>太棒了！我们只需要内核内的<code>selinux_state</code>变量的运行时地址：<br>（shell&#x2F;bash）</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms</span><br><span class="line">ffffffffbc3bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
-
-<p>有了所有这些信息，我们可以编写一个几乎完全符合教科书的简单内核模块来操纵SELinux状态：</p>
-<p>Mymod.c:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">mod_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">bool</span> *selinux_enforce = (<span class="type">bool</span> *)<span class="number">0xffffffffbc3bcae0</span>;</span><br><span class="line">	*selinux_enforce = <span class="literal">false</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">mod_fini</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(mod_init);</span><br><span class="line">module_exit(mod_fini);</span><br><span class="line"></span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;A somewhat malicious module&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;Ignat Korchagin &lt;ignat@cloudflare.com&gt;&quot;</span>);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br></pre></td></tr></table></figure>
-
-<p>以及相应的<code>Kbuild</code>文件：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">obj-m := mymod.o</span><br></pre></td></tr></table></figure>
-
-<p>使用这两个文件，我们可以根据<a href="https://docs.kernel.org/kbuild/modules.html">官方内核文档</a>构建一个完整的内核模块：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">cd</span> mymod/</span><br><span class="line">ignat@dev:~/mymod$ <span class="built_in">ls</span></span><br><span class="line">Kbuild  mymod.c</span><br><span class="line">ignat@dev:~/mymod$ make -C /lib/modules/`<span class="built_in">uname</span> -r`/build M=<span class="variable">$PWD</span></span><br><span class="line">make: Entering directory <span class="string">&#x27;/usr/src/linux-headers-6.1.0-18-cloud-amd64&#x27;</span></span><br><span class="line">  CC [M]  /home/ignat/mymod/mymod.o</span><br><span class="line">  MODPOST /home/ignat/mymod/Module.symvers</span><br><span class="line">  CC [M]  /home/ignat/mymod/mymod.mod.o</span><br><span class="line">  LD [M]  /home/ignat/mymod/mymod.ko</span><br><span class="line">  BTF [M] /home/ignat/mymod/mymod.ko</span><br><span class="line">Skipping BTF generation <span class="keyword">for</span> /home/ignat/mymod/mymod.ko due to unavailability of vmlinux</span><br><span class="line">make: Leaving directory <span class="string">&#x27;/usr/src/linux-headers-6.1.0-18-cloud-amd64&#x27;</span></span><br></pre></td></tr></table></figure>
-
-<p>如果现在尝试加载此模块，系统可能不允许，因为SELinux策略的原因：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo insmod mymod.ko insmod: ERROR: could not load module mymod.ko: Permission denied</span><br></pre></td></tr></table></figure>
-
-<p>我们可以通过将模块复制到标准模块路径中的某个位置来解决此问题：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo <span class="built_in">cp</span> mymod.ko /lib/modules/`<span class="built_in">uname</span> -r`/kernel/crypto/</span><br></pre></td></tr></table></figure>
-
-<p>现在让我们试试：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo getenforce Enforcing ignat@dev:~/mymod$ sudo insmod /lib/modules/`<span class="built_in">uname</span> -r`/kernel/crypto/mymod.ko ignat@dev:~/mymod$ sudo getenforce Permissive</span><br></pre></td></tr></table></figure>
-
-<p>我们不仅通过恶意内核模块静默地禁用了SELinux保护，而且还完成了这一操作。正常的<code>sudo setenforce 0</code>即使被允许，也会通过官方的<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/selinuxfs.c#L173">selinuxfs接口，并发出审核消息</a>。我们的代码直接操作内核内存，因此没有人会发出警报。这说明为什么不受控制的内核模块加载非常危险，这也是为什么大多数安全标准和商业安全监控产品主张密切监控内核模块加载的原因。</p>
-<p>但是，在Cloudflare上，我们不需要监视内核模块。让我们在Cloudflare生产内核上重复这个过程（为简洁起见，跳过模块重新编译）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64</span><br><span class="line">CONFIG_MODULE_SIG_FORMAT=y</span><br><span class="line">CONFIG_MODULE_SIG=y</span><br><span class="line"><span class="comment"># CONFIG_MODULE_SIG_FORCE is not set</span></span><br><span class="line">…</span><br></pre></td></tr></table></figure>
-
-<p>当尝试加载模块时，我们会收到“Key was rejected by service”错误，并且内核日志将显示以下消息：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo dmesg | <span class="built_in">tail</span> -n 1 [41515.037031] Loading of unsigned module is rejected</span><br></pre></td></tr></table></figure>
-
-<p>这是因为Cloudflare内核要求所有内核模块具有有效的签名，因此我们无需担心恶意模块在某个时间点被加载：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG_FORCE /boot/config-`<span class="built_in">uname</span> -r` CONFIG_MODULE_SIG_FORCE=y</span><br></pre></td></tr></table></figure>
-
-<p>为了完整起见，值得注意的是，Debian标准内核也支持模块签名，但不强制执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64 CONFIG_MODULE_SIG_FORMAT=y CONFIG_MODULE_SIG=y <span class="comment"># CONFIG_MODULE_SIG_FORCE is not set …</span></span><br></pre></td></tr></table></figure>
-
-<p>上述配置意味着，如果可用，内核将验证模块签名。但是如果没有签名-模块将被加载，并发出警告消息，<a href="https://docs.kernel.org/admin-guide/tainted-kernels.html">内核将被污染</a>。</p>
-<h3 id="内核模块签名的密钥管理"><a href="#内核模块签名的密钥管理" class="headerlink" title="内核模块签名的密钥管理"></a>内核模块签名的密钥管理</h3><p>签名的内核模块非常好，但是它会带来密钥管理问题：要签名一个模块，我们需要一个由内核信任的签名密钥对。密钥对的公钥通常直接嵌入到内核二进制文件中，因此内核可以轻松使用它来验证模块签名。密钥对的私钥需要受到保护和安全，因为如果泄漏，任何人都可以编译和签名一个潜在恶意的内核模块，而我们的内核将接受它。</p>
-<p>但是，如何消除丢失风险呢？首先不要一开始就拥有它！幸运的是，内核构建系统<a href="https://elixir.bootlin.com/linux/v6.6.17/source/certs/Makefile#L36">将为模块签名生成一个随机密钥对</a>，如果没有提供密钥。在Cloudflare，我们使用该功能在内核编译阶段对所有内核模块进行签名。但是，在编译和签名完成后，我们不会将私钥存储在安全的位置，而是销毁私钥：</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/46b61bf0a9163c9836837b598bc64d9e.png" alt="image1-19"></p>
-<p>因此，根据上述过程：</p>
-<ol>
-<li>内核构建系统为模块签名生成了一个随机密钥对，并编译内核和模块</li>
-<li>公钥嵌入到内核映像中，私钥用于签名所有模块</li>
-<li>私钥被销毁</li>
-</ol>
-<p>通过这种方案，我们不仅无需担心模块签名密钥管理问题，而且我们还为每个发布到生产环境的内核使用不同的密钥。因此，即使某个特定的构建过程被劫持并且签名密钥未被销毁并且有可能泄漏，当发布内核更新时，该密钥将不再有效。</p>
-<p>然而，值得注意的是，Debian内核的库存版本也支持模块签名，但不强制执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64 CONFIG_MODULE_SIG_FORMAT=y CONFIG_MODULE_SIG=y <span class="comment"># CONFIG_MODULE_SIG_FORCE is not set …</span></span><br></pre></td></tr></table></figure>
-
-<p>上述配置意味着，如果可用，内核将验证模块签名。但是如果没有签名-模块将被加载，并发出警告消息，<a href="https://docs.kernel.org/admin-guide/tainted-kernels.html">内核将被污染</a>。</p>
-<h3 id="KEXEC"><a href="#KEXEC" class="headerlink" title="KEXEC"></a>KEXEC</h3><p><a href="https://en.wikipedia.org/wiki/Kexec">KEXEC</a>（或<code>kexec_load()</code>）是Linux中一个有趣的系统调用，它允许一个内核直接执行（或跳转到）另一个内核。这个想法是在不经过完整的重新启动过程的情况下更快地切换&#x2F;更新&#x2F;降级内核，以减少潜在的系统停机时间。然而，它是在很久以前开发的，当时安全启动和系统完整性还不是一个问题。因此，它的原始设计存在安全缺陷，可以<a href="https://mjg59.dreamwidth.org/28746.html">绕过安全启动并潜在地破坏系统完整性</a>。</p>
-<p>我们可以根据<a href="https://man7.org/linux/man-pages/man2/kexec_load.2.html">系统调用的定义</a>看到这些问题：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kexec_segment</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *buf;</span><br><span class="line">	<span class="type">size_t</span> bufsz;</span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *mem;</span><br><span class="line">	<span class="type">size_t</span> memsz;</span><br><span class="line">&#125;;</span><br><span class="line">...</span><br><span class="line"><span class="type">long</span> <span class="title function_">kexec_load</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> entry, <span class="type">unsigned</span> <span class="type">long</span> nr_segments, <span class="keyword">struct</span> kexec_segment *segments, <span class="type">unsigned</span> <span class="type">long</span> flags)</span>;</span><br></pre></td></tr></table></figure>
-
-<p>因此，内核期望的只是一组要执行的代码缓冲区。在当时，内核内部没有太多的数据解析的愿望，因此，解析要执行的内核映像是在用户空间中完成的，并且仅向内核提供其所需的数据。此外，为了在旧内核关闭时接管并且新内核尚未执行时，我们需要一个中间程序。在kexec世界中，此程序称为<a href="https://git.kernel.org/pub/scm/utils/kernel/kexec/kexec-tools.git/tree/purgatory">purgatory</a>。因此，问题显而易见：我们向内核提供一堆代码，它将愉快地以最高特权级别执行它。但是，与原始内核或purgatory代码相反，我们可以轻松地提供类似于本文中演示的代码，该代码禁用SELinux（或对内核执行其他操作）。</p>
-<p>在Cloudflare上，我们已经将<code>kexec_load()</code>禁用了一段时间，仅因为这个原因。使用kexec实现更快的重新启动的优点是，<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L30">硬件可能未正确初始化</a>，因此即使没有安全问题，也不值得使用它。但是，kexec确实提供了一个有用的功能-它是Linux内核<a href="https://docs.kernel.org/admin-guide/kdump/kdump.html">崩溃转储解决方案</a>的基础。简而言之，如果内核在生产中崩溃（由于错误或其他错误），备份内核（使用kexec预先加载）可以接管，收集并保存内存转储以供进一步调查。这使得在生产中更有效地调查内核和其他问题成为可能，因此它是一个强大的工具。</p>
-<p>幸运的是，自从<a href="https://mjg59.dreamwidth.org/28746.html">指出了kexec的原始问题</a>以来，Linux开发了一种替代的<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L36">安全的kexec接口</a>：与其使用代码缓冲区，它期望使用包含要执行的内核映像和initrd的文件描述符，并在内核内部进行解析。因此，只能提供有效的内核映像。在此基础上，我们可以<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L48">配置</a>并<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L62">要求</a>kexec以确保所提供的映像具有正确的签名，因此只有经授权的代码可以在kexec场景中执行。一个安全的kexec配置如下所示：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep KEXEC /boot/config-`<span class="built_in">uname</span> -r` CONFIG_KEXEC_CORE=y CONFIG_HAVE_IMA_KEXEC=y <span class="comment"># CONFIG_KEXEC is not set CONFIG_KEXEC_FILE=y CONFIG_KEXEC_SIG=y CONFIG_KEXEC_SIG_FORCE=y CONFIG_KEXEC_BZIMAGE_VERIFY_SIG=y …</span></span><br></pre></td></tr></table></figure>
-
-<p>以上配置确保了禁用了传统的<code>kexec_load()</code>系统调用，通过禁用<code>CONFIG_KEXEC</code>来实现，但仍然可以使用新的<code>kexec_file_load()</code>系统调用通过<code>CONFIG_KEXEC_FILE=y</code>进行Linux内核崩溃转储的配置，并强制执行签名检查（<code>CONFIG_KEXEC_SIG=y</code>和<code>CONFIG_KEXEC_SIG_FORCE=y</code>）。</p>
-<p>请注意，Debian内核的库存版本启用了传统的<code>kexec_load()</code>系统调用，并且不强制执行<code>kexec_file_load()</code>的签名检查（类似于模块签名检查）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep KEXEC /boot/config-6.1.0-18-cloud-amd64 CONFIG_KEXEC=y CONFIG_KEXEC_FILE=y CONFIG_ARCH_HAS_KEXEC_PURGATORY=y CONFIG_KEXEC_SIG=y <span class="comment"># CONFIG_KEXEC_SIG_FORCE is not set CONFIG_KEXEC_BZIMAGE_VERIFY_SIG=y …</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="内核地址空间布局随机化（KASLR）"><a href="#内核地址空间布局随机化（KASLR）" class="headerlink" title="内核地址空间布局随机化（KASLR）"></a>内核地址空间布局随机化（KASLR）</h2><p>即使在库存的Debian内核上，如果您尝试在系统重新启动后重复我们在“安全启动”部分中描述的练习，您可能会发现它无法再禁用SELinux。这是因为我们在恶意内核模块中硬编码了<code>selinux_state</code>的内核地址，但现在地址已更改：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms ffffffffb41bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
-
-<p><a href="https://docs.kernel.org/security/self-protection.html#kernel-address-space-layout-randomization-kaslr">内核地址空间布局随机化（或KASLR）</a>是一个简单的概念：它在每次启动时都会轻微且随机地移动内核代码和数据：</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/70708d7d7185c3edd9a77c712198af8c.png" alt="Screenshot-2024-03-06-at-13.53.23-2"></p>
-<p>这是为了对抗基于对内核内部结构和代码位置的了解的有针对性的利用（如本文中的恶意模块）。对于像Debian这样的流行Linux发行版内核尤其有用，因为大多数用户使用相同的二进制文件，任何人都可以下载调试符号和包含所有内核内部地址的System.map文件。只要注意：它不会阻止模块加载和造成伤害，但它可能无法实现禁用SELinux的有针对性效果。相反，它将修改随机的内核内存片段，可能导致内核崩溃。</p>
-<p>Cloudflare内核和Debian内核都启用了此功能：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep RANDOMIZE_BASE /boot/config-`<span class="built_in">uname</span> -r` CONFIG_RANDOMIZE_BASE=y</span><br></pre></td></tr></table></figure>
-
-<h3 id="受限制的内核指针"><a href="#受限制的内核指针" class="headerlink" title="受限制的内核指针"></a>受限制的内核指针</h3><p>虽然KASLR有助于针对性的利用，但很容易绕过，因为每次只是通过单个随机偏移量移动所有内容，如上图所示。因此，如果攻击者知道至少一个运行时内核地址，他们可以通过将运行时地址从内核的System.map文件中的相同符号（函数或数据结构）的编译时地址中减去来恢复此偏移量。一旦他们知道了偏移量，他们就可以通过调整它们来恢复所有其他符号的地址。</p>
-<p>因此，现代内核为了至少不将内核地址泄漏给非特权用户而采取了预防措施。其中一个主要的调整选项是<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>。将其至少设置为<code>1</code>以禁止普通用户查看内核指针是一个好主意：<br>（shell&#x2F;bash）</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo sysctl -w kernel.kptr_restrict=1</span><br><span class="line">kernel.kptr_restrict = 1</span><br><span class="line">ignat@dev:~$ grep selinux_state /proc/kallsyms</span><br><span class="line">0000000000000000 B selinux_state</span><br></pre></td></tr></table></figure>
-
-<p>特权用户仍然可以查看指针：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms ffffffffb41bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
-
-<p>类似于<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>，还有<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>，如果设置，将阻止普通用户读取内核日志（通过其消息也可能泄漏内核指针）。虽然您需要在每次启动时显式设置<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>的值（或使用一些系统sysctl配置实用程序，如<a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-sysctl.service.html">此工具</a>），但您可以通过<code>CONFIG_SECURITY_DMESG_RESTRICT</code>内核配置选项来配置<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>的初始值。Cloudflare内核和Debian内核都通过这种方式强制执行<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep CONFIG_SECURITY_DMESG_RESTRICT /boot/config-`<span class="built_in">uname</span> -r` CONFIG_SECURITY_DMESG_RESTRICT=y</span><br></pre></td></tr></table></figure>
-
-<p>值得注意的是，&#x2F;proc&#x2F;kallsyms和内核日志不是潜在的内核指针泄漏的唯一来源。Linux内核中有很多遗留问题，而且<a href="https://docs.kernel.org/latest/admin-guide/kernel-parameters.html#debug-kernel-parameters">新的泄漏来源不断被发现和修复</a>。这就是为什么及时跟上最新的内核错误修复版本非常重要。</p>
-<h2 id="Lockdown-LSM"><a href="#Lockdown-LSM" class="headerlink" title="Lockdown LSM"></a>Lockdown LSM</h2><p><a href="https://www.kernel.org/doc/html/latest/admin-guide/LSM/index.html">Linux Security Modules (LSM)</a>是一个基于钩子的框架，用于在Linux内核中实现安全策略和强制访问控制。我们之前[介绍过我们使用的另一个LSM模块，BPF-LSM]。</p>
-<p>BPF-LSM是我们内核安全性的一个有用的基础组件，但在本文中，我们要提到我们使用的另一个有用的LSM模块——<a href="https://man7.org/linux/man-pages/man7/kernel_lockdown.7.html">Lockdown LSM</a>。Lockdown可以处于三种状态（由<code>/sys/kernel/security/lockdown</code>特殊文件控制）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">cat</span> /sys/kernel/security/lockdown [none] integrity confidentiality</span><br></pre></td></tr></table></figure>
-
-<p><code>none</code>是未执行任何操作并且模块实际上被禁用的状态。当Lockdown处于<code>integrity</code>状态时，内核尝试阻止任何可能破坏其完整性的操作。我们在本文中已经涵盖了其中的一些示例：加载未签名的模块和通过KEXEC执行未签名的代码。但是，该LSM还尝试阻止<a href="https://man7.org/linux/man-pages/man7/kernel_lockdown.7.html">LSM的man页中提到的其他潜在方式</a>。<code>confidentiality</code>是最严格的模式，其中Lockdown还尝试阻止内核信息泄漏。在实践中，这对于服务器工作负载来说可能过于严格，因为它会阻止所有运行时调试功能，如<code>perf</code>或eBPF。</p>
-<p>让我们看看Lockdown LSM的实际效果。在一个基本的Debian系统上，初始状态是<code>none</code>，意味着没有被锁定：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">uname</span> -a Linux dev 6.1.0-18-cloud-amd64 <span class="comment">#1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64 GNU/Linux ignat@dev:~$ cat /sys/kernel/security/lockdown [none] integrity confidentiality</span></span><br></pre></td></tr></table></figure>
-
-<p>我们可以将系统切换到<code>integrity</code>模式：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">echo</span> integrity | sudo <span class="built_in">tee</span> /sys/kernel/security/lockdown integrity ignat@dev:~$ <span class="built_in">cat</span> /sys/kernel/security/lockdown none [integrity] confidentiality</span><br></pre></td></tr></table></figure>
-
-<p>值得注意的是，我们只能将系统设置为更严格的状态，而不能返回。也就是说，一旦进入<code>integrity</code>模式，我们只能切换到<code>confidentiality</code>模式，而不能切换回<code>none</code>模式：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">echo</span> none | sudo <span class="built_in">tee</span> /sys/kernel/security/lockdown none <span class="built_in">tee</span>: /sys/kernel/security/lockdown: Operation not permitted</span><br></pre></td></tr></table></figure>
-
-<p>现在，即使在库存的Debian内核上，我们也无法再加载潜在恶意的未签名内核模块：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo insmod mymod/mymod.ko insmod: ERROR: could not insert module mymod/mymod.ko: Operation not permitted</span><br></pre></td></tr></table></figure>
-
-<p>而且内核日志会友好地指出这是由于Lockdown LSM引起的：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo dmesg | <span class="built_in">tail</span> -n 1 [21728.820129] Lockdown: insmod: unsigned module loading is restricted; see man kernel_lockdown.7</span><br></pre></td></tr></table></figure>
-
-<p>正如我们所看到的，Lockdown LSM有助于加强内核的安全性，否则可能不会启用其他强制执行位，如库存的Debian内核。</p>
-<p>如果您自己编译内核，您可以更进一步，将<a href="https://elixir.bootlin.com/linux/v6.6.17/source/security/lockdown/Kconfig#L33">Lockdown LSM的初始状态设置为比none更严格的状态</a>。这正是我们为Cloudflare生产内核所做的：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep LOCK_DOWN /boot/config-6.6.17-cloudflare-2024.2.9 <span class="comment"># CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE is not set CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y # CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>在本文中，我们回顾了Cloudflare在Linux内核安全配置方面使用的一些有用方法。这只是一个小的子集，还有许多其他可用的功能，并且Linux内核社区不断开发、审查和改进更多功能。我们希望本文能够为您介绍这些安全功能，并且如果您尚未这样做，您可以考虑在Linux系统中启用它们。</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>linux</tag>
-        <tag>安全</tag>
       </tags>
   </entry>
   <entry>
@@ -1408,6 +1282,156 @@
       <tags>
         <tag>翻译</tag>
         <tag>GO</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>每个人都应该考虑采用的 Linux 内核安全可调</title>
+    <url>/2024/03/15/%E6%AF%8F%E4%B8%AA%E4%BA%BA%E9%83%BD%E5%BA%94%E8%AF%A5%E8%80%83%E8%99%91%E9%87%87%E7%94%A8%E7%9A%84%20Linux%20%E5%86%85%E6%A0%B8%E5%AE%89%E5%85%A8%E5%8F%AF%E8%B0%83/</url>
+    <content><![CDATA[<h1 id="每个人都应该考虑采用的Linux内核安全可调"><a href="#每个人都应该考虑采用的Linux内核安全可调" class="headerlink" title="每个人都应该考虑采用的Linux内核安全可调"></a>每个人都应该考虑采用的Linux内核安全可调</h1><p>原文连接：<a href="https://blog.cloudflare.com/linux-kernel-hardening/">https://blog.cloudflare.com/linux-kernel-hardening/</a></p>
+<p>本文介绍了一些Linux内核的功能，这些功能帮助我们保持生产系统更安全。我们将深入探讨它们的工作原理以及为什么您也应该考虑启用它们。</p>
+<span id="more"></span>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/b6bf3148716461c32a9f1e5447cb2c62.png" alt="Linux内核安全调整：每个人都应该考虑采用的方法"></p>
+<p>Linux内核是许多现代生产系统的核心。它决定了何时允许运行任何代码以及哪些程序&#x2F;用户可以访问哪些资源。它管理内存，调解对硬件的访问，并在程序运行时的幕后代表程序执行大部分工作。由于内核始终参与任何代码执行，它处于最佳位置来保护系统免受恶意程序的侵害，执行所需的系统安全策略，并为更安全的生产环境提供安全功能。</p>
+<p>在本文中，我们将回顾Cloudflare在Linux内核安全配置方面的一些使用方法，以及它们如何帮助阻止或减少潜在的系统妥协。</p>
+<h2 id="安全启动"><a href="#安全启动" class="headerlink" title="安全启动"></a>安全启动</h2><p>当机器（无论是笔记本还是服务器）启动时，它经历了几个引导阶段：</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/a960262885fbf648dbdc2bd800cde2ca.png" alt="image3-17"></p>
+<p>在安全启动架构中，上图中的每个阶段在传递执行权之前都会验证下一个阶段的完整性，从而形成所谓的安全启动链。这样，“可信度”就扩展到引导链中的每个组件，因为如果我们验证了特定阶段的代码完整性，我们可以相信该代码可以验证下一个阶段的完整性。</p>
+<p>我们之前已经介绍过Cloudflare在引导过程的初始阶段实现安全启动的方法。在本文中，我们将重点介绍Linux内核。</p>
+<p>安全启动是任何操作系统安全机制的基石。Linux内核是操作系统安全配置和策略的主要执行者，因此我们必须确保Linux内核本身没有被篡改。在我们之前关于安全启动的文章中，我们展示了如何使用UEFI Secure Boot来确保Linux内核的完整性。</p>
+<p>但接下来会发生什么呢？内核执行后，它可能尝试加载其他驱动程序，或者在Linux世界中称为内核模块。内核模块加载不仅限于引导过程。模块可以在运行时的任何时候加载——当插入新设备并需要驱动程序时，需要对网络堆栈进行一些附加扩展（例如，用于细粒度防火墙规则），或者只是由系统管理员手动加载。</p>
+<p>然而，不受控制的内核模块加载可能对系统完整性构成重大风险。与常规程序不同，内核模块是直接注入并在Linux内核地址空间中直接执行的代码片段。在不同的内核模块和核心内核子系统中，代码和数据之间没有分离，因此一切都可以访问一切。这意味着一个恶意的内核模块可以完全使操作系统的可信度失效，并使安全启动变得无效。例如，考虑一个简单的Debian 12（Bookworm安装），但启用了SELinux配置和强制执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ lsb_release --all</span><br><span class="line">No LSB modules are available.</span><br><span class="line">Distributor ID:	Debian</span><br><span class="line">Description:	Debian GNU/Linux 12 (bookworm)</span><br><span class="line">Release:	12</span><br><span class="line">Codename:	bookworm</span><br><span class="line">ignat@dev:~$ <span class="built_in">uname</span> -a</span><br><span class="line">Linux dev 6.1.0-18-cloud-amd64 <span class="comment">#1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64 GNU/Linux</span></span><br><span class="line">ignat@dev:~$ sudo getenforce</span><br><span class="line">Enforcing</span><br></pre></td></tr></table></figure>
+
+<p>现在我们需要进行一些研究。首先，我们看到我们正在运行6.1.76 Linux内核。如果我们探索源代码，我们会发现<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/hooks.c#L107">在内核内部，SELinux配置存储在一个单例结构中</a>，该结构<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/include/security.h#L92">定义如下</a>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">selinux_state</span> &#123;</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY_SELINUX_DISABLE</span></span><br><span class="line">	<span class="type">bool</span> disabled;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY_SELINUX_DEVELOP</span></span><br><span class="line">	<span class="type">bool</span> enforcing;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="type">bool</span> checkreqprot;</span><br><span class="line">	<span class="type">bool</span> initialized;</span><br><span class="line">	<span class="type">bool</span> policycap[__POLICYDB_CAP_MAX];</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">status_page</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">status_lock</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">selinux_avc</span> *<span class="title">avc</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">selinux_policy</span> __<span class="title">rcu</span> *<span class="title">policy</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">policy_mutex</span>;</span></span><br><span class="line">&#125; __randomize_layout;</span><br></pre></td></tr></table></figure>
+
+<p>从上面可以看出，如果内核配置启用了<code>CONFIG_SECURITY_SELINUX_DEVELOP</code>，则该结构将具有一个名为<code>enforcing</code>的布尔变量，该变量控制SELinux在运行时的强制执行状态。这正是上面的<code>$ sudo getenforce</code>命令返回的内容。我们可以再次检查Debian内核确实已启用该配置选项：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep CONFIG_SECURITY_SELINUX_DEVELOP /boot/config-`<span class="built_in">uname</span> -r` CONFIG_SECURITY_SELINUX_DEVELOP=y</span><br></pre></td></tr></table></figure>
+
+<p>很好！现在我们在内核中有一个变量，负责某种安全执行，我们可以尝试攻击它。但有一个问题是<code>__randomize_layout</code>属性：由于我们的Debian内核实际上没有设置<code>CONFIG_SECURITY_SELINUX_DISABLE</code>，因此<code>enforcing</code>实际上将是结构体的第一个成员。因此，如果我们知道结构体的位置，我们立即就知道了<code>enforcing</code>标志的位置。使用<code>__randomize_layout</code>，在内核编译期间，编译器可能会将成员放置在结构体的任意位置，因此创建通用的漏洞利用变得更加困难。但是，在内核中任意结构体随机化<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/Kconfig.hardening#L301">可能会引入性能影响</a>，因此通常被禁用，并且对于Debian内核而言，它是被禁用的：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep RANDSTRUCT /boot/config-`<span class="built_in">uname</span> -r` CONFIG_RANDSTRUCT_NONE=y</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以使用<a href="https://git.kernel.org/pub/scm/devel/pahole/pahole.git/">pahole工具</a>和内核调试符号（如果可用）或（在现代内核上，如果启用）内核<a href="https://www.kernel.org/doc/html/next/bpf/btf.html">BTF</a>信息来确认<code>enforcing</code>标志的编译位置。我们将使用后者：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ pahole -C selinux_state /sys/kernel/btf/vmlinux</span><br><span class="line">struct selinux_state &#123;</span><br><span class="line">	bool                       enforcing;            /*     0     1 */</span><br><span class="line">	bool                       checkreqprot;         /*     1     1 */</span><br><span class="line">	bool                       initialized;          /*     2     1 */</span><br><span class="line">	bool                       policycap[8];         /*     3     8 */</span><br><span class="line"></span><br><span class="line">	/* XXX 5 bytes hole, try to pack */</span><br><span class="line"></span><br><span class="line">	struct page *              status_page;          /*    16     8 */</span><br><span class="line">	struct mutex               status_lock;          /*    24    32 */</span><br><span class="line">	struct selinux_avc *       avc;                  /*    56     8 */</span><br><span class="line">	/* --- cacheline 1 boundary (64 bytes) --- */</span><br><span class="line">	struct selinux_policy *    policy;               /*    64     8 */</span><br><span class="line">	struct mutex               policy_mutex;         /*    72    32 */</span><br><span class="line"></span><br><span class="line">	/* size: 104, cachelines: 2, members: 9 */</span><br><span class="line">	/* <span class="built_in">sum</span> members: 99, holes: 1, <span class="built_in">sum</span> holes: 5 */</span><br><span class="line">	/* last cacheline: 40 bytes */</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>因此，<code>enforcing</code>确实位于结构体的开头，我们甚至不需要成为特权用户即可确认这一点。</p>
+<p>太棒了！我们只需要内核内的<code>selinux_state</code>变量的运行时地址：<br>（shell&#x2F;bash）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms</span><br><span class="line">ffffffffbc3bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
+
+<p>有了所有这些信息，我们可以编写一个几乎完全符合教科书的简单内核模块来操纵SELinux状态：</p>
+<p>Mymod.c:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">mod_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">bool</span> *selinux_enforce = (<span class="type">bool</span> *)<span class="number">0xffffffffbc3bcae0</span>;</span><br><span class="line">	*selinux_enforce = <span class="literal">false</span>;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">mod_fini</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(mod_init);</span><br><span class="line">module_exit(mod_fini);</span><br><span class="line"></span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;A somewhat malicious module&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;Ignat Korchagin &lt;ignat@cloudflare.com&gt;&quot;</span>);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>以及相应的<code>Kbuild</code>文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">obj-m := mymod.o</span><br></pre></td></tr></table></figure>
+
+<p>使用这两个文件，我们可以根据<a href="https://docs.kernel.org/kbuild/modules.html">官方内核文档</a>构建一个完整的内核模块：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">cd</span> mymod/</span><br><span class="line">ignat@dev:~/mymod$ <span class="built_in">ls</span></span><br><span class="line">Kbuild  mymod.c</span><br><span class="line">ignat@dev:~/mymod$ make -C /lib/modules/`<span class="built_in">uname</span> -r`/build M=<span class="variable">$PWD</span></span><br><span class="line">make: Entering directory <span class="string">&#x27;/usr/src/linux-headers-6.1.0-18-cloud-amd64&#x27;</span></span><br><span class="line">  CC [M]  /home/ignat/mymod/mymod.o</span><br><span class="line">  MODPOST /home/ignat/mymod/Module.symvers</span><br><span class="line">  CC [M]  /home/ignat/mymod/mymod.mod.o</span><br><span class="line">  LD [M]  /home/ignat/mymod/mymod.ko</span><br><span class="line">  BTF [M] /home/ignat/mymod/mymod.ko</span><br><span class="line">Skipping BTF generation <span class="keyword">for</span> /home/ignat/mymod/mymod.ko due to unavailability of vmlinux</span><br><span class="line">make: Leaving directory <span class="string">&#x27;/usr/src/linux-headers-6.1.0-18-cloud-amd64&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果现在尝试加载此模块，系统可能不允许，因为SELinux策略的原因：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo insmod mymod.ko insmod: ERROR: could not load module mymod.ko: Permission denied</span><br></pre></td></tr></table></figure>
+
+<p>我们可以通过将模块复制到标准模块路径中的某个位置来解决此问题：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo <span class="built_in">cp</span> mymod.ko /lib/modules/`<span class="built_in">uname</span> -r`/kernel/crypto/</span><br></pre></td></tr></table></figure>
+
+<p>现在让我们试试：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo getenforce Enforcing ignat@dev:~/mymod$ sudo insmod /lib/modules/`<span class="built_in">uname</span> -r`/kernel/crypto/mymod.ko ignat@dev:~/mymod$ sudo getenforce Permissive</span><br></pre></td></tr></table></figure>
+
+<p>我们不仅通过恶意内核模块静默地禁用了SELinux保护，而且还完成了这一操作。正常的<code>sudo setenforce 0</code>即使被允许，也会通过官方的<a href="https://elixir.bootlin.com/linux/v6.1.76/source/security/selinux/selinuxfs.c#L173">selinuxfs接口，并发出审核消息</a>。我们的代码直接操作内核内存，因此没有人会发出警报。这说明为什么不受控制的内核模块加载非常危险，这也是为什么大多数安全标准和商业安全监控产品主张密切监控内核模块加载的原因。</p>
+<p>但是，在Cloudflare上，我们不需要监视内核模块。让我们在Cloudflare生产内核上重复这个过程（为简洁起见，跳过模块重新编译）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64</span><br><span class="line">CONFIG_MODULE_SIG_FORMAT=y</span><br><span class="line">CONFIG_MODULE_SIG=y</span><br><span class="line"><span class="comment"># CONFIG_MODULE_SIG_FORCE is not set</span></span><br><span class="line">…</span><br></pre></td></tr></table></figure>
+
+<p>当尝试加载模块时，我们会收到“Key was rejected by service”错误，并且内核日志将显示以下消息：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~/mymod$ sudo dmesg | <span class="built_in">tail</span> -n 1 [41515.037031] Loading of unsigned module is rejected</span><br></pre></td></tr></table></figure>
+
+<p>这是因为Cloudflare内核要求所有内核模块具有有效的签名，因此我们无需担心恶意模块在某个时间点被加载：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG_FORCE /boot/config-`<span class="built_in">uname</span> -r` CONFIG_MODULE_SIG_FORCE=y</span><br></pre></td></tr></table></figure>
+
+<p>为了完整起见，值得注意的是，Debian标准内核也支持模块签名，但不强制执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64 CONFIG_MODULE_SIG_FORMAT=y CONFIG_MODULE_SIG=y <span class="comment"># CONFIG_MODULE_SIG_FORCE is not set …</span></span><br></pre></td></tr></table></figure>
+
+<p>上述配置意味着，如果可用，内核将验证模块签名。但是如果没有签名-模块将被加载，并发出警告消息，<a href="https://docs.kernel.org/admin-guide/tainted-kernels.html">内核将被污染</a>。</p>
+<h3 id="内核模块签名的密钥管理"><a href="#内核模块签名的密钥管理" class="headerlink" title="内核模块签名的密钥管理"></a>内核模块签名的密钥管理</h3><p>签名的内核模块非常好，但是它会带来密钥管理问题：要签名一个模块，我们需要一个由内核信任的签名密钥对。密钥对的公钥通常直接嵌入到内核二进制文件中，因此内核可以轻松使用它来验证模块签名。密钥对的私钥需要受到保护和安全，因为如果泄漏，任何人都可以编译和签名一个潜在恶意的内核模块，而我们的内核将接受它。</p>
+<p>但是，如何消除丢失风险呢？首先不要一开始就拥有它！幸运的是，内核构建系统<a href="https://elixir.bootlin.com/linux/v6.6.17/source/certs/Makefile#L36">将为模块签名生成一个随机密钥对</a>，如果没有提供密钥。在Cloudflare，我们使用该功能在内核编译阶段对所有内核模块进行签名。但是，在编译和签名完成后，我们不会将私钥存储在安全的位置，而是销毁私钥：</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/46b61bf0a9163c9836837b598bc64d9e.png" alt="image1-19"></p>
+<p>因此，根据上述过程：</p>
+<ol>
+<li>内核构建系统为模块签名生成了一个随机密钥对，并编译内核和模块</li>
+<li>公钥嵌入到内核映像中，私钥用于签名所有模块</li>
+<li>私钥被销毁</li>
+</ol>
+<p>通过这种方案，我们不仅无需担心模块签名密钥管理问题，而且我们还为每个发布到生产环境的内核使用不同的密钥。因此，即使某个特定的构建过程被劫持并且签名密钥未被销毁并且有可能泄漏，当发布内核更新时，该密钥将不再有效。</p>
+<p>然而，值得注意的是，Debian内核的库存版本也支持模块签名，但不强制执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep MODULE_SIG /boot/config-6.1.0-18-cloud-amd64 CONFIG_MODULE_SIG_FORMAT=y CONFIG_MODULE_SIG=y <span class="comment"># CONFIG_MODULE_SIG_FORCE is not set …</span></span><br></pre></td></tr></table></figure>
+
+<p>上述配置意味着，如果可用，内核将验证模块签名。但是如果没有签名-模块将被加载，并发出警告消息，<a href="https://docs.kernel.org/admin-guide/tainted-kernels.html">内核将被污染</a>。</p>
+<h3 id="KEXEC"><a href="#KEXEC" class="headerlink" title="KEXEC"></a>KEXEC</h3><p><a href="https://en.wikipedia.org/wiki/Kexec">KEXEC</a>（或<code>kexec_load()</code>）是Linux中一个有趣的系统调用，它允许一个内核直接执行（或跳转到）另一个内核。这个想法是在不经过完整的重新启动过程的情况下更快地切换&#x2F;更新&#x2F;降级内核，以减少潜在的系统停机时间。然而，它是在很久以前开发的，当时安全启动和系统完整性还不是一个问题。因此，它的原始设计存在安全缺陷，可以<a href="https://mjg59.dreamwidth.org/28746.html">绕过安全启动并潜在地破坏系统完整性</a>。</p>
+<p>我们可以根据<a href="https://man7.org/linux/man-pages/man2/kexec_load.2.html">系统调用的定义</a>看到这些问题：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kexec_segment</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *buf;</span><br><span class="line">	<span class="type">size_t</span> bufsz;</span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *mem;</span><br><span class="line">	<span class="type">size_t</span> memsz;</span><br><span class="line">&#125;;</span><br><span class="line">...</span><br><span class="line"><span class="type">long</span> <span class="title function_">kexec_load</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> entry, <span class="type">unsigned</span> <span class="type">long</span> nr_segments, <span class="keyword">struct</span> kexec_segment *segments, <span class="type">unsigned</span> <span class="type">long</span> flags)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>因此，内核期望的只是一组要执行的代码缓冲区。在当时，内核内部没有太多的数据解析的愿望，因此，解析要执行的内核映像是在用户空间中完成的，并且仅向内核提供其所需的数据。此外，为了在旧内核关闭时接管并且新内核尚未执行时，我们需要一个中间程序。在kexec世界中，此程序称为<a href="https://git.kernel.org/pub/scm/utils/kernel/kexec/kexec-tools.git/tree/purgatory">purgatory</a>。因此，问题显而易见：我们向内核提供一堆代码，它将愉快地以最高特权级别执行它。但是，与原始内核或purgatory代码相反，我们可以轻松地提供类似于本文中演示的代码，该代码禁用SELinux（或对内核执行其他操作）。</p>
+<p>在Cloudflare上，我们已经将<code>kexec_load()</code>禁用了一段时间，仅因为这个原因。使用kexec实现更快的重新启动的优点是，<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L30">硬件可能未正确初始化</a>，因此即使没有安全问题，也不值得使用它。但是，kexec确实提供了一个有用的功能-它是Linux内核<a href="https://docs.kernel.org/admin-guide/kdump/kdump.html">崩溃转储解决方案</a>的基础。简而言之，如果内核在生产中崩溃（由于错误或其他错误），备份内核（使用kexec预先加载）可以接管，收集并保存内存转储以供进一步调查。这使得在生产中更有效地调查内核和其他问题成为可能，因此它是一个强大的工具。</p>
+<p>幸运的是，自从<a href="https://mjg59.dreamwidth.org/28746.html">指出了kexec的原始问题</a>以来，Linux开发了一种替代的<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L36">安全的kexec接口</a>：与其使用代码缓冲区，它期望使用包含要执行的内核映像和initrd的文件描述符，并在内核内部进行解析。因此，只能提供有效的内核映像。在此基础上，我们可以<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L48">配置</a>并<a href="https://elixir.bootlin.com/linux/v6.6.17/source/kernel/Kconfig.kexec#L62">要求</a>kexec以确保所提供的映像具有正确的签名，因此只有经授权的代码可以在kexec场景中执行。一个安全的kexec配置如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep KEXEC /boot/config-`<span class="built_in">uname</span> -r` CONFIG_KEXEC_CORE=y CONFIG_HAVE_IMA_KEXEC=y <span class="comment"># CONFIG_KEXEC is not set CONFIG_KEXEC_FILE=y CONFIG_KEXEC_SIG=y CONFIG_KEXEC_SIG_FORCE=y CONFIG_KEXEC_BZIMAGE_VERIFY_SIG=y …</span></span><br></pre></td></tr></table></figure>
+
+<p>以上配置确保了禁用了传统的<code>kexec_load()</code>系统调用，通过禁用<code>CONFIG_KEXEC</code>来实现，但仍然可以使用新的<code>kexec_file_load()</code>系统调用通过<code>CONFIG_KEXEC_FILE=y</code>进行Linux内核崩溃转储的配置，并强制执行签名检查（<code>CONFIG_KEXEC_SIG=y</code>和<code>CONFIG_KEXEC_SIG_FORCE=y</code>）。</p>
+<p>请注意，Debian内核的库存版本启用了传统的<code>kexec_load()</code>系统调用，并且不强制执行<code>kexec_file_load()</code>的签名检查（类似于模块签名检查）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep KEXEC /boot/config-6.1.0-18-cloud-amd64 CONFIG_KEXEC=y CONFIG_KEXEC_FILE=y CONFIG_ARCH_HAS_KEXEC_PURGATORY=y CONFIG_KEXEC_SIG=y <span class="comment"># CONFIG_KEXEC_SIG_FORCE is not set CONFIG_KEXEC_BZIMAGE_VERIFY_SIG=y …</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="内核地址空间布局随机化（KASLR）"><a href="#内核地址空间布局随机化（KASLR）" class="headerlink" title="内核地址空间布局随机化（KASLR）"></a>内核地址空间布局随机化（KASLR）</h2><p>即使在库存的Debian内核上，如果您尝试在系统重新启动后重复我们在“安全启动”部分中描述的练习，您可能会发现它无法再禁用SELinux。这是因为我们在恶意内核模块中硬编码了<code>selinux_state</code>的内核地址，但现在地址已更改：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms ffffffffb41bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://docs.kernel.org/security/self-protection.html#kernel-address-space-layout-randomization-kaslr">内核地址空间布局随机化（或KASLR）</a>是一个简单的概念：它在每次启动时都会轻微且随机地移动内核代码和数据：</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/70708d7d7185c3edd9a77c712198af8c.png" alt="Screenshot-2024-03-06-at-13.53.23-2"></p>
+<p>这是为了对抗基于对内核内部结构和代码位置的了解的有针对性的利用（如本文中的恶意模块）。对于像Debian这样的流行Linux发行版内核尤其有用，因为大多数用户使用相同的二进制文件，任何人都可以下载调试符号和包含所有内核内部地址的System.map文件。只要注意：它不会阻止模块加载和造成伤害，但它可能无法实现禁用SELinux的有针对性效果。相反，它将修改随机的内核内存片段，可能导致内核崩溃。</p>
+<p>Cloudflare内核和Debian内核都启用了此功能：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep RANDOMIZE_BASE /boot/config-`<span class="built_in">uname</span> -r` CONFIG_RANDOMIZE_BASE=y</span><br></pre></td></tr></table></figure>
+
+<h3 id="受限制的内核指针"><a href="#受限制的内核指针" class="headerlink" title="受限制的内核指针"></a>受限制的内核指针</h3><p>虽然KASLR有助于针对性的利用，但很容易绕过，因为每次只是通过单个随机偏移量移动所有内容，如上图所示。因此，如果攻击者知道至少一个运行时内核地址，他们可以通过将运行时地址从内核的System.map文件中的相同符号（函数或数据结构）的编译时地址中减去来恢复此偏移量。一旦他们知道了偏移量，他们就可以通过调整它们来恢复所有其他符号的地址。</p>
+<p>因此，现代内核为了至少不将内核地址泄漏给非特权用户而采取了预防措施。其中一个主要的调整选项是<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>。将其至少设置为<code>1</code>以禁止普通用户查看内核指针是一个好主意：<br>（shell&#x2F;bash）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo sysctl -w kernel.kptr_restrict=1</span><br><span class="line">kernel.kptr_restrict = 1</span><br><span class="line">ignat@dev:~$ grep selinux_state /proc/kallsyms</span><br><span class="line">0000000000000000 B selinux_state</span><br></pre></td></tr></table></figure>
+
+<p>特权用户仍然可以查看指针：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo grep selinux_state /proc/kallsyms ffffffffb41bcae0 B selinux_state</span><br></pre></td></tr></table></figure>
+
+<p>类似于<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>，还有<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>，如果设置，将阻止普通用户读取内核日志（通过其消息也可能泄漏内核指针）。虽然您需要在每次启动时显式设置<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#kptr-restrict">kptr_restrict sysctl</a>的值（或使用一些系统sysctl配置实用程序，如<a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-sysctl.service.html">此工具</a>），但您可以通过<code>CONFIG_SECURITY_DMESG_RESTRICT</code>内核配置选项来配置<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>的初始值。Cloudflare内核和Debian内核都通过这种方式强制执行<a href="https://www.kernel.org/doc/html/latest/admin-guide/sysctl/kernel.html#dmesg-restrict">dmesg_restrict</a>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep CONFIG_SECURITY_DMESG_RESTRICT /boot/config-`<span class="built_in">uname</span> -r` CONFIG_SECURITY_DMESG_RESTRICT=y</span><br></pre></td></tr></table></figure>
+
+<p>值得注意的是，&#x2F;proc&#x2F;kallsyms和内核日志不是潜在的内核指针泄漏的唯一来源。Linux内核中有很多遗留问题，而且<a href="https://docs.kernel.org/latest/admin-guide/kernel-parameters.html#debug-kernel-parameters">新的泄漏来源不断被发现和修复</a>。这就是为什么及时跟上最新的内核错误修复版本非常重要。</p>
+<h2 id="Lockdown-LSM"><a href="#Lockdown-LSM" class="headerlink" title="Lockdown LSM"></a>Lockdown LSM</h2><p><a href="https://www.kernel.org/doc/html/latest/admin-guide/LSM/index.html">Linux Security Modules (LSM)</a>是一个基于钩子的框架，用于在Linux内核中实现安全策略和强制访问控制。我们之前[介绍过我们使用的另一个LSM模块，BPF-LSM]。</p>
+<p>BPF-LSM是我们内核安全性的一个有用的基础组件，但在本文中，我们要提到我们使用的另一个有用的LSM模块——<a href="https://man7.org/linux/man-pages/man7/kernel_lockdown.7.html">Lockdown LSM</a>。Lockdown可以处于三种状态（由<code>/sys/kernel/security/lockdown</code>特殊文件控制）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">cat</span> /sys/kernel/security/lockdown [none] integrity confidentiality</span><br></pre></td></tr></table></figure>
+
+<p><code>none</code>是未执行任何操作并且模块实际上被禁用的状态。当Lockdown处于<code>integrity</code>状态时，内核尝试阻止任何可能破坏其完整性的操作。我们在本文中已经涵盖了其中的一些示例：加载未签名的模块和通过KEXEC执行未签名的代码。但是，该LSM还尝试阻止<a href="https://man7.org/linux/man-pages/man7/kernel_lockdown.7.html">LSM的man页中提到的其他潜在方式</a>。<code>confidentiality</code>是最严格的模式，其中Lockdown还尝试阻止内核信息泄漏。在实践中，这对于服务器工作负载来说可能过于严格，因为它会阻止所有运行时调试功能，如<code>perf</code>或eBPF。</p>
+<p>让我们看看Lockdown LSM的实际效果。在一个基本的Debian系统上，初始状态是<code>none</code>，意味着没有被锁定：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">uname</span> -a Linux dev 6.1.0-18-cloud-amd64 <span class="comment">#1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64 GNU/Linux ignat@dev:~$ cat /sys/kernel/security/lockdown [none] integrity confidentiality</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以将系统切换到<code>integrity</code>模式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">echo</span> integrity | sudo <span class="built_in">tee</span> /sys/kernel/security/lockdown integrity ignat@dev:~$ <span class="built_in">cat</span> /sys/kernel/security/lockdown none [integrity] confidentiality</span><br></pre></td></tr></table></figure>
+
+<p>值得注意的是，我们只能将系统设置为更严格的状态，而不能返回。也就是说，一旦进入<code>integrity</code>模式，我们只能切换到<code>confidentiality</code>模式，而不能切换回<code>none</code>模式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ <span class="built_in">echo</span> none | sudo <span class="built_in">tee</span> /sys/kernel/security/lockdown none <span class="built_in">tee</span>: /sys/kernel/security/lockdown: Operation not permitted</span><br></pre></td></tr></table></figure>
+
+<p>现在，即使在库存的Debian内核上，我们也无法再加载潜在恶意的未签名内核模块：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo insmod mymod/mymod.ko insmod: ERROR: could not insert module mymod/mymod.ko: Operation not permitted</span><br></pre></td></tr></table></figure>
+
+<p>而且内核日志会友好地指出这是由于Lockdown LSM引起的：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ sudo dmesg | <span class="built_in">tail</span> -n 1 [21728.820129] Lockdown: insmod: unsigned module loading is restricted; see man kernel_lockdown.7</span><br></pre></td></tr></table></figure>
+
+<p>正如我们所看到的，Lockdown LSM有助于加强内核的安全性，否则可能不会启用其他强制执行位，如库存的Debian内核。</p>
+<p>如果您自己编译内核，您可以更进一步，将<a href="https://elixir.bootlin.com/linux/v6.6.17/source/security/lockdown/Kconfig#L33">Lockdown LSM的初始状态设置为比none更严格的状态</a>。这正是我们为Cloudflare生产内核所做的：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ignat@dev:~$ grep LOCK_DOWN /boot/config-6.6.17-cloudflare-2024.2.9 <span class="comment"># CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE is not set CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY=y # CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>在本文中，我们回顾了Cloudflare在Linux内核安全配置方面使用的一些有用方法。这只是一个小的子集，还有许多其他可用的功能，并且Linux内核社区不断开发、审查和改进更多功能。我们希望本文能够为您介绍这些安全功能，并且如果您尚未这样做，您可以考虑在Linux系统中启用它们。</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>linux</tag>
+        <tag>安全</tag>
       </tags>
   </entry>
   <entry>
@@ -1692,30 +1716,6 @@
       </tags>
   </entry>
   <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
-<span id="more"></span>
-
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>年度总结</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS 0907-0913</title>
     <url>/2022/09/30/arts/ARTS%200907-0913/</url>
     <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -1764,42 +1764,6 @@
       </categories>
       <tags>
         <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-40</title>
-    <url>/2023/10/02/arts/ARTS-2023-40/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
-<ol>
-<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
-<ol>
-<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
-</ol>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<ol>
-<li>我要坚持写长文博客。。</li>
-<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
       </tags>
   </entry>
   <entry>
@@ -1869,6 +1833,42 @@
 </blockquote>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
 <p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-40</title>
+    <url>/2023/10/02/arts/ARTS-2023-40/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode</p>
+<ol>
+<li><a href="https://leetcode.cn/problems/excel-sheet-column-title/">168. Excel表列名称</a><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convertToTitle</span><span class="params">(columnNumber <span class="type">int</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line"><span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line"><span class="keyword">for</span> columnNumber &gt; <span class="number">0</span> &#123;</span><br><span class="line">	columnNumber-- <span class="comment">// 0-25</span></span><br><span class="line">	res = <span class="type">string</span>(<span class="type">rune</span>(columnNumber%<span class="number">26</span>+<span class="string">&#x27;A&#x27;</span>)) + res</span><br><span class="line">	columnNumber /= <span class="number">26</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+就是把 int 转26进制，辗转相除法？ 好像是这个名字把？</li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><h2 id="好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips"><a href="#好文-阅读1-https-buildkite-com-blog-goodbye-integers-hello-uuids使用uuid-作为数据库的主键Id，兼顾性能以及可用性，mongodb-的-uuid-前八位是时间戳，可以用来进行范围查询。-Technique-Tips" class="headerlink" title="#好文 #阅读1. https://buildkite.com/blog/goodbye-integers-hello-uuids使用uuid 作为数据库的主键Id，兼顾性能以及可用性，mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。## Technique&#x2F;Tips"></a>#好文 #阅读<br>1. <a href="https://buildkite.com/blog/goodbye-integers-hello-uuids">https://buildkite.com/blog/goodbye-integers-hello-uuids</a><br>使用uuid 作为数据库的主键Id，兼顾性能以及可用性，<br>mongodb 的 uuid 前八位是时间戳，可以用来进行范围查询。<br>## Technique&#x2F;Tips</h2><p>#工具  </p>
+<ol>
+<li>#浏览器插件 <a href="https://www.trancy.org/zh-cn">trancy</a> 一个沉浸式的翻译插件，集成了ai功能，目前这种插件越来越多了。</li>
+</ol>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<ol>
+<li>我要坚持写长文博客。。</li>
+<li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
+</ol>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2001,6 +2001,34 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-46</title>
     <url>/2023/11/13/arts/ARTS-2023-46/</url>
     <content><![CDATA[<blockquote>
@@ -2043,59 +2071,21 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
+
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-49</title>
-    <url>/2023/12/04/arts/ARTS-2023-49/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>leetcode 173: 也是中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
-<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-        <tag>工程师工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>ARTS-2023-47</title>
@@ -2127,6 +2117,33 @@
       </categories>
       <tags>
         <tag>atrs</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-49</title>
+    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>leetcode 173: 也是中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
+<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+        <tag>工程师工具</tag>
       </tags>
   </entry>
   <entry>
@@ -2166,38 +2183,6 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2024-02</title>
-    <url>/2024/01/09/arts/ARTS-2024-02/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ARTS-2023-52</title>
     <url>/2023/12/25/arts/ARTS-2023-52/</url>
     <content><![CDATA[<blockquote>
@@ -2213,6 +2198,21 @@
 <li><a href="https://chromewebstore.google.com/detail/%E8%B1%86%E4%BC%B4%EF%BC%9A%E8%B1%86%E7%93%A3%E8%B4%A6%E5%8F%B7%E5%A4%87%E4%BB%BD%E5%B7%A5%E5%85%B7/ghppfgfeoafdcaebjoglabppkfmbcjdd?hl=zh-CN">豆伴：豆瓣账号备份工具</a> 豆瓣重度用户，这个浏览器拓展可以将你再豆瓣的信息全部保存的到本地。 也可以导入另外的账号，好用。</li>
 <li>devv.ai  面向程序员的AIGC 浏览器，</li>
 </ul>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2024-02</title>
+    <url>/2024/01/09/arts/ARTS-2024-02/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://commandcenter.blogspot.com/2024/01/what-we-got-right-what-we-got-wrong.html">What We Got Right, What We Got Wrong</a><br>    # 做对的地方：<br>    1.  统一的规范，方便后面的使用者理解，以及实现不同的编译器，同时，为了兼容不同的编译器，反过来又影响 规范的统一。<br>    2. 多种编译器，跟1 是绑定关系<br>    3. 跨平台，<br>    4.  保持向后兼容<br>    5. 完善的文档库<br>    6. 功能强大且多样的工具<br>    7. 格式化 fmt（最喜欢的功能，不需要靠程序员自己维护统一的风格）<br>    # 做的不太好的地方<br>    1. 并发，并发!&#x3D;并行，<br>    golang 的 go（goroutine）功能，让并发编程真正的走进了每个程序员的日常生活，让go看起来像一个新的语言，很令人兴奋，有时候我们会再程序里面写一堆 go func(){} ，但是却没取到想要的结果，甚至可能代码更慢了，这很打击积极性，其中真正的原因是 并发！&#x3D;并行。<br>    2. interface<br>     主要是社区觉得没泛型，其实接口很好用的。<br>    3. 编译器<br>    4. 项目管理 社区运营总是很难的<br>    5. 包管理 深恶痛绝</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 <a href="https://github.com/princjef/gomarkdoc">gomarkdoc</a> 再开发代码的时候，我们需要维护一份代码以及一份文档，通常这两个部分是分开的，gomarkdoc 可以帮我们从的注释中生成接口文档，方便我们我们写文档以及维护。</p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
