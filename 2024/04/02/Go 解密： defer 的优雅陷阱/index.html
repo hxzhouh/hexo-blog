@@ -23,31 +23,30 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
      crossorigin="anonymous"></script>
 
-    <meta name="description" content="go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。  原因是因为谷歌在某一版本的chrome中禁用了本地API 解决办法：  注册一个chrome token https:&#x2F;&#x2F;developers.chrome.com&#x2F;origintrials&#x2F;#&#x2F;register_t">
+    <meta name="description" content="深入理解 go defer">
 <meta property="og:type" content="article">
-<meta property="og:title" content="go trace view trace 显示空白">
-<meta property="og:url" content="http://example.com/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/index.html">
+<meta property="og:title" content="go 解密 defer 的优雅陷阱">
+<meta property="og:url" content="http://example.com/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/index.html">
 <meta property="og:site_name" content="萝卜的博客">
-<meta property="og:description" content="go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。  原因是因为谷歌在某一版本的chrome中禁用了本地API 解决办法：  注册一个chrome token https:&#x2F;&#x2F;developers.chrome.com&#x2F;origintrials&#x2F;#&#x2F;register_t">
+<meta property="og:description" content="深入理解 go defer">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png">
-<meta property="article:published_time" content="2020-03-21T03:55:43.000Z">
-<meta property="article:modified_time" content="2023-11-20T06:57:45.628Z">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png">
+<meta property="article:published_time" content="2024-04-02T08:19:00.000Z">
+<meta property="article:modified_time" content="2024-04-02T08:20:08.068Z">
 <meta property="article:author" content="hxzhouh">
-<meta property="article:tag" content="Go">
-<meta property="article:tag" content="最佳实践">
+<meta property="article:tag" content="go">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png">
 
 
-<link rel="canonical" href="http://example.com/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/">
+<link rel="canonical" href="http://example.com/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/","path":"2020/03/21/go trace view trace 显示空白/","title":"go trace view trace 显示空白"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/","path":"2024/04/02/Go 解密： defer 的优雅陷阱/","title":"go 解密 defer 的优雅陷阱"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>go trace view trace 显示空白 | 萝卜的博客</title>
+<title>go 解密 defer 的优雅陷阱 | 萝卜的博客</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
   <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
@@ -110,7 +109,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -123,6 +122,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#defer-%E7%9A%84%E5%87%A0%E4%B8%AA%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">defer 的几个使用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#defer-%E5%B8%A6%E6%9D%A5%E7%9A%84%E6%80%A7%E8%83%BD%E6%8D%9F%E8%80%97"><span class="nav-number">2.</span> <span class="nav-text">defer 带来的性能损耗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -173,7 +173,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -186,12 +186,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="go trace view trace 显示空白 | 萝卜的博客">
-      <meta itemprop="description" content="">
+      <meta itemprop="name" content="go 解密 defer 的优雅陷阱 | 萝卜的博客">
+      <meta itemprop="description" content="深入理解 go defer">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          go trace view trace 显示空白
+          go 解密 defer 的优雅陷阱
         </h1>
 
         <div class="post-meta-container">
@@ -201,15 +201,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2020-03-21 11:55:43" itemprop="dateCreated datePublished" datetime="2020-03-21T11:55:43+08:00">2020-03-21</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-11-20 14:57:45" itemprop="dateModified" datetime="2023-11-20T14:57:45+08:00">2023-11-20</time>
+      <time title="创建时间：2024-04-02 16:19:00 / 修改时间：16:20:08" itemprop="dateCreated datePublished" datetime="2024-04-02T16:19:00+08:00">2024-04-02</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -217,12 +211,12 @@
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+          <a href="/categories/golang/" itemprop="url" rel="index"><span itemprop="name">golang</span></a>
         </span>
     </span>
 
   
-    <span id="/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/" class="post-meta-item twikoo_visitors" data-flag-title="go trace view trace 显示空白" title="阅读次数">
+    <span id="/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/" class="post-meta-item twikoo_visitors" data-flag-title="go 解密 defer 的优雅陷阱" title="阅读次数">
       <span class="post-meta-item-icon">
         <i class="far fa-eye"></i>
       </span>
@@ -236,39 +230,41 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>158</span>
+      <span>625</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
+      <span>2 分钟</span>
     </span>
 </div>
 
+            <div class="post-description">深入理解 go defer</div>
         </div>
       </header>
 
     
     
     
-    <div class="post-body" itemprop="articleBody"><blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+    <div class="post-body" itemprop="articleBody"><p>在<a target="_blank" rel="noopener" href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">wg.Add(goroutines)  </span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;  </span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> wg.Done()  </span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;  </span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;()  </span><br><span class="line">&#125;  </span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p>释放锁，或者其他任何资源。</p>
+<blockquote>
+<p>在Go中，只有在函数和方法内部才能使用defer；defer关键字后面只能接函数或方法，这些函数被称为deferred函数。<br>defer将它们注册到其所在goroutine用于存放deferred函数的栈数据结构中，这些deferred函数将在执行defer的函数退出前被按后进先出（LIFO）的顺序调度执行</p>
 </blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a target="_blank" rel="noopener" href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"><br>无论是执行到函数体尾部返回，还是在某个错误处理分支显式调用return返回，抑或出现panic，已经存储到deferred函数栈中的函数都会被调度执行。因此，deferred函数是一个在任何情况下都可以为函数进行收尾工作的好场合。</p>
+<h1 id="defer-的几个使用场景"><a href="#defer-的几个使用场景" class="headerlink" title="defer 的几个使用场景"></a>defer 的几个使用场景</h1><ul>
+<li>panic 捕获,因为deferred 再任意场景下都会被执行，所以我们可以再defer中处理异常。（不建议这么做，如果是一般错误，不建议panic，如果必须panic ，就不要捕获）</li>
+<li>释放资源</li>
+<li>延迟执行，记录函数执行的时间比如<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">		fmt.Println(time.Now().Sub(s))</span><br><span class="line">	&#125;(time.Now())</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="defer-带来的性能损耗"><a href="#defer-带来的性能损耗" class="headerlink" title="defer 带来的性能损耗"></a>defer 带来的性能损耗</h1><p>defer让进行资源释放（如文件描述符、锁）的过程变得优雅很多，也不易出错。但在性能敏感的程序中，defer带来的性能负担也是Gopher必须知晓和权衡的。<br><a target="_blank" rel="noopener" href="https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303">https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+
+<p>在 go1.12 版本中相同的测试代码，非 defer 版本 要比defer 版本快7倍，经过1.13 1.14 两个大版本的优化，defer 的性能已经显著提高了，在我的电脑上，非defer 版本还是有着50%左右的性能领先。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在多数情况下，我们的程序对性能并不太敏感，我建议尽量使用defer，同时我们需要了解defer 运行的原理，以及几个要避免的地方。</p>
 
     </div>
 
@@ -278,22 +274,18 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/Go/" rel="tag"># Go</a>
-              <a href="/tags/%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" rel="tag"># 最佳实践</a>
+              <a href="/tags/go/" rel="tag"># go</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/" rel="prev" title="new跟make 的区别">
-                  <i class="fa fa-angle-left"></i> new跟make 的区别
+                <a href="/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/" rel="prev" title="Go iota, 不是枚举">
+                  <i class="fa fa-angle-left"></i> Go iota, 不是枚举
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/" rel="next" title="leetcode解题笔记-114-原地算法">
-                  leetcode解题笔记-114-原地算法 <i class="fa fa-angle-right"></i>
-                </a>
             </div>
           </div>
     </footer>
