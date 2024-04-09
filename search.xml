@@ -1,30 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
-<span id="more"></span>
-
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>年度总结</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go - Ordering in Select Statements</title>
     <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
     <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
@@ -72,49 +48,6 @@
       <tags>
         <tag>go</tag>
         <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go tool: expvar 自定义度量数据，辅助定位性能瓶颈点</title>
-    <url>/2024/03/15/Go%20tool%EF%BC%9Aexpvar%20%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%A6%E9%87%8F%E6%95%B0%E6%8D%AE%EF%BC%8C%E8%BE%85%E5%8A%A9%E5%AE%9A%E4%BD%8D%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E7%82%B9/</url>
-    <content><![CDATA[<p>介绍 go 内置工具包 expvar 的使用，能够帮我们实现什么功能，以及它跟pprof 的区别</p>
-<span id="more"></span>
-<p>#go #监控 #自定义<br>在开发过程中，要想对Go应用存在的性能瓶颈进行剖析，首先就要使用pprof 对不同类型的性能数据进行收集和采样。有两种收集和采样数据的方法。</p>
-<ul>
-<li>在微观层面，采用通过运行性能基准测试收集和采样数据的方法，这种方法适用于定位函数或方法实现中存在性能瓶颈点的情形；</li>
-<li>在宏观层面，采用独立程序收集和采样数据的方法。但通过独立程序进行性能数据采样时，往往很难快速捕捉到真正的瓶颈点，尤其是对于那些内部结构复杂、业务逻辑过多、内部有较多并发的Go程序。我们在对这样的程序进行性能采样时，真正的瓶颈点很可能被其他数据遮盖。<br><strong>那么如何能更高效地捕捉到应用的性能瓶颈点呢？</strong><br>我们可以通过部署agent或者其他方式，通过查询应用外部特征而获取的探针类（probing）数据（比如查看应用某端口是否有响应并返回正确的数据或状态码），相比于这些消息，我们可能还想知道一些内省的消息，比如更多的有关应用程序状态的上下文信息。这些上下文信息可以是应用对各类资源的占用信息，比如应用运行占用了多少内存空间，也可以是自定义的性能指标信息，比如单位时间处理的外部请求数量、应答延迟、队列积压量等。<br>这个时候，我们就需要 go 官方的另外一个包 <a href="https://pkg.go.dev/expvar">expvar</a></li>
-</ul>
-<blockquote>
-<p>Package expvar provides a standardized interface to public variables, such as operation counters in servers. It exposes these variables via HTTP at &#x2F;debug&#x2F;vars in JSON format.</p>
-</blockquote>
-<p>我们可以轻松地使用Go标准库提供的expvar包按统一接口、统一数据格式、一致的指标定义方法输出自定义的度量数据。在本篇博客中，我们就一起来看看如何使用expvar输出自定义的性能度量数据。  </p>
-<h1 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h1><p>我们首先来看一个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>然后我们访问一下<code>http://localhost:8080/debug/vars</code><br><img src="https://images.hxzhouh.com/blog-images/2024/03/a74e96c20015c0490c2668b06451c1b6.png" alt="Pasted image 20240314192240"><br>expvar 返回的是标准格式的JSON。<br>在默认返回的状态数据中包含了两个字段：cmdline和memstats。<br>这两个输出数据是expvar包在init函数中就已经发布（Publish）了的变量：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">src/expvar/expvar.<span class="keyword">go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">  http.HandleFunc(<span class="string">&quot;/debug/vars&quot;</span>, expvarHandler)  </span><br><span class="line">  Publish(<span class="string">&quot;cmdline&quot;</span>, Func(cmdline))  </span><br><span class="line">  Publish(<span class="string">&quot;memstats&quot;</span>, Func(memstats))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong><a href="https://pkg.go.dev/os#Args">cmdline</a></strong> 字段的含义是输出数据的应用名，这里因为是通过go run运行的应用，所以cmdline的值是一个临时路径下的应用。<br><strong><a href="https://pkg.go.dev/runtime#MemStats">memstats</a></strong> 输出的数据对应的是runtime.Memstats结构体，反映的是应用在运行期间堆内存分配、栈内存分配及GC的状态。runtime.Memstats结构体的字段可能会随着Go版本的演进而发生变化，其字段具体含义可以参考Memstats结构体中的注释。</p>
-<h1 id="通过expvar输出自定义度量数据"><a href="#通过expvar输出自定义度量数据" class="headerlink" title="通过expvar输出自定义度量数据"></a>通过expvar输出自定义度量数据</h1><p>同样，我们用一个例子说明 如何自定义度量数据。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">var</span> customVar = <span class="built_in">new</span>(expvar.Map).Init()  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    customVar.Set(<span class="string">&quot;hi_count&quot;</span>, <span class="built_in">new</span>(expvar.Int))  </span><br><span class="line">    expvar.Publish(<span class="string">&quot;custom&quot;</span>, customVar)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          customVar.Add(<span class="string">&quot;hi_count&quot;</span>, <span class="number">1</span>)  </span><br><span class="line">       &#125;()  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如以上示例所示，定义一个expvar.Map类型变量后，可以向该复合指标变量中添加指标，比如示例中的“hi_count”<br>然后重新运行例子。先调用两次 localhost:8080&#x2F;hi</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi</span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi                </span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl http://localhost:8080/debug/vars </span><br><span class="line">&#123;</span><br><span class="line">&quot;cmdline&quot;: [&quot;/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_expvar&quot;],</span><br><span class="line">&quot;custom&quot;: &#123;&quot;hi_count&quot;: 2&#125;,</span><br><span class="line">&quot;memstats&quot;:&quot;.....&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>expvar 输出了我们想要的结果。实际上expvar 可以输出任何我们想要的结果，这里就不展开描述。</p>
-<h1 id="输出数据的展示"><a href="#输出数据的展示" class="headerlink" title="输出数据的展示"></a>输出数据的展示</h1><p>通过&#x2F;debug&#x2F;vars服务端点，我们可以得到标准JSON格式的应用内部状态数据，数据采集出来后可根据不同开发者的需求进行转换和展示。JSON格式文本很容易反序列化，开发者可自行解析后使用，比如：编写一个Prometheus exporter，将数据导入Prometheus背后的存储（比如InfluxDB）中，并利用一些基于Web图形化的方式直观展示出来；或者导入Elasticsearch，再通过Kibana或Grafana的页面展示出来。<br>我们这里展示go开发者<a href="https://twitter.com/idanyliuk">Ivan Daniluk</a> 开发的 expvarmon， 首先安装它</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go get github.com/divan/expvarmon</span><br></pre></td></tr></table></figure>
-
-<p>然后查看数据</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">expvarmon -ports=&quot;8080&quot; -vars=&quot;custom.hi_count,mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs&quot;</span><br></pre></td></tr></table></figure>
-<p>结果很geek<br><img src="https://images.hxzhouh.com/blog-images/2024/03/07330c38becc77adad1a63bc7503bb7b.png" alt="Pasted image 20240314195301"></p>
-<p>expvar包不仅可用于辅助缩小定位性能瓶颈的范围，还可以用来输出度量数据以对应用的运行状态进行监控，这样当程序出现问题时，我们可以快速发现问题并利用输出的度量数据对程序进行诊断并快速定位问题</p>
-<h1 id="跟-pprof-的区别"><a href="#跟-pprof-的区别" class="headerlink" title="跟 pprof 的区别"></a>跟 pprof 的区别</h1><p><code>pprof</code> 是 Go 语言另一个内置的性能剖析工具，主要用于分析程序的 CPU 使用情况和内存占用情况。与 <code>expvar</code> 提供实时监控服务内部变量不同，<code>pprof</code> 更多地用于性能分析和优化。简而言之，<code>expvar</code> 能够帮助我们观察程序的”活动”数据，而 <code>pprof</code> 专注于程序的”性能”数据。<br><code>expvar</code> 以简单的方式公开应用程序的实时状态数据，如当前活跃连接数或已处理请求的计数器。其设计意图是长期运行以监控应用状态，对于想要快速了解应用健康状况的开发者而言，这是一个非常直接的工具。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>expvar 是一个很强大的工具，他可以帮助我们实现应用内情况的监控，并且很方便的跟其他监控平台对接，是每个gopher 都应该掌握的工具。</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>监控</tag>
       </tags>
   </entry>
   <entry>
@@ -203,6 +136,30 @@
       </categories>
       <tags>
         <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>年度总结</tag>
       </tags>
   </entry>
   <entry>
@@ -361,7 +318,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#x74;&#x40;&#x31;&#48;&#x2e;&#x31;&#x31;&#x32;&#46;&#x31;&#46;&#x31;">&#103;&#108;&#x74;&#x40;&#x31;&#48;&#x2e;&#x31;&#x31;&#x32;&#46;&#x31;&#46;&#x31;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#x67;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#50;&#46;&#49;&#46;&#x31;">&#x67;&#108;&#116;&#x40;&#49;&#48;&#x2e;&#x31;&#x31;&#50;&#46;&#49;&#46;&#x31;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -395,6 +352,29 @@
       </tags>
   </entry>
   <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+  </entry>
+  <entry>
     <title>go 解密 defer 的优雅陷阱</title>
     <url>/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/</url>
     <content><![CDATA[<p>在<a href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
@@ -423,6 +403,49 @@
       </tags>
   </entry>
   <entry>
+    <title>Go tool: expvar 自定义度量数据，辅助定位性能瓶颈点</title>
+    <url>/2024/03/15/Go%20tool%EF%BC%9Aexpvar%20%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%A6%E9%87%8F%E6%95%B0%E6%8D%AE%EF%BC%8C%E8%BE%85%E5%8A%A9%E5%AE%9A%E4%BD%8D%E6%80%A7%E8%83%BD%E7%93%B6%E9%A2%88%E7%82%B9/</url>
+    <content><![CDATA[<p>介绍 go 内置工具包 expvar 的使用，能够帮我们实现什么功能，以及它跟pprof 的区别</p>
+<span id="more"></span>
+<p>#go #监控 #自定义<br>在开发过程中，要想对Go应用存在的性能瓶颈进行剖析，首先就要使用pprof 对不同类型的性能数据进行收集和采样。有两种收集和采样数据的方法。</p>
+<ul>
+<li>在微观层面，采用通过运行性能基准测试收集和采样数据的方法，这种方法适用于定位函数或方法实现中存在性能瓶颈点的情形；</li>
+<li>在宏观层面，采用独立程序收集和采样数据的方法。但通过独立程序进行性能数据采样时，往往很难快速捕捉到真正的瓶颈点，尤其是对于那些内部结构复杂、业务逻辑过多、内部有较多并发的Go程序。我们在对这样的程序进行性能采样时，真正的瓶颈点很可能被其他数据遮盖。<br><strong>那么如何能更高效地捕捉到应用的性能瓶颈点呢？</strong><br>我们可以通过部署agent或者其他方式，通过查询应用外部特征而获取的探针类（probing）数据（比如查看应用某端口是否有响应并返回正确的数据或状态码），相比于这些消息，我们可能还想知道一些内省的消息，比如更多的有关应用程序状态的上下文信息。这些上下文信息可以是应用对各类资源的占用信息，比如应用运行占用了多少内存空间，也可以是自定义的性能指标信息，比如单位时间处理的外部请求数量、应答延迟、队列积压量等。<br>这个时候，我们就需要 go 官方的另外一个包 <a href="https://pkg.go.dev/expvar">expvar</a></li>
+</ul>
+<blockquote>
+<p>Package expvar provides a standardized interface to public variables, such as operation counters in servers. It exposes these variables via HTTP at &#x2F;debug&#x2F;vars in JSON format.</p>
+</blockquote>
+<p>我们可以轻松地使用Go标准库提供的expvar包按统一接口、统一数据格式、一致的指标定义方法输出自定义的度量数据。在本篇博客中，我们就一起来看看如何使用expvar输出自定义的性能度量数据。  </p>
+<h1 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h1><p>我们首先来看一个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后我们访问一下<code>http://localhost:8080/debug/vars</code><br><img src="https://images.hxzhouh.com/blog-images/2024/03/a74e96c20015c0490c2668b06451c1b6.png" alt="Pasted image 20240314192240"><br>expvar 返回的是标准格式的JSON。<br>在默认返回的状态数据中包含了两个字段：cmdline和memstats。<br>这两个输出数据是expvar包在init函数中就已经发布（Publish）了的变量：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">src/expvar/expvar.<span class="keyword">go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">  http.HandleFunc(<span class="string">&quot;/debug/vars&quot;</span>, expvarHandler)  </span><br><span class="line">  Publish(<span class="string">&quot;cmdline&quot;</span>, Func(cmdline))  </span><br><span class="line">  Publish(<span class="string">&quot;memstats&quot;</span>, Func(memstats))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><a href="https://pkg.go.dev/os#Args">cmdline</a></strong> 字段的含义是输出数据的应用名，这里因为是通过go run运行的应用，所以cmdline的值是一个临时路径下的应用。<br><strong><a href="https://pkg.go.dev/runtime#MemStats">memstats</a></strong> 输出的数据对应的是runtime.Memstats结构体，反映的是应用在运行期间堆内存分配、栈内存分配及GC的状态。runtime.Memstats结构体的字段可能会随着Go版本的演进而发生变化，其字段具体含义可以参考Memstats结构体中的注释。</p>
+<h1 id="通过expvar输出自定义度量数据"><a href="#通过expvar输出自定义度量数据" class="headerlink" title="通过expvar输出自定义度量数据"></a>通过expvar输出自定义度量数据</h1><p>同样，我们用一个例子说明 如何自定义度量数据。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    _ <span class="string">&quot;expvar&quot;</span>  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>    <span class="string">&quot;net/http&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">var</span> customVar = <span class="built_in">new</span>(expvar.Map).Init()  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    customVar.Set(<span class="string">&quot;hi_count&quot;</span>, <span class="built_in">new</span>(expvar.Int))  </span><br><span class="line">    expvar.Publish(<span class="string">&quot;custom&quot;</span>, customVar)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    http.Handle(<span class="string">&quot;/hi&quot;</span>, http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter,  </span></span></span><br><span class="line"><span class="params"><span class="function">       r *http.Request)</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          customVar.Add(<span class="string">&quot;hi_count&quot;</span>, <span class="number">1</span>)  </span><br><span class="line">       &#125;()  </span><br><span class="line">       w.Write([]<span class="type">byte</span>(<span class="string">&quot;hi\n&quot;</span>))  </span><br><span class="line">    &#125;))  </span><br><span class="line">    fmt.Println(http.ListenAndServe(<span class="string">&quot;localhost:8080&quot;</span>, <span class="literal">nil</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如以上示例所示，定义一个expvar.Map类型变量后，可以向该复合指标变量中添加指标，比如示例中的“hi_count”<br>然后重新运行例子。先调用两次 localhost:8080&#x2F;hi</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi</span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl localhost:8080/hi                </span><br><span class="line">hi</span><br><span class="line">➜  test git:(main) ✗ curl http://localhost:8080/debug/vars </span><br><span class="line">&#123;</span><br><span class="line">&quot;cmdline&quot;: [&quot;/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_expvar&quot;],</span><br><span class="line">&quot;custom&quot;: &#123;&quot;hi_count&quot;: 2&#125;,</span><br><span class="line">&quot;memstats&quot;:&quot;.....&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>expvar 输出了我们想要的结果。实际上expvar 可以输出任何我们想要的结果，这里就不展开描述。</p>
+<h1 id="输出数据的展示"><a href="#输出数据的展示" class="headerlink" title="输出数据的展示"></a>输出数据的展示</h1><p>通过&#x2F;debug&#x2F;vars服务端点，我们可以得到标准JSON格式的应用内部状态数据，数据采集出来后可根据不同开发者的需求进行转换和展示。JSON格式文本很容易反序列化，开发者可自行解析后使用，比如：编写一个Prometheus exporter，将数据导入Prometheus背后的存储（比如InfluxDB）中，并利用一些基于Web图形化的方式直观展示出来；或者导入Elasticsearch，再通过Kibana或Grafana的页面展示出来。<br>我们这里展示go开发者<a href="https://twitter.com/idanyliuk">Ivan Daniluk</a> 开发的 expvarmon， 首先安装它</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go get github.com/divan/expvarmon</span><br></pre></td></tr></table></figure>
+
+<p>然后查看数据</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">expvarmon -ports=&quot;8080&quot; -vars=&quot;custom.hi_count,mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,duration:memstats.PauseNs,duration:memstats.PauseTotalNs&quot;</span><br></pre></td></tr></table></figure>
+<p>结果很geek<br><img src="https://images.hxzhouh.com/blog-images/2024/03/07330c38becc77adad1a63bc7503bb7b.png" alt="Pasted image 20240314195301"></p>
+<p>expvar包不仅可用于辅助缩小定位性能瓶颈的范围，还可以用来输出度量数据以对应用的运行状态进行监控，这样当程序出现问题时，我们可以快速发现问题并利用输出的度量数据对程序进行诊断并快速定位问题</p>
+<h1 id="跟-pprof-的区别"><a href="#跟-pprof-的区别" class="headerlink" title="跟 pprof 的区别"></a>跟 pprof 的区别</h1><p><code>pprof</code> 是 Go 语言另一个内置的性能剖析工具，主要用于分析程序的 CPU 使用情况和内存占用情况。与 <code>expvar</code> 提供实时监控服务内部变量不同，<code>pprof</code> 更多地用于性能分析和优化。简而言之，<code>expvar</code> 能够帮助我们观察程序的”活动”数据，而 <code>pprof</code> 专注于程序的”性能”数据。<br><code>expvar</code> 以简单的方式公开应用程序的实时状态数据，如当前活跃连接数或已处理请求的计数器。其设计意图是长期运行以监控应用状态，对于想要快速了解应用健康状况的开发者而言，这是一个非常直接的工具。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>expvar 是一个很强大的工具，他可以帮助我们实现应用内情况的监控，并且很方便的跟其他监控平台对接，是每个gopher 都应该掌握的工具。</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>监控</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>go trace view trace 显示空白</title>
     <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
     <content><![CDATA[<blockquote>
@@ -448,6 +471,89 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 协程切换的性能分析</title>
+    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
+<ul>
+<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
+<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
+<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
+<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
+</ul>
+<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
+<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
+<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
+<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
+<p>本文基于 go 1.22.1</p>
+</blockquote>
+<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
+</code></pre>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
+<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
+<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
+<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
+]]></content>
+      <categories>
+        <category>golang</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
+    <content><![CDATA[<blockquote>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br>Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
+</blockquote>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -531,64 +637,43 @@
       </tags>
   </entry>
   <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>go 协程切换的性能分析</title>
-    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
-<ul>
-<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
-<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
-<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
-<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
-</ul>
-<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
-<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
-<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
-<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
-<p>本文基于 go 1.22.1</p>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
 </blockquote>
-<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
-</code></pre>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
 
-<p>编译运行</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
 
-<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
-<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
-<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
-<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
 ]]></content>
       <categories>
-        <category>golang</category>
+        <category>leetCode</category>
       </categories>
       <tags>
-        <tag>go</tag>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
       </tags>
   </entry>
   <entry>
@@ -631,116 +716,6 @@
       <tags>
         <tag>go</tag>
         <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
-</blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
-]]></content>
-      <categories>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br>Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>medium能让你快速的赚到钱？ 不可能</title>
-    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
-    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
-<span id="more"></span>
-
-<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
-<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
-<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
-<p>下面我将这样做</p>
-<ol>
-<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
-<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
-<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
-<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>medium</tag>
-        <tag>副业</tag>
       </tags>
   </entry>
   <entry>
@@ -916,32 +891,6 @@
       </tags>
   </entry>
   <entry>
-    <title>为什么TCP断开的时候需要四次挥手</title>
-    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
-    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
-<span id="more"></span>
-<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br><img src="https://images.hxzhouh.com/blog-images/2024/03/a710aaf52810ad7ecd7423ca98a4f343.png" alt="Pasted image 20240201170632"></p>
-<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
-<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
-<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
-<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
-<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
-<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
-<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>为什么这么设计</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>为什么TCP连接时需要3次握手</title>
     <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E8%BF%9E%E6%8E%A5%E6%97%B6%E9%9C%80%E8%A6%813%E6%AC%A1%E6%8F%A1%E6%89%8B/</url>
     <content><![CDATA[<p>TCP 协议是我们几乎每天都会接触到的网络协议，绝大多数网络连接的建立都是基于 TCP 协议的，学过计算机网络或者对 TCP 协议稍有了解的人都知道 —— 使用 TCP 协议建立连接需要经过三次握手（three-way handshake）。</p>
@@ -1018,6 +967,32 @@
       </tags>
   </entry>
   <entry>
+    <title>为什么TCP断开的时候需要四次挥手</title>
+    <url>/2024/02/16/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/</url>
+    <content><![CDATA[<p>TCP协议是我们日常使用的网络协议之一，它不仅负责建立连接，还负责断开连接。上面上一篇<a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">博客</a>，我们分析了 Why TCP requires three handshakes to establish a connection,建立连接时，我们需要保证历史连接以及序列号的问题。 与建立连接时的三次握手不同，断开连接时需要进行四次挥手（four-way handshake）。本文将探讨为什么TCP断开连接需要进行四次挥手，而不是三次或其他次数。</p>
+<span id="more"></span>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在深入讨论为什么需要四次挥手之前，我们先来了解一下TCP连接的断开过程。通常情况下，当通信双方中的一方决定断开连接时，它会发送一个FIN（Finish）控制消息给对方，表示自己已经没有数据要发送了。接收到FIN消息的一方会发送一个ACK（Acknowledgment）控制消息作为确认，并进入半关闭状态，表示自己不再发送数据，但仍然可以接收数据。当另一方也没有数据要发送时，它会发送一个FIN消息给对方，表示自己也准备断开连接。接收到这个FIN消息的一方会再次发送一个ACK消息进行确认，然后两端的连接才会完全关闭。<br><img src="https://images.hxzhouh.com/blog-images/2024/03/a710aaf52810ad7ecd7423ca98a4f343.png" alt="Pasted image 20240201170632"></p>
+<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p>为什么TCP断开连接需要进行四次挥手？下面我们从几个方面来分析这个问题：</p>
+<h3 id="确保数据完整性"><a href="#确保数据完整性" class="headerlink" title="确保数据完整性"></a>确保数据完整性</h3><p>TCP协议是面向连接的可靠传输协议，它保证数据的可靠性和完整性。在断开连接时，双方可能还有未发送或未接收的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收。这样一来，可能会导致对方未能完全接收到自己的数据，造成数据的丢失。因此，通过进行四次挥手，可以确保双方都能够完整地接收到对方的数据，保证数据的完整性。</p>
+<h3 id="处理网络延迟和丢包"><a href="#处理网络延迟和丢包" class="headerlink" title="处理网络延迟和丢包"></a>处理网络延迟和丢包</h3><p>在网络中，数据包可能会因为网络延迟或丢包而无法及时到达目的地。在断开连接时，如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息是否已经被接收，这就无法保证对方能够及时关闭连接。通过进行四次挥手，可以给网络提供足够的时间来处理延迟和丢包问题，确保连接能够正确地关闭。</p>
+<h3 id="等待未发送的数据发送完毕"><a href="#等待未发送的数据发送完毕" class="headerlink" title="等待未发送的数据发送完毕"></a>等待未发送的数据发送完毕</h3><p>在断开连接时，双方可能还有未发送的数据包。如果只进行三次挥手，那么在最后一次挥手时，对方可能无法得知自己发送的FIN消息之前是否还有未发送完的数据。通过进行四次挥手，可以给双方足够的时间来发送和接收剩余的数据，确保数据的完整性和正确性。</p>
+<h3 id="处理半关闭状态"><a href="#处理半关闭状态" class="headerlink" title="处理半关闭状态"></a>处理半关闭状态</h3><p>在TCP连接的断开过程中，一方先发送FIN消息进入半关闭状态，表示自己不再发送数据但仍然可以接收数据。如果只进行三次挥手，那么对方在接收到FIN消息后会立即关闭连接，这样就无法保证另一方能够正确地处理半关闭状态。通过进行四次挥手，可以确保双方都能够正确地处理半关闭状态，避免数据的丢失和混乱。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过以上分析，我们可以得出结论：TCP断开连接需要进行四次挥手是为了确保数据的完整性、处理网络延迟和丢包、等待未发送的数据发送完毕以及处理半关闭状态。通过四次挥手，双方能够更好地协调和处理连接的断开，确保数据的正确传输和连接的安全关闭。</p>
+<p>在讨论TCP断开连接时，我们不应该执着于为什么使用四次挥手，而是应该理解为什么需要进行多次挥手来保证数据的完整性和连接的正确关闭。通过对TCP协议设计的深入理解，我们能够更好地应用和理解网络通信的原理和机制。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 - Transmission Control Protocol - IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>为什么这么设计</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>在VPS上搭建vaultwarden</title>
     <url>/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/</url>
     <content><![CDATA[<h1 id="在VPS上搭建vaultwarden"><a href="#在VPS上搭建vaultwarden" class="headerlink" title="在VPS上搭建vaultwarden"></a>在VPS上搭建vaultwarden</h1><p>之前一直在寻找一个支持跨平台的密码管理工具，先后尝试了 1Password 和 LastPass，迫于贫穷，切换到了开源的 <a href="https://bitwarden.com/">Bitwarden</a> 支持自托管服务端,但是 <a href="https://bitwarden.com/">Bitwarden</a> 对性能要求比较高， 退而求其次，用它的另一个实现 <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a>（原名 Bitwarden_rs） <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 完美兼容<a href="https://bitwarden.com/">Bitwarden</a> ，这样我们就在AWS 的免费主机上得到了一个  <a href="https://github.com/dani-garcia/vaultwarden">Vaultwarden</a> 做后端，<a href="https://bitwarden.com/">Bitwarden</a>做前端的 免费密码托管服务。<br>本文详细整理了使用vps 搭建 私有 vaultwarden服务，实现 bitwarden自托管的步骤，设置的内容有：#VPS，#反向代理，rclone 自动挂载Google Drive等。</p>
@@ -1056,6 +1031,59 @@
         <tag>密码托管</tag>
         <tag>docker</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>medium能让你快速的赚到钱？ 不可能</title>
+    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
+    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
+<span id="more"></span>
+
+<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
+<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
+<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
+<p>下面我将这样做</p>
+<ol>
+<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
+<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
+<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
+<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>medium</tag>
+        <tag>副业</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>什么是medium 的 publication</title>
+    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
+<span id="more"></span>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
+<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
+<ul>
+<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
+<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
+<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
+</ul>
+<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
+<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
+<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
+<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
+<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
+<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
+<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
+<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
+</ol>
+]]></content>
   </entry>
   <entry>
     <title>如何用汇编分析Go代码</title>
@@ -1434,73 +1462,6 @@
       </tags>
   </entry>
   <entry>
-    <title>深度优先算法与广度优先算法</title>
-    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
-<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
-<p><strong>DFS属于盲目搜索</strong></p>
-<p>深度优先遍历图算法步骤：</p>
-<ul>
-<li>访问顶点v；</li>
-<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
-<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
-</ul>
-<p><strong>举个实例：</strong></p>
-<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
-<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
-<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
-<p>算法步骤：</p>
-<ol>
-<li>首先将根节点放入队列中。</li>
-<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
-<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
-<li>重复步骤2。</li>
-</ol>
-<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
-<p>代码实现</p>
-<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>数据结构&amp;算法</category>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>DFS</tag>
-        <tag>BFS</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>玩转memos</title>
-    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
-    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
-<span id="more"></span>
-<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
-<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
-<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
-<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
-<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>memos</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>聊聊Redis  链表</title>
     <url>/2022/09/30/%E8%81%8A%E8%81%8ARedis%20%20%E9%93%BE%E8%A1%A8/</url>
     <content><![CDATA[<p>链表提供了高效的节点重排能力， 以及顺序性的节点访问方式， 并且可以通过增删节点来灵活地调整链表的长度。</p>
@@ -1549,6 +1510,48 @@
       </categories>
       <tags>
         <tag>redis</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深度优先算法与广度优先算法</title>
+    <url>/2022/09/30/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<h1 id="深度优先算法-（Depth-First-Search）"><a href="#深度优先算法-（Depth-First-Search）" class="headerlink" title="深度优先算法 （Depth-First-Search）"></a>深度优先算法 （Depth-First-Search）</h1><p>深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分 支。<br> 当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。<br> 这一过程一直进行到已发现从源节点可达的所有节点为止。<br> 如果还存在未被发 现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。</p>
+<p>深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。</p>
+<p><strong>DFS属于盲目搜索</strong></p>
+<p>深度优先遍历图算法步骤：</p>
+<ul>
+<li>访问顶点v；</li>
+<li>依次从v的未被访问的邻接点出发，对图进行深度优先遍历；直至图中和v有路径相通的顶点都被访问；</li>
+<li>若此时图中尚有顶点未被访问，则从一个未被访问的顶点出发，重新进行深度优先遍历，直到图中所有顶点均被访问过为止。</li>
+</ul>
+<p><strong>举个实例：</strong></p>
+<p>DFS 在访问图中某一起始顶点 v 后，由 v 出发，访问它的任一邻接顶点 w1；再从 w1 出发，访问与 w1邻 接但还没有访问过的顶点 w2；然后再从 w2 出发，进行类似的访问，… 如此进行下去，直至到达所有的邻接顶点都被访问过的顶点 u 为止。<br> 接着，退回一步，退到前一次刚访问过的顶点，看是否还有其它没有被访问的邻接顶点。如果有，则访问此顶点，之后再从此顶点出发，进行与前述类似的访问；如果没有，就再退回一步进行搜索。重复上述过程，直到连通图中所有顶点都被访问过为止。</p>
+<p>例如下图，其深度优先遍历顺序为 1-&gt;2-&gt;4-&gt;8-&gt;5-&gt;3-&gt;6-&gt;7</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200406213809.png" alt="深度优先算法"></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dfs</span><span class="params">(root *TreeNode)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Print(root.Val)</span><br><span class="line">	dfs(root.Left)</span><br><span class="line">	dfs(root.Right)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="广度优先搜索算法（Breadth-First-Search）"><a href="#广度优先搜索算法（Breadth-First-Search）" class="headerlink" title="广度优先搜索算法（Breadth-First-Search）"></a>广度优先搜索算法（Breadth-First-Search）</h1><p><strong>广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法</strong></p>
+<p>简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。<br>BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。</p>
+<p>算法步骤：</p>
+<ol>
+<li>首先将根节点放入队列中。</li>
+<li>从队列中取出第一个节点，并检验它是否为目标。如果找到目标，则结束搜寻并回传结果。否则将它所有尚未检验过的直接子节点加入队列中。</li>
+<li>若队列为空，表示整张图都检查过了——亦即图中没有欲搜寻的目标。结束搜寻并回传“找不到目标”。</li>
+<li>重复步骤2。</li>
+</ol>
+<p>如上图，其广度优先算法的遍历顺序为：1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;6-&gt;7-&gt;8</p>
+<p>代码实现</p>
+<h3 id="leetcode-真题"><a href="#leetcode-真题" class="headerlink" title="leetcode 真题"></a>leetcode 真题</h3><h4 id="662-二叉树最大宽度"><a href="#662-二叉树最大宽度" class="headerlink" title="662. 二叉树最大宽度"></a><a href="https://leetcode-cn.com/problems/maximum-width-of-binary-tree/">662. 二叉树最大宽度</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node *TreeNode</span><br><span class="line">	dept,</span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">widthOfBinaryTree</span><span class="params">(root *TreeNode)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	query := NewQueue()</span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">		node: root,</span><br><span class="line">		dept: <span class="number">0</span>,</span><br><span class="line">		ops:  <span class="number">0</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">	curDepth := <span class="number">0</span></span><br><span class="line">	left := <span class="number">0</span></span><br><span class="line">	ans := <span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Left,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops * <span class="number">2</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;</span><br><span class="line">				node: a.node.Right,</span><br><span class="line">				dept: a.dept + <span class="number">1</span>,</span><br><span class="line">				ops:  a.ops*<span class="number">2</span> + <span class="number">1</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			<span class="keyword">if</span> curDepth != a.dept &#123;</span><br><span class="line">				curDepth = a.dept</span><br><span class="line">				left = a.ops</span><br><span class="line">			&#125;</span><br><span class="line">			ans = Max(ans, a.ops-left+<span class="number">1</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ans</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">		<span class="keyword">return</span> a</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> b</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="103-二叉树的锯齿形层次遍历"><a href="#103-二叉树的锯齿形层次遍历" class="headerlink" title="103. 二叉树的锯齿形层次遍历"></a><a href="https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/">103. 二叉树的锯齿形层次遍历</a></h4><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Definition for a binary tree node.</span></span><br><span class="line"><span class="comment"> * type TreeNode struct &#123;</span></span><br><span class="line"><span class="comment"> *     Val int</span></span><br><span class="line"><span class="comment"> *     Left *TreeNode</span></span><br><span class="line"><span class="comment"> *     Right *TreeNode</span></span><br><span class="line"><span class="comment"> * &#125;</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">type</span> AnnotatedNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	node  *TreeNode</span><br><span class="line">	dept, <span class="comment">//深度</span></span><br><span class="line">	ops <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> linkNode <span class="keyword">struct</span> &#123;</span><br><span class="line">	value *AnnotatedNode</span><br><span class="line">	next  *linkNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 链表</span></span><br><span class="line"><span class="keyword">type</span> linkedAnnotatedNodeList <span class="keyword">struct</span> &#123;</span><br><span class="line">	head  *linkNode <span class="comment">//队首</span></span><br><span class="line">	tail  *linkNode <span class="comment">//队尾</span></span><br><span class="line">	count <span class="type">int</span>       <span class="comment">//长度</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 初始化链表</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewLinkedAnnotatedNodeList</span><span class="params">()</span></span> *linkedAnnotatedNodeList &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;linkedAnnotatedNodeList&#123;head: <span class="literal">nil</span>, tail: <span class="literal">nil</span>, count: <span class="number">0</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.count == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Add(value *AnnotatedNode) &#123;</span><br><span class="line">	node := <span class="built_in">new</span>(linkNode)</span><br><span class="line">	node.value = value</span><br><span class="line"></span><br><span class="line">	this.count++</span><br><span class="line">	<span class="keyword">if</span> this.tail == <span class="literal">nil</span> &#123;</span><br><span class="line">		this.head = node</span><br><span class="line">		this.tail = node</span><br><span class="line">		node.next = <span class="literal">nil</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.tail.next = node</span><br><span class="line">	node.next = <span class="literal">nil</span></span><br><span class="line">	this.tail = node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *linkedAnnotatedNodeList)</span></span> Delete() *linkNode &#123;</span><br><span class="line">	<span class="keyword">if</span> this.head == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	this.count--</span><br><span class="line">	<span class="keyword">if</span> this.head == this.tail &#123;</span><br><span class="line">		node := this.head</span><br><span class="line">		this.head = <span class="literal">nil</span></span><br><span class="line">		this.tail = <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> node</span><br><span class="line">	&#125;</span><br><span class="line">	node := this.head</span><br><span class="line">	this.head = this.head.next</span><br><span class="line">	<span class="keyword">return</span> node</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Queue <span class="keyword">struct</span> &#123;</span><br><span class="line">	link *linkedAnnotatedNodeList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewQueue</span><span class="params">()</span></span> *Queue &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;Queue&#123;link: NewLinkedAnnotatedNodeList()&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//加入队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Put(value *AnnotatedNode) &#123;</span><br><span class="line">	this.link.Add(value)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//pop出队列</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> Pop() *linkNode &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.Delete()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//获得队列的长度</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> GetSize() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.link.count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *Queue)</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> this.GetSize() == <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zigzagLevelOrder</span><span class="params">(root *TreeNode)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	result := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	query := NewQueue()</span><br><span class="line"></span><br><span class="line">	query.Put(&amp;AnnotatedNode&#123;node: root, dept: <span class="number">0</span>, ops: <span class="number">0</span>&#125;)</span><br><span class="line">	<span class="keyword">for</span> query.GetSize() != <span class="number">0</span> &#123;</span><br><span class="line">		a := query.Pop().value</span><br><span class="line">		<span class="keyword">if</span> a.node != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> <span class="built_in">len</span>(result) &lt;= a.dept &#123; <span class="comment">//小于层数</span></span><br><span class="line">				temp := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">				temp = <span class="built_in">append</span>(temp, a.node.Val)</span><br><span class="line">				result = <span class="built_in">append</span>(result, temp)</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				result[a.dept] = <span class="built_in">append</span>(result[a.dept], a.node.Val)</span><br><span class="line">			&#125;</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Left, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">			query.Put(&amp;AnnotatedNode&#123;a.node.Right, a.dept + <span class="number">1</span>, <span class="number">0</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> result &#123;</span><br><span class="line">		<span class="keyword">if</span> k%<span class="number">2</span> == <span class="number">1</span> &#123;</span><br><span class="line">			result[k] = stringReverse(v)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">stringReverse</span><span class="params">(src []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> src == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(fmt.Errorf(<span class="string">&quot;the src can&#x27;t be empty!&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line">	count := <span class="built_in">len</span>(src)</span><br><span class="line">	mid := count / <span class="number">2</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; mid; i++ &#123;</span><br><span class="line">		tmp := src[i]</span><br><span class="line">		src[i] = src[count<span class="number">-1</span>]</span><br><span class="line">		src[count<span class="number">-1</span>] = tmp</span><br><span class="line">		count--</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> src</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>数据结构&amp;算法</category>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>DFS</tag>
+        <tag>BFS</tag>
       </tags>
   </entry>
   <entry>
@@ -1741,6 +1744,31 @@
       </tags>
   </entry>
   <entry>
+    <title>玩转memos</title>
+    <url>/2023/11/26/%E7%8E%A9%E8%BD%ACmemos/</url>
+    <content><![CDATA[<p>memos 是一个开源的，类似flomo 的 笔记服务，同时支持，微信小程序、Obsidian、logseq 等效率工具的联动，可玩性比较好。</p>
+<span id="more"></span>
+<h2 id="搭建"><a href="#搭建" class="headerlink" title="搭建"></a>搭建</h2><p>memos 官方提供docker，所以只需要再任意一台有安装docker 的机器上就可以安装运行。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker run -d --name memos -p 5230:5230 -v ~/.memos/:/var/opt/memos ghcr.io/usememos/memos:latest</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">version: <span class="string">&#x27;3&#x27;</span></span><br><span class="line">services:</span><br><span class="line">  memos:</span><br><span class="line">    image: ghcr.io/usememos/memos:latest</span><br><span class="line">    container_name: memos</span><br><span class="line">    ports:</span><br><span class="line">      - <span class="number">5230</span>:<span class="number">5230</span></span><br><span class="line">    volumes:</span><br><span class="line">      - ~/.memos/:/var/opt/memos</span><br><span class="line">    restart: always</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>~/.memos/</code> sqllite 等数据文件的目录，可以指定成任意的目录。<br>这样memos 就能搭建了，通过 <a href="http://127.0.0.1:5230/">http://127.0.0.1:5230</a> 就可以访问了。<br>效果如下<br><img src="https://images.hxzhouh.com/blog-images/2023/11/a0575a5f76c15cfde90390fff6fc5595.png"></p>
+<h3 id="启用-https"><a href="#启用-https" class="headerlink" title="启用 https"></a>启用 https</h3><p>为了安全可以nginx + dns 解析 支持https。这里不展开，可以参考 其他博客或者<a href="https://hexo.hxzhouh.com/2023/09/23/%E5%9C%A8VPS%E4%B8%8A%E6%90%AD%E5%BB%BAvaultwarden/">在VPS上搭建vaultwarden</a>，我的配置是</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">                listen 443 ssl;</span><br><span class="line">                server_name memos.hxzhouh.com;</span><br><span class="line"></span><br><span class="line">                ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">                ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line">                #ssl_certificate /path/to/your/ssl_certificate.pem; # 您的 SSL 证书路径</span><br><span class="line">                #ssl_certificate_key /path/to/your/ssl_certificate_key.key; # 您的 SSL 密钥路径</span><br><span class="line">                location / &#123;</span><br><span class="line">                        proxy_pass http://127.0.0.1:5230/;</span><br><span class="line">                        rewrite ^/(.*)$ /$1 break;</span><br><span class="line">                        proxy_redirect off;</span><br><span class="line">                        proxy_set_header Host $host;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">                        proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">                        proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">                        proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="数据备份"><a href="#数据备份" class="headerlink" title="数据备份"></a>数据备份</h2><p>数据备份，可以使用<code>rclone</code> 工具，备份<code>~/.memos/</code> 目录，或者直接使用 memos 提供的将数据存储到S3</p>
+<h2 id="拓展功能"><a href="#拓展功能" class="headerlink" title="拓展功能"></a>拓展功能</h2><h3 id="打通-Obsidian"><a href="#打通-Obsidian" class="headerlink" title="打通 Obsidian"></a>打通 Obsidian</h3><h3 id="打通微信"><a href="#打通微信" class="headerlink" title="打通微信"></a>打通微信</h3><p>打通微信是用一个小程序实现的，具体可以参考这个项目**<a href="https://github.com/Rabithua/memos_wmp">memos_wmp</a>**<br>但是，我没有已经备案的域名，所以这步就放弃了。</p>
+<h3 id="raycast"><a href="#raycast" class="headerlink" title="raycast"></a>raycast</h3><p>raycast 支持 memos <a href="https://www.raycast.com/JakeYu/memos">插件</a>，可以很方便的在raycast中使用 memos</p>
+<h3 id="telegram"><a href="#telegram" class="headerlink" title="telegram"></a>telegram</h3><p>支持telegram转发消息保存到memos 中，参考这个<a href="https://www.usememos.com/docs/integration/telegram-bot">Integration with Telegram Bot</a></p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>memos</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>如何利用 github copilot搭建 chatgpt-4  服务</title>
     <url>/2024/01/12/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%20github%20copilot%E6%90%AD%E5%BB%BA%20chatgpt-4%20%20%E6%9C%8D%E5%8A%A1/</url>
     <content><![CDATA[<h1 id="如何利用-github-copilot搭建-chatgpt-4-服务"><a href="#如何利用-github-copilot搭建-chatgpt-4-服务" class="headerlink" title="如何利用 github copilot搭建 chatgpt-4  服务"></a>如何利用 github copilot搭建 chatgpt-4  服务</h1><p>Github Copilot 是 GitHub 开发 AI 助手，它可以帮助开发者编写代码。它是一个基于 OpenAI Codex 的 Visual Studio Code 插件，它可以为你提供代码提示、自动补全、自动修复、自动重构等功能。现在 Github Copilot 还支持chat功能，它的底层逻辑基于GPT-4，但是目前仅支持在vs code 中使用， 但是我日常开发环境是Golang，本文将介绍如何利用github copilot搭建chatgpt-4服务，使得我们可以在任何地方使用chatgpt-4。</p>
@@ -1778,34 +1806,6 @@
         <tag>copilot</tag>
         <tag>chatgpt-4</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>什么是medium 的 publication</title>
-    <url>/2024/03/12/%E4%BB%80%E4%B9%88%E6%98%AFmedium%20%E7%9A%84%20publication/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>publication即出版物，你可以把他理解成一本杂志，但是可以随时发布，随时修改。<br>每个 publication都有一个或者多个编辑，这个编辑负责审核你的文章，发表。总体流程 大概就这样子。</p>
-<span id="more"></span>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/496a388d05f3aa5966560a4840832948.png" alt="Pasted image 20240312155507"><br>具体的细节可以看官网的说明：<br><a href="https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication">https://help.medium.com/hc/en-us/articles/115004681607-Getting-started-with-a-Medium-publication</a></p>
-<h1 id="有那些publication"><a href="#有那些publication" class="headerlink" title="有那些publication"></a>有那些publication</h1><p>官网好像没有具体的publication 排名，但是有一些 第三方网站 会追踪这些。<br>比如下面这些链接 </p>
-<ul>
-<li><a href="https://nickwolny.com/medium-publications/">https://nickwolny.com/medium-publications/</a></li>
-<li><a href="https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54">https://medium.com/new-writers-welcome/the-big-list-of-medium-publications-2023-8f9860f74d54</a></li>
-<li><a href="https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61">https://medium.com/@MediumStaff/list/mediums-huge-list-of-publications-accepting-submissions-7c0ec8037e61</a><br>你可以从上面找一些流量比较大的 publication 重点关注一下。</li>
-</ul>
-<h1 id="如何成为作者"><a href="#如何成为作者" class="headerlink" title="如何成为作者"></a>如何成为作者</h1><p>以 Level Up Coding 为例子<br>不是每个publication都公开招募作者的，但是如果他们招募作者，就会再publication的官网显示出来。比如<a href="https://levelup.gitconnected.com/">Level Up Coding</a>这个<br><img src="https://images.hxzhouh.com/blog-images/2024/03/ee87da8b9690509d48da5472c6aac4f6.png" alt="Pasted image 20240312160108"><br>根据他们的要求，先写一篇草稿，然后把草稿发邮件给他们的编辑等待他们添加你到这个 publication 的作者。<br>这个时间 不确定，有的很快，有的很慢 （老外墨迹）Level Up Coding 我当初大概是三天，但是 <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-uul5nrYehQxmUY6MTdxu8Fj6t1vSaUgG82oV42onrVJp_w/viewform">Dev Genius</a> 这个我提交了一个 超过一个星期了还没人回复。</p>
-<h1 id="成为作者后，怎么发布文章。"><a href="#成为作者后，怎么发布文章。" class="headerlink" title="成为作者后，怎么发布文章。"></a>成为作者后，怎么发布文章。</h1><p>一般添加后都会有邮件回复，<br>然后在在你的草稿中选择 要出版的publish ，就像这样。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/03/e981881175716513b1aa586b03ca550f.gif" alt="how to push to publication"><br>提交到出版物后，不是立即就发表，而是要等 编辑审核，时间不确定，有时候还会拒绝。比如说你AI稿之类的。</p>
-<h1 id="publication-优缺点"><a href="#publication-优缺点" class="headerlink" title="publication 优缺点"></a>publication 优缺点</h1><h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>最大的缺点是磨叽，有时候等1个星期都不见任何反应。也不是所有的publication 乐意接受你成为作者的<br>还有一个缺点就是你的文章会显示成 publication 的域名，比如我这篇<a href="https://levelup.gitconnected.com/go-source-code-analysis-rwmutex-3498b6087d57?source=collection_home---4------1-----------------------">Go Source Code Analysis: RWmutex_</a>  ，如果你注重后期想自己发展独立站的话，这点需要考虑一下</p>
-<h2 id="不明显的优点："><a href="#不明显的优点：" class="headerlink" title="不明显的优点："></a>不明显的优点：</h2><ol>
-<li>可能会被审稿，提出专业的修改意见？我没遇到过 哈哈</li>
-<li>出版物自带流量，比如Level Up Coding 全网100k+粉丝，你的文章发表后，会显示在它的主页，会给你增加流量吧？但是不明显<br>  <img src="https://images.hxzhouh.com/blog-images/2024/03/58e5dab79d0b28276ddec5210e73388d.png" alt="Pasted image 20240312161118"></li>
-<li>publication 发表后的文章也可以随时修改，甚至撤下来，换其他的出版物，这点比较灵活。</li>
-<li>看过很多写medium经验的文章，不要选择太大的出版物，因为提交的文章多，可能你的文章很快就被淹没了，一些小众的出版物，可能更好。我没尝试过。<br>总的来说，publication 就这么回事，没有明显的坏处，可能有点好处，但是也就那么多。enjoy。</li>
-</ol>
-]]></content>
   </entry>
   <entry>
     <title>计算机中的时间 线程上下文切换会用掉你多少CPU？</title>
@@ -1924,31 +1924,95 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-39</title>
-    <url>/2023/09/27/arts/ARTS-2023-39/</url>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>arts</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<ol>
-<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
-如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
-</ol>
-<blockquote>
-<ol>
-<li>打开Chrome浏览器。  </li>
-<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
-<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
-<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
-</ol>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-42</title>
+    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
+<ol>
+<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
+</ul>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2000,95 +2064,17 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-42</title>
-    <url>/2023/10/16/arts/ARTS-2023-42/</url>
+    <title>ARTS-2023-44</title>
+    <url>/2023/10/30/arts/ARTS-2023-44/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode  </p>
-<ol>
-<li>leetcode 45 <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">jump</span><span class="params">(nums []<span class="type">int</span>)</span></span> <span class="type">int</span> &#123;  </span><br><span class="line">    length := <span class="built_in">len</span>(nums)  </span><br><span class="line">    end := <span class="number">0</span>  </span><br><span class="line">    maxPosition := <span class="number">0</span>  </span><br><span class="line">    steps := <span class="number">0</span>  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; length<span class="number">-1</span>; i++ &#123;  </span><br><span class="line">       maxPosition = max(maxPosition, i+nums[i])  </span><br><span class="line">       <span class="keyword">if</span> i == end &#123;  </span><br><span class="line">          end = maxPosition  </span><br><span class="line">          steps++  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">return</span> steps  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://substack.com/redirect/5c83001c-e5fb-4213-8871-41e93c28dfb1?j=eyJ1IjoibHNxdmoifQ.3oGmLofndxScvklxajPKu05xrXKSE0fYF651WfgCv6U">如何做出伟大的工作？</a> </p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> <a href="things:///show?id=NU7XfixHt1ewVSJ3hXEteZ">阅读</a> ✅ 2023-11-08<br><a href="https://www.brendangregg.com/linuxperf.html">Linux Performance</a></li>
-</ul>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2117,6 +2103,46 @@
 <h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 <p>最后，我想说有时候笨办法才是最聪明的，慢慢来才是最快的。读文档不一定能直接给我们生活的最优解，但是他能让我们趋近于知道最优解的路径。生活就像一场冒险，也许文档就是我们手中的地图和指南针。  慢慢来不着急，时间还很长。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-39</title>
+    <url>/2023/09/27/arts/ARTS-2023-39/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<h2 id="算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review"><a href="#算法-leetcode本周放假前一周，比较颓废，很多都没完成。-Review" class="headerlink" title="#算法 #leetcode本周放假前一周，比较颓废，很多都没完成。## Review"></a>#算法 #leetcode<br>本周放假前一周，比较颓废，很多都没完成。<br>## Review</h2><p>#好文 #阅读</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<ol>
+<li>在本地生成测试证书。 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">首先，生成一个RSA私钥文件（`server.key`）：</span></span><br><span class="line">openssl genpkey -algorithm RSA -out server.key</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">接下来，生成一个自签名证书请求（CSR）：</span></span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在执行此命令时，您将被要求提供一些证书信息，例如国家、州、城市、公司等。您可以根据需要提供这些信息，或者按照默认值留空。</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">现在，使用生成的私钥和证书请求来生成自签名证书：</span></span><br><span class="line">openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt</span><br></pre></td></tr></table></figure>
+如果这个证书再浏览器里面显示不安全，可以尝试信任本地证书</li>
+</ol>
+<blockquote>
+<ol>
+<li>打开Chrome浏览器。  </li>
+<li>在地址栏中输入 <code>chrome://flags/#allow-insecure-localhost/</code> 并按 Enter 键。  </li>
+<li>找到并启用 “Allow invalid certificates for resources loaded from localhost” 选项。 </li>
+<li>重新启动Chrome浏览器。<br><img src="https://images.hxzhouh.com/blog-images/2023/09/c72bb8fc1990bb18c394ae237d8b4ad9.png" alt="image.png"></li>
+</ol>
+</blockquote>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2174,32 +2200,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-44</title>
-    <url>/2023/10/30/arts/ARTS-2023-44/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://github.com/ZachGoldberg/Startup-CTO-Handbook">https://github.com/ZachGoldberg/Startup-CTO-Handbook</a>  </p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ARTS-2023-45</title>
     <url>/2023/11/06/arts/ARTS-2023-45/</url>
     <content><![CDATA[<blockquote>
@@ -2225,6 +2225,33 @@
         <tag>工具</tag>
         <tag>碎碎念</tag>
         <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-49</title>
+    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>leetcode 173: 也是中序遍历</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
+<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+        <tag>工程师工具</tag>
       </tags>
   </entry>
   <entry>
@@ -2260,60 +2287,22 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-49</title>
-    <url>/2023/12/04/arts/ARTS-2023-49/</url>
+    <title>ARTS-2023-50</title>
+    <url>/2023/12/11/arts/ARTS-2023-50/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>继续在做二叉树的题目。<br>leetcode 97: 中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>leetcode 173: 也是中序遍历</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> BSTIterator <span class="keyword">struct</span> &#123;  </span><br><span class="line">    stack []<span class="type">int</span> <span class="comment">// 用于存储中序遍历的结果  </span></span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Constructor</span><span class="params">(root *TreeNode)</span></span> BSTIterator &#123;  </span><br><span class="line">    <span class="keyword">return</span> BSTIterator&#123;stack: inorderTraversal(root)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">inorderTraversal</span><span class="params">(root *TreeNode)</span></span> []<span class="type">int</span> &#123;  </span><br><span class="line">    <span class="keyword">if</span> root == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">if</span> root.Left == <span class="literal">nil</span> &amp;&amp; root.Right == <span class="literal">nil</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span> []<span class="type">int</span>&#123;root.Val&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    result := []<span class="type">int</span>&#123;&#125;  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Left)...)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, root.Val)  </span><br><span class="line">    result = <span class="built_in">append</span>(result, inorderTraversal(root.Right)...)  </span><br><span class="line">    <span class="keyword">return</span> result  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> Next() <span class="type">int</span> &#123;  </span><br><span class="line">    val := this.stack[<span class="number">0</span>]  </span><br><span class="line">    this.stack = this.stack[<span class="number">1</span>:]  </span><br><span class="line">    <span class="keyword">return</span> val  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this *BSTIterator)</span></span> HasNext() <span class="type">bool</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(this.stack) &gt; <span class="number">0</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://colobu.com/2023/12/07/more-precise-sleep/">更精准的sleep</a><br>头一次知道time.sleep 的精度问题，想想也是哈，CPU频率就在那里，怎么可能提供那么高精度的休眠。<code>time.sleep</code> 的精度是1ms左右。如果想要更高精度的休眠，使用<code>syscall.Nanosleep</code> 可以提供ns 级别的休眠，但是它是阻塞进程的。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工程师工具 鼠须管，雾凇拼音方案，<a href="https://github.com/iDvel/rime-ice">https://github.com/iDvel/rime-ice</a>开箱即用的鼠须管方案，记录一下，等下忘记了。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>不要把职业（career）当成某一件具体的事情，这是人类发明的最危险、最令人窒息的概念之一，也是大多数梦想和直觉的敌人。</p>
-<p>职业应该是一个抽象的概念，指的是一个人在日常的工作和生活中，不断探索、培训、实践、逐步进步的过程。</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
+<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
+<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
 ]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-        <tag>工程师工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-48</title>
-    <url>/2023/11/27/arts/ARTS-2023-48/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
-<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
-
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
@@ -2340,22 +2329,18 @@
       </categories>
   </entry>
   <entry>
-    <title>ARTS-2023-50</title>
-    <url>/2023/12/11/arts/ARTS-2023-50/</url>
+    <title>ARTS-2023-48</title>
+    <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
 
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://www.riverphillips.dev/blog/go-cfs">https://www.riverphillips.dev/blog/go-cfs</a> 一个老生常谈的问题， GOMAXPROCS 的设置。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>使用 <a href="https://github.com/Yidadaa/ChatGPT-Next-Web">ChatGPT-Next-Web</a> +<a href="https://www.gptapi.us/"> gptapi</a> 搭建了一个镜像站，看能活多久把。</p>
+<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
 
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
-<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
-<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
-]]></content>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
@@ -2374,6 +2359,21 @@
 <p>一个不成熟的理想主义者会为理想悲壮地死去，而一个成熟的理想主义者则愿意为了理想苟且偷生。  《麦田里的守望者》</p>
 </blockquote>
 ]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
