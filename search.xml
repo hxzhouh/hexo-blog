@@ -75,6 +75,82 @@
       </tags>
   </entry>
   <entry>
+    <title>go 解密 defer 的优雅陷阱</title>
+    <url>/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/</url>
+    <content><![CDATA[<p>在<a href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)  </span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;  </span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> wg.Done()  </span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;  </span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;()  </span><br><span class="line">&#125;  </span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p>释放锁，或者其他任何资源。</p>
+<blockquote>
+<p>在Go中，只有在函数和方法内部才能使用defer；defer关键字后面只能接函数或方法，这些函数被称为deferred函数。<br>defer将它们注册到其所在goroutine用于存放deferred函数的栈数据结构中，这些deferred函数将在执行defer的函数退出前被按后进先出（LIFO）的顺序调度执行</p>
+</blockquote>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"><br>无论是执行到函数体尾部返回，还是在某个错误处理分支显式调用return返回，抑或出现panic，已经存储到deferred函数栈中的函数都会被调度执行。因此，deferred函数是一个在任何情况下都可以为函数进行收尾工作的好场合。</p>
+<h1 id="defer-的几个使用场景"><a href="#defer-的几个使用场景" class="headerlink" title="defer 的几个使用场景"></a>defer 的几个使用场景</h1><ul>
+<li>panic 捕获,因为deferred 再任意场景下都会被执行，所以我们可以再defer中处理异常。（不建议这么做，如果是一般错误，不建议panic，如果必须panic ，就不要捕获）</li>
+<li>释放资源</li>
+<li>延迟执行，记录函数执行的时间比如<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">		fmt.Println(time.Now().Sub(s))</span><br><span class="line">	&#125;(time.Now())</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="defer-带来的性能损耗"><a href="#defer-带来的性能损耗" class="headerlink" title="defer 带来的性能损耗"></a>defer 带来的性能损耗</h1><p>defer让进行资源释放（如文件描述符、锁）的过程变得优雅很多，也不易出错。但在性能敏感的程序中，defer带来的性能负担也是Gopher必须知晓和权衡的。<br><a href="https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303">https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303</a></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+
+<p>在 go1.12 版本中相同的测试代码，非 defer 版本 要比defer 版本快7倍，经过1.13 1.14 两个大版本的优化，defer 的性能已经显著提高了，在我的电脑上，非defer 版本还是有着50%左右的性能领先。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在多数情况下，我们的程序对性能并不太敏感，我建议尽量使用defer，同时我们需要了解defer 运行的原理，以及几个要避免的地方。</p>
+]]></content>
+      <categories>
+        <category>golang</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go iota, 不是枚举</title>
+    <url>/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/</url>
+    <content><![CDATA[<p>上周再hacker news 上有一篇讨论go enum 的 文章 <a href="https://www.zarl.dev/articles/enums">Go Enums Suck</a>（很开心还能再hacker news  上看到go相关的信息），我不想对这篇文章发表什么看法，作者说的都是正确的 如果把iota 当成enum看，跟其他语言相比较，确实很糟糕，本篇文章，我们讨论一下iota 的用法。</p>
+<span id="more"></span>
+<h1 id="iota-在-Go-中的使用"><a href="#iota-在-Go-中的使用" class="headerlink" title="iota 在 Go 中的使用"></a>iota 在 Go 中的使用</h1><h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Go 语言实际上没有直接支持枚举的关键字。一般我们都是通过 <code>const</code> + <code>iota</code> 实现枚举的能力。<br>有人要问了，为什么一定要使用枚举呢？<code>stackoverflow</code> 上有一个高赞的回答，如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">You should always use enums when a variable (especially a method parameter) can only take one out of a small set of possible values. Examples would be things like type constants (contract status: &quot;permanent&quot;, &quot;temp&quot;, &quot;apprentice&quot;), or flags (&quot;execute now&quot;, &quot;defer execution&quot;).</span><br><span class="line"></span><br><span class="line">If you use enums instead of integers (or String codes), you increase compile-time checking and avoid errors from passing in invalid constants, and you document which values are legal to use.</span><br><span class="line"></span><br><span class="line">BTW, overuse of enums might mean that your methods do too much (it&#x27;s often better to have several separate methods, rather than one method that takes several flags which modify what it does), but if you have to use flags or type codes, enums are the way to go.</span><br></pre></td></tr></table></figure>
+<h1 id="如何实现枚举"><a href="#如何实现枚举" class="headerlink" title="如何实现枚举"></a>如何实现枚举</h1><p><code>iota</code> 是 Go 中预声明的一个特殊常量。它会被预声明为0，但是它的值在编译阶段并非是固定的，当预声明的 <code>iota</code> 出现在一个常量声明中的时候，它的值在第n个常量描述中的值为n(从0开始)。所以它只在同类型多个常量声明的情况下才显得有意义。</p>
+<p>比如，大家都了解的电商，订单系统一定会涉及到订单状态的流转。那么这时候，我们一般可以这样做:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay     OrderStatus = <span class="literal">iota</span> <span class="comment">//未支付  1</span></span><br><span class="line">	PendIng   OrderStatus = <span class="literal">iota</span> <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered OrderStatus = <span class="literal">iota</span> <span class="comment">// 已发货 3</span></span><br><span class="line">	Received  OrderStatus = <span class="literal">iota</span> <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然，这样看着好麻烦。其实，其他常量可以重复上一行 <code>iota</code> 表达式，我们可以改成这样。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 1</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 3</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有人会用 0 的值来表示状态吗？一般都不会，我们想以1开头，那么可以这样。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:1,2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们还想在 <code>Delivered</code> 后跳过一个数字，才是 <code>Received</code> 的值,也就是 <code>Received=6</code>，那么可以借助 <code>_</code> 符号。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	_</span><br><span class="line">	Received                     <span class="comment">// 已收货 6</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received) <span class="comment">// 打印:6</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顺着来可以，倒着当然也行。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Max = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Received  OrderStatus = Max - <span class="literal">iota</span> <span class="comment">// 已收货  5</span></span><br><span class="line">	Delivered                          <span class="comment">// 已发货 4</span></span><br><span class="line">	PendIng                            <span class="comment">// 未发货 3</span></span><br><span class="line">	NoPay                              <span class="comment">//未支付 2</span></span><br><span class="line">	Cancelled                          <span class="comment">//订单已取消 1</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received,Delivered) <span class="comment">// 打印:5,4</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你还可以使用位运算，比如在 go 源码中的包 <code>sync</code> 中的锁上面有这么一段代码。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    mutexLocked = <span class="number">1</span> &lt;&lt; <span class="literal">iota</span>  <span class="comment">//1&lt;&lt;0</span></span><br><span class="line">    mutexWoken               <span class="comment">//1&lt;&lt;1</span></span><br><span class="line">    mutexStarving            <span class="comment">//1&lt;&lt;2</span></span><br><span class="line">    mutexWaiterShift = <span class="literal">iota</span>  <span class="comment">//3</span></span><br><span class="line"></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexLocked的值&quot;</span>,mutexLocked) <span class="comment">//打印：1</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWoken的值&quot;</span>,mutexWoken) <span class="comment">//打印：2</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexStarving的值&quot;</span>,mutexStarving) <span class="comment">//打印：4</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWaiterShift的值&quot;</span>,mutexWaiterShift) <span class="comment">// 打印：3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可能有人平常是直接定义常量值或者用字符串来表示的。<br>比如，上面这些我完全可以用 <code>string</code> 来表示，我还真见过用字符串来表示订单状态的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="string">&quot;cancelled&quot;</span></span><br><span class="line">	NoPay     = <span class="string">&quot;noPay&quot;</span></span><br><span class="line">	PendIng   = <span class="string">&quot;pendIng&quot;</span></span><br><span class="line">	Delivered = <span class="string">&quot;delivered&quot;</span></span><br><span class="line">	Received  = <span class="string">&quot;received&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>或者直接定义整形常量值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="number">1</span></span><br><span class="line">	NoPay     = <span class="number">2</span></span><br><span class="line">	PendIng   = <span class="number">3</span></span><br><span class="line">	Delivered = <span class="number">4</span></span><br><span class="line">	Received  = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实上述两种都可以，但是相比之下使用 <code>iota</code> 更有优势。</p>
+<ul>
+<li>能保证一组常量的唯一性，人工定义的不能保证。</li>
+<li>可以为一组动作分享同一种行为。</li>
+<li>避免无效值。</li>
+<li>提高代码阅读性以及维护。</li>
+</ul>
+<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>按照上面我们所演示的，最后我们可以这样操作。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> + <span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                            <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                          <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                        <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                         <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">//公共行为 赋予类型 String() 函数，方便打印值含义</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> [...]<span class="type">string</span>&#123;<span class="string">&quot;cancelled&quot;</span>, <span class="string">&quot;noPay&quot;</span>, <span class="string">&quot;pendIng&quot;</span>, <span class="string">&quot;delivered&quot;</span>, <span class="string">&quot;received&quot;</span>&#125;[order<span class="number">-1</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建公共行为 赋予类型 int 函数 EnumIndex()</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> EnumIndex() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="type">int</span>(order)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> order OrderStatus = Received</span><br><span class="line">	fmt.Println(order.String())    <span class="comment">// 打印:received</span></span><br><span class="line">	fmt.Println(order.EnumIndex()) <span class="comment">// 打印:5</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这篇文章主要介绍了 <code>Golang</code> 中对 <code>iota</code> 的使用介绍，以及我们为什么要使用它。每一种语言的设计都一定不是完美的，我们要适应它。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Go 编程模式 05 修饰器（Decoration）</title>
     <url>/2024/03/04/Go%20%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%BC%8F%2005%20%E4%BF%AE%E9%A5%B0%E5%99%A8%EF%BC%88Decoration%EF%BC%89/</url>
     <content><![CDATA[<p>Go 是一种静态类型的编译语言，它的设计目标是简洁、高效。虽然 Go 不是一种完全的面向对象语言，但是我们仍然可以使用一些设计模式来提高代码的可读性和可维护性。今天，我将介绍一种常见的设计模式：修饰器模式。</p>
@@ -155,54 +231,6 @@
       <tags>
         <tag>go</tag>
         <tag>监控</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go iota, 不是枚举</title>
-    <url>/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/</url>
-    <content><![CDATA[<p>上周再hacker news 上有一篇讨论go enum 的 文章 <a href="https://www.zarl.dev/articles/enums">Go Enums Suck</a>（很开心还能再hacker news  上看到go相关的信息），我不想对这篇文章发表什么看法，作者说的都是正确的 如果把iota 当成enum看，跟其他语言相比较，确实很糟糕，本篇文章，我们讨论一下iota 的用法。</p>
-<span id="more"></span>
-<h1 id="iota-在-Go-中的使用"><a href="#iota-在-Go-中的使用" class="headerlink" title="iota 在 Go 中的使用"></a>iota 在 Go 中的使用</h1><h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Go 语言实际上没有直接支持枚举的关键字。一般我们都是通过 <code>const</code> + <code>iota</code> 实现枚举的能力。<br>有人要问了，为什么一定要使用枚举呢？<code>stackoverflow</code> 上有一个高赞的回答，如下:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">You should always use enums when a variable (especially a method parameter) can only take one out of a small set of possible values. Examples would be things like type constants (contract status: &quot;permanent&quot;, &quot;temp&quot;, &quot;apprentice&quot;), or flags (&quot;execute now&quot;, &quot;defer execution&quot;).</span><br><span class="line"></span><br><span class="line">If you use enums instead of integers (or String codes), you increase compile-time checking and avoid errors from passing in invalid constants, and you document which values are legal to use.</span><br><span class="line"></span><br><span class="line">BTW, overuse of enums might mean that your methods do too much (it&#x27;s often better to have several separate methods, rather than one method that takes several flags which modify what it does), but if you have to use flags or type codes, enums are the way to go.</span><br></pre></td></tr></table></figure>
-<h1 id="如何实现枚举"><a href="#如何实现枚举" class="headerlink" title="如何实现枚举"></a>如何实现枚举</h1><p><code>iota</code> 是 Go 中预声明的一个特殊常量。它会被预声明为0，但是它的值在编译阶段并非是固定的，当预声明的 <code>iota</code> 出现在一个常量声明中的时候，它的值在第n个常量描述中的值为n(从0开始)。所以它只在同类型多个常量声明的情况下才显得有意义。</p>
-<p>比如，大家都了解的电商，订单系统一定会涉及到订单状态的流转。那么这时候，我们一般可以这样做:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay     OrderStatus = <span class="literal">iota</span> <span class="comment">//未支付  1</span></span><br><span class="line">	PendIng   OrderStatus = <span class="literal">iota</span> <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered OrderStatus = <span class="literal">iota</span> <span class="comment">// 已发货 3</span></span><br><span class="line">	Received  OrderStatus = <span class="literal">iota</span> <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>当然，这样看着好麻烦。其实，其他常量可以重复上一行 <code>iota</code> 表达式，我们可以改成这样。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 1</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 3</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有人会用 0 的值来表示状态吗？一般都不会，我们想以1开头，那么可以这样。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:1,2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>我们还想在 <code>Delivered</code> 后跳过一个数字，才是 <code>Received</code> 的值,也就是 <code>Received=6</code>，那么可以借助 <code>_</code> 符号。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	_</span><br><span class="line">	Received                     <span class="comment">// 已收货 6</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received) <span class="comment">// 打印:6</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>顺着来可以，倒着当然也行。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Max = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Received  OrderStatus = Max - <span class="literal">iota</span> <span class="comment">// 已收货  5</span></span><br><span class="line">	Delivered                          <span class="comment">// 已发货 4</span></span><br><span class="line">	PendIng                            <span class="comment">// 未发货 3</span></span><br><span class="line">	NoPay                              <span class="comment">//未支付 2</span></span><br><span class="line">	Cancelled                          <span class="comment">//订单已取消 1</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received,Delivered) <span class="comment">// 打印:5,4</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>你还可以使用位运算，比如在 go 源码中的包 <code>sync</code> 中的锁上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    mutexLocked = <span class="number">1</span> &lt;&lt; <span class="literal">iota</span>  <span class="comment">//1&lt;&lt;0</span></span><br><span class="line">    mutexWoken               <span class="comment">//1&lt;&lt;1</span></span><br><span class="line">    mutexStarving            <span class="comment">//1&lt;&lt;2</span></span><br><span class="line">    mutexWaiterShift = <span class="literal">iota</span>  <span class="comment">//3</span></span><br><span class="line"></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexLocked的值&quot;</span>,mutexLocked) <span class="comment">//打印：1</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWoken的值&quot;</span>,mutexWoken) <span class="comment">//打印：2</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexStarving的值&quot;</span>,mutexStarving) <span class="comment">//打印：4</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWaiterShift的值&quot;</span>,mutexWaiterShift) <span class="comment">// 打印：3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可能有人平常是直接定义常量值或者用字符串来表示的。<br>比如，上面这些我完全可以用 <code>string</code> 来表示，我还真见过用字符串来表示订单状态的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="string">&quot;cancelled&quot;</span></span><br><span class="line">	NoPay     = <span class="string">&quot;noPay&quot;</span></span><br><span class="line">	PendIng   = <span class="string">&quot;pendIng&quot;</span></span><br><span class="line">	Delivered = <span class="string">&quot;delivered&quot;</span></span><br><span class="line">	Received  = <span class="string">&quot;received&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>或者直接定义整形常量值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="number">1</span></span><br><span class="line">	NoPay     = <span class="number">2</span></span><br><span class="line">	PendIng   = <span class="number">3</span></span><br><span class="line">	Delivered = <span class="number">4</span></span><br><span class="line">	Received  = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实上述两种都可以，但是相比之下使用 <code>iota</code> 更有优势。</p>
-<ul>
-<li>能保证一组常量的唯一性，人工定义的不能保证。</li>
-<li>可以为一组动作分享同一种行为。</li>
-<li>避免无效值。</li>
-<li>提高代码阅读性以及维护。</li>
-</ul>
-<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>按照上面我们所演示的，最后我们可以这样操作。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> + <span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                            <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                          <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                        <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                         <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">//公共行为 赋予类型 String() 函数，方便打印值含义</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> [...]<span class="type">string</span>&#123;<span class="string">&quot;cancelled&quot;</span>, <span class="string">&quot;noPay&quot;</span>, <span class="string">&quot;pendIng&quot;</span>, <span class="string">&quot;delivered&quot;</span>, <span class="string">&quot;received&quot;</span>&#125;[order<span class="number">-1</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建公共行为 赋予类型 int 函数 EnumIndex()</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> EnumIndex() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="type">int</span>(order)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> order OrderStatus = Received</span><br><span class="line">	fmt.Println(order.String())    <span class="comment">// 打印:received</span></span><br><span class="line">	fmt.Println(order.EnumIndex()) <span class="comment">// 打印:5</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这篇文章主要介绍了 <code>Golang</code> 中对 <code>iota</code> 的使用介绍，以及我们为什么要使用它。每一种语言的设计都一定不是完美的，我们要适应它。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -361,7 +389,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#116;&#64;&#x31;&#x30;&#x2e;&#x31;&#49;&#50;&#46;&#49;&#46;&#49;">&#103;&#x6c;&#116;&#64;&#x31;&#x30;&#x2e;&#x31;&#49;&#50;&#46;&#49;&#46;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#116;&#64;&#x31;&#48;&#46;&#x31;&#x31;&#50;&#46;&#x31;&#46;&#49;">&#103;&#x6c;&#116;&#64;&#x31;&#48;&#46;&#x31;&#x31;&#50;&#46;&#x31;&#46;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -416,34 +444,6 @@
       <categories>
         <category>随笔</category>
       </categories>
-  </entry>
-  <entry>
-    <title>go 解密 defer 的优雅陷阱</title>
-    <url>/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/</url>
-    <content><![CDATA[<p>在<a href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)  </span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;  </span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> wg.Done()  </span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;  </span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;()  </span><br><span class="line">&#125;  </span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p>释放锁，或者其他任何资源。</p>
-<blockquote>
-<p>在Go中，只有在函数和方法内部才能使用defer；defer关键字后面只能接函数或方法，这些函数被称为deferred函数。<br>defer将它们注册到其所在goroutine用于存放deferred函数的栈数据结构中，这些deferred函数将在执行defer的函数退出前被按后进先出（LIFO）的顺序调度执行</p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"><br>无论是执行到函数体尾部返回，还是在某个错误处理分支显式调用return返回，抑或出现panic，已经存储到deferred函数栈中的函数都会被调度执行。因此，deferred函数是一个在任何情况下都可以为函数进行收尾工作的好场合。</p>
-<h1 id="defer-的几个使用场景"><a href="#defer-的几个使用场景" class="headerlink" title="defer 的几个使用场景"></a>defer 的几个使用场景</h1><ul>
-<li>panic 捕获,因为deferred 再任意场景下都会被执行，所以我们可以再defer中处理异常。（不建议这么做，如果是一般错误，不建议panic，如果必须panic ，就不要捕获）</li>
-<li>释放资源</li>
-<li>延迟执行，记录函数执行的时间比如<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">		fmt.Println(time.Now().Sub(s))</span><br><span class="line">	&#125;(time.Now())</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h1 id="defer-带来的性能损耗"><a href="#defer-带来的性能损耗" class="headerlink" title="defer 带来的性能损耗"></a>defer 带来的性能损耗</h1><p>defer让进行资源释放（如文件描述符、锁）的过程变得优雅很多，也不易出错。但在性能敏感的程序中，defer带来的性能负担也是Gopher必须知晓和权衡的。<br><a href="https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303">https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303</a></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-
-<p>在 go1.12 版本中相同的测试代码，非 defer 版本 要比defer 版本快7倍，经过1.13 1.14 两个大版本的优化，defer 的性能已经显著提高了，在我的电脑上，非defer 版本还是有着50%左右的性能领先。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在多数情况下，我们的程序对性能并不太敏感，我建议尽量使用defer，同时我们需要了解defer 运行的原理，以及几个要避免的地方。</p>
-]]></content>
-      <categories>
-        <category>golang</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
   </entry>
   <entry>
     <title>Go 解密： unsafe.Pointer</title>
@@ -508,89 +508,6 @@
       <tags>
         <tag>Go</tag>
         <tag>最佳实践</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go 怎么做stw</title>
-    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
-    <content><![CDATA[<blockquote>
-<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br>Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
-<blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
-</blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go 协程切换的性能分析</title>
-    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[004-blog&#x2F;计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
-<ul>
-<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
-<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
-<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
-<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
-</ul>
-<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
-<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
-<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
-<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
-<p>本文基于 go 1.22.1</p>
-</blockquote>
-<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
-</code></pre>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编译运行</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
-<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
-
-<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
-<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
-<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
-]]></content>
-      <categories>
-        <category>golang</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -674,43 +591,48 @@
       </tags>
   </entry>
   <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <title>go 怎么做stw</title>
+    <url>/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/</url>
     <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+<p>原文链接:  <a href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br>Author :   <a href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
 </blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+<p><strong>本文基于 go 1.13</strong></p>
+<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
+<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+<p>运行垃圾回收算法将触发两个阶段的STW </p>
+<blockquote>
+<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+</blockquote>
+<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
+<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
+<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
+<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
+<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
+<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>他的trace情况。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
+<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
+<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+<p>STW时长达到了2.6S</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
+<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
 ]]></content>
       <categories>
-        <category>leetCode</category>
+        <category>go</category>
       </categories>
       <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -802,6 +724,84 @@
       </tags>
   </entry>
   <entry>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
+
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>go 协程切换的性能分析</title>
+    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[004-blog&#x2F;计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
+<ul>
+<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
+<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
+<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
+<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
+</ul>
+<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
+<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
+<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
+<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
+<p>本文基于 go 1.22.1</p>
+</blockquote>
+<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
+</code></pre>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
+<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
+<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
+<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
+]]></content>
+      <categories>
+        <category>golang</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>new跟make 的区别</title>
     <url>/2020/03/21/new%E8%B7%9Fmake%20%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
     <content><![CDATA[<h1 id="new跟make-的区别"><a href="#new跟make-的区别" class="headerlink" title="new跟make 的区别"></a>new跟make 的区别</h1><blockquote>
@@ -880,6 +880,53 @@
       <tags>
         <tag>go</tag>
         <tag>hash</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>medium 写作一个月的心得</title>
+    <url>/2024/02/19/medium%20%E5%86%99%E4%BD%9C%E4%B8%80%E4%B8%AA%E6%9C%88%E7%9A%84%E5%BF%83%E5%BE%97/</url>
+    <content><![CDATA[<p>1月份的时候，从一个网友那里得到经验，再medium上写作可以赚钱。于是开通<a href="https://x1mdx3wzpm.feishu.cn/docx/UA99drQcroan5Jx3aiXcwGoEnMg">会员计划</a>，然后。开始写作，1.9 到今天 2.19 已经写了22篇文章（都是我以前的文章翻译）总共有 73个follows<br>总阅读量 645，获得收益 $25.5<br><img src="https://images.hxzhouh.com/blog-images/2024/02/a086a96e967a82f1a4272b7f65ca3abb.png" alt="Pasted image 20240219174914"></p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/4c12d557403a2278a3e2c648385aa188.png" alt="Pasted image 20240219173904"></p>
+<p>关于这一个月的总结：</p>
+<ol>
+<li><p>medium 的确能赚到钱，<br> 一月份的 $9.8 扣税后，已经到了我的支付宝。很多人通过medium 赚到了可观的收入（当然，这需要一点运气以及耐心） 。比如这个作者，通过一篇30分钟时间写的文章获得了10000多块的收入，并且还在持续增加中。 <a href="https://catcoding.me/p/my-writing-story-on-medium/">我如何写出一万元的文章</a></p>
+</li>
+<li><p>利用出版物<br> 当开始写作后，可以选择出版物发表文章，利用出版物自带的流量完成冷启动，比如我经常投稿的 <a href="https://levelup.gitconnected.com/">LevelUpCode</a>  就是一个流量不错的出版物。出版物如果支持投稿的话，会在他们主页写明<a href="https://levelup.gitconnected.com/how-to-get-published-on-gitconnected-dac547ef556b">wirte for us</a>,根据他们的要求做就是了。<br>  大概的流程就是</p>
+<ol>
+<li>在medium 写一篇文章，保存成草稿</li>
+<li>将草稿连接发送给出版物的编辑，</li>
+<li>编辑会给你回邮件，将你添加为作者（一周以内）</li>
+<li>然后在medium 就可以选择出版物发表了（其实也是推送草稿给出版物的编辑）。</li>
+<li>最后，编辑会审核你的文章，然后由他们发表。</li>
+</ol>
+</li>
+<li><p>一些常用的软件以及web工具（mac）</p>
+<ol>
+<li>为博客制作封面图片 <a href="https://coverview.vercel.app/">https://coverview.vercel.app/</a> </li>
+<li>屏幕录制软件 FocuSee </li>
+<li>制作gif图片 picgif lite</li>
+<li>画图软件 draw.io 或者 excalidraw</li>
+<li>翻译工具 bob chatgpt</li>
+<li>写作工具我用的是 typro，typro复制粘贴到 medium 能最大程度保持格式。</li>
+</ol>
+</li>
+<li><p>关于阅读量和涨粉</p>
+<ol>
+<li>我现在主要是通过社区里面的朋友点赞😄。</li>
+<li>春节期间，我没有上medium 也涨了30左右的粉丝，每天的阅读量也有50左右，应该都是来自出版物的自然流量。</li>
+<li>多关注别人，用心评论别人的文章，蹭大佬的流量。 把medium当成学习的平台，而不是单纯只蹭流量。</li>
+<li>看了比较多教人写meidium文章的文章，基本上都再说一个好标题，以及好的配图之类的 巴啦巴啦， 二月-三月我会实践一下，在写一篇如何提高阅读量的文章。<br>从启动到现在，大概就是做了这些事情把，也算是开始了，后面有新的想法，再更新。。。</li>
+</ol>
+</li>
+</ol>
+<p>good enjoy 😁</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>写作</tag>
+        <tag>medium</tag>
       </tags>
   </entry>
   <entry>
@@ -1022,53 +1069,6 @@
         <tag>反向代理</tag>
         <tag>密码托管</tag>
         <tag>docker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>medium 写作一个月的心得</title>
-    <url>/2024/02/19/medium%20%E5%86%99%E4%BD%9C%E4%B8%80%E4%B8%AA%E6%9C%88%E7%9A%84%E5%BF%83%E5%BE%97/</url>
-    <content><![CDATA[<p>1月份的时候，从一个网友那里得到经验，再medium上写作可以赚钱。于是开通<a href="https://x1mdx3wzpm.feishu.cn/docx/UA99drQcroan5Jx3aiXcwGoEnMg">会员计划</a>，然后。开始写作，1.9 到今天 2.19 已经写了22篇文章（都是我以前的文章翻译）总共有 73个follows<br>总阅读量 645，获得收益 $25.5<br><img src="https://images.hxzhouh.com/blog-images/2024/02/a086a96e967a82f1a4272b7f65ca3abb.png" alt="Pasted image 20240219174914"></p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/4c12d557403a2278a3e2c648385aa188.png" alt="Pasted image 20240219173904"></p>
-<p>关于这一个月的总结：</p>
-<ol>
-<li><p>medium 的确能赚到钱，<br> 一月份的 $9.8 扣税后，已经到了我的支付宝。很多人通过medium 赚到了可观的收入（当然，这需要一点运气以及耐心） 。比如这个作者，通过一篇30分钟时间写的文章获得了10000多块的收入，并且还在持续增加中。 <a href="https://catcoding.me/p/my-writing-story-on-medium/">我如何写出一万元的文章</a></p>
-</li>
-<li><p>利用出版物<br> 当开始写作后，可以选择出版物发表文章，利用出版物自带的流量完成冷启动，比如我经常投稿的 <a href="https://levelup.gitconnected.com/">LevelUpCode</a>  就是一个流量不错的出版物。出版物如果支持投稿的话，会在他们主页写明<a href="https://levelup.gitconnected.com/how-to-get-published-on-gitconnected-dac547ef556b">wirte for us</a>,根据他们的要求做就是了。<br>  大概的流程就是</p>
-<ol>
-<li>在medium 写一篇文章，保存成草稿</li>
-<li>将草稿连接发送给出版物的编辑，</li>
-<li>编辑会给你回邮件，将你添加为作者（一周以内）</li>
-<li>然后在medium 就可以选择出版物发表了（其实也是推送草稿给出版物的编辑）。</li>
-<li>最后，编辑会审核你的文章，然后由他们发表。</li>
-</ol>
-</li>
-<li><p>一些常用的软件以及web工具（mac）</p>
-<ol>
-<li>为博客制作封面图片 <a href="https://coverview.vercel.app/">https://coverview.vercel.app/</a> </li>
-<li>屏幕录制软件 FocuSee </li>
-<li>制作gif图片 picgif lite</li>
-<li>画图软件 draw.io 或者 excalidraw</li>
-<li>翻译工具 bob chatgpt</li>
-<li>写作工具我用的是 typro，typro复制粘贴到 medium 能最大程度保持格式。</li>
-</ol>
-</li>
-<li><p>关于阅读量和涨粉</p>
-<ol>
-<li>我现在主要是通过社区里面的朋友点赞😄。</li>
-<li>春节期间，我没有上medium 也涨了30左右的粉丝，每天的阅读量也有50左右，应该都是来自出版物的自然流量。</li>
-<li>多关注别人，用心评论别人的文章，蹭大佬的流量。 把medium当成学习的平台，而不是单纯只蹭流量。</li>
-<li>看了比较多教人写meidium文章的文章，基本上都再说一个好标题，以及好的配图之类的 巴啦巴啦， 二月-三月我会实践一下，在写一篇如何提高阅读量的文章。<br>从启动到现在，大概就是做了这些事情把，也算是开始了，后面有新的想法，再更新。。。</li>
-</ol>
-</li>
-</ol>
-<p>good enjoy 😁</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>写作</tag>
-        <tag>medium</tag>
       </tags>
   </entry>
   <entry>
@@ -1339,6 +1339,74 @@
       <tags>
         <tag>翻译</tag>
         <tag>GO</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何用汇编分析Go代码</title>
+    <url>/2024/01/16/%E5%A6%82%E4%BD%95%E7%94%A8%E6%B1%87%E7%BC%96%E5%88%86%E6%9E%90Go%E4%BB%A3%E7%A0%81/</url>
+    <content><![CDATA[<p>今天介绍几个常用的查看 Go 汇编代码、调试 Go 程序的命令和工具，</p>
+<span id="more"></span>
+<p>比较这两段代码</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Class <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> a = &amp;Student&#123;<span class="number">1</span>&#125;</span><br><span class="line">	<span class="built_in">println</span>(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>的执行效率要高于下面这段代码：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Class <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> a = Student&#123;<span class="number">1</span>&#125;</span><br><span class="line">	<span class="keyword">var</span> b = &amp;a</span><br><span class="line">	<span class="built_in">println</span>(b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并且给你讲了一通道理，你好像没法辩赢他。怎么办？<br>直接用一行命令生成汇编代码，马上可以戳穿他，打他的脸。</p>
+<h1 id="go-tool-生成汇编"><a href="#go-tool-生成汇编" class="headerlink" title="go tool 生成汇编"></a>go tool 生成汇编</h1><p>其实很简单，有两个命令可以做到：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go tool compile -S main.go</span><br></pre></td></tr></table></figure>
+
+<p>和：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go build main.go &amp;&amp; go tool objdump ./main</span><br></pre></td></tr></table></figure>
+
+<p> 前者是编译，即将源代码编译成 <code>.o</code> 目标文件，并输出汇编代码。<br>后者是反汇编，即从可执行文件反编译成汇编，所以要先用 <code>go build</code> 命令编译出可执行文件。<br>二者不尽相同，但都能看到前面两个示例代码对应的汇编代码是一致的。同事的“谣言”不攻自破，脸都被你打疼了。</p>
+<h1 id="找到-runtime-源码"><a href="#找到-runtime-源码" class="headerlink" title="找到 runtime 源码"></a>找到 runtime 源码</h1><p>Go 是一门有 runtime 的语言，什么是 runtime？其实就是一段辅助程序，用户没有写的代码，runtime 替我们写了，比如 Go 调度器的代码。</p>
+<p>我们只需要知道用 go 关键字创建 goroutine，就可以疯狂堆业务了。至于 goroutine 是怎么被调度的，根本不需要关心，这些是 runtime 调度器的工作。</p>
+<p>那我们自己写的代码如何和 runtime 里的代码对应起来呢？</p>
+<p>前面介绍的方法就可以做到，只需要加一个 <code>grep</code> 就可以。</p>
+<p>例如，我想知道 go 关键字对应 runtime 里的哪个函数，于是写了一段测试代码：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="built_in">println</span>(<span class="number">1</span>+<span class="number">2</span>)</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为 <code>go func()&#123;&#125;()</code> 那一行代码在第 4 行，所以，grep 的时候加一个条件：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go tool compile -S main.go | grep <span class="string">&quot;main.go:4&quot;</span></span><br><span class="line"></span><br><span class="line">// 或</span><br><span class="line"></span><br><span class="line">go build main.go &amp;&amp; go tool objdump ./main | grep <span class="string">&quot;main.go:4&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/ddda1a97dad5e145c1b83e0cf89bf1f7.png" alt="Pasted image 20240116112336"></p>
+<p>马上就能看到 <code>go func()&#123;&#125;()</code> 对应 <code>newproc()</code> 函数，这时再深入研究下 <code>newproc()</code> 函数就大概知道 goroutine 是如何被创建的。</p>
+<h1 id="与dlv调试代码"><a href="#与dlv调试代码" class="headerlink" title="与dlv调试代码"></a>与dlv调试代码</h1><p>那有同学问了，有没有其他可以调试 Go、以及和 Go 程序互动的方法呢？其实是有的！这就是我们要介绍的 dlv 调试工具，目前它对调试 Go 的程序支持是最好的。</p>
+<p>之前没我怎么研究它，只会一些非常简单的命令，这次学会了几个进阶的指令，威力挺大，也进一步加深了对 Go 的理解。</p>
+<p>下面我们带着一个任务来讲解 dlv 如何使用。</p>
+<p>我们知道，向一个 nil 的 slice append 元素，不会有任何问题。但是向一个 nil 的 map 插入新元素，马上就会报 panic。这是为什么呢？又是在哪 panic 呢？</p>
+<p>首先写出让 map 产生 panic 的示例程序：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">int</span></span><br><span class="line">	m[<span class="number">1</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接着用 <code>go build</code> 命令编译生成可执行文件：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go build main.go</span><br></pre></td></tr></table></figure>
+
+<p>然后，使用 dlv 进入调试状态：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">dlv <span class="built_in">exec</span> ./main</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>b</code> 这个命令打断点，有三种方法：</p>
+<ol>
+<li>b + 地址</li>
+<li>b + 代码行数</li>
+<li>b + 函数名</li>
+</ol>
+<p>我们要在对 map 赋值的地方加个断点。位置是第五行，我们在第五行加一个断点。</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">(dlv) b main.go:5</span><br><span class="line">Breakpoint 1 <span class="built_in">set</span> at 0x104203070 <span class="keyword">for</span> main.main() ./main.go:5</span><br><span class="line">(dlv)</span><br></pre></td></tr></table></figure>
+
+<p>执行 <code>c</code> 命令，直接运行到断点处,执行 <code>disass</code> 命令，可以看到汇编指令：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/108eac7ada0934c2e59e6405c399e3ca.png" alt="Pasted image 20240116165330"></p>
+<p>这时使用 <code>si</code> 命令，执行单条指令，多次执行 <code>si</code>，就会执行到 map 赋值函数 &#96;mapassign_fast64:<br><img src="https://images.hxzhouh.com/blog-images/2024/01/df61dc4321789a163071d054e2d40f4b.png" alt="Pasted image 20240116165429"><br><img src="https://images.hxzhouh.com/blog-images/2024/01/c9223b5250b9fdf891adfaeee8493633.png" alt="Pasted image 20240116170428"><br>然后我们在 map_fast64.go上面添加一个断点，</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">b /opt/homebrew/Cellar/go/1.21.6/libexec/src/runtime/map_fast64.go:93</span><br></pre></td></tr></table></figure>
+<p>这时再用单步命令 <code>s</code>，就会进入判断 h 的值为 nil 的分支，然后执行 <code>panic</code> 函数：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/3c305ca7f39d3b6bd35f5d640d5d7ef1.png" alt="Pasted image 20240116170619"></p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/123a0062745492be1a90b5028331faea.png" alt="Pasted image 20240116170945"><br>至此，向 nil 的 map 赋值时，产生 panic 的代码就被我们找到了。接着，按图索骥找到对应 runtime 源码的位置，就可以进一步探索了。</p>
+<p>除此之外，我们还可以使用 <code>bt</code> 命令看到调用栈：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6cd9f5f16328f257c5020ac976a8ba42.png" alt="Pasted image 20240116171018"><br>使用 <code>frame 1</code> 命令可以跳转到相应位置。这里 <code>1</code> 对应图中的 <code>main.go:5</code>，也就是我们前面打断点的地方，是不是非常酷炫。</p>
+<p>上面这张图里我们也能清楚地看到，用户 goroutine 其实是被 goexit 函数一路调用过来的。当用户 goroutine 执行完毕后，就会回到 goexit 函数做一些收尾工作。当然，这是题外话了。</p>
+<h2 id="另外，用-dlv-也能干第二部分“找到-runtime-源码”的活。-总结今天系统地讲了几招通过命令和工具查看用户代码对应的-runtime-源码或者汇编代码的方法，非常实用。最后再汇总一下：1-go-tool-compile2-go-tool-objdump3-dlv后面，我们会用这些工具继续分析-go语言的源码，比如map-slice-等，有了这些工具，我们的学习过程会事半功倍。"><a href="#另外，用-dlv-也能干第二部分“找到-runtime-源码”的活。-总结今天系统地讲了几招通过命令和工具查看用户代码对应的-runtime-源码或者汇编代码的方法，非常实用。最后再汇总一下：1-go-tool-compile2-go-tool-objdump3-dlv后面，我们会用这些工具继续分析-go语言的源码，比如map-slice-等，有了这些工具，我们的学习过程会事半功倍。" class="headerlink" title="另外，用 dlv 也能干第二部分“找到 runtime 源码”的活。# 总结今天系统地讲了几招通过命令和工具查看用户代码对应的 runtime 源码或者汇编代码的方法，非常实用。最后再汇总一下：1. go tool compile2. go tool objdump3. dlv后面，我们会用这些工具继续分析 go语言的源码，比如map slice 等，有了这些工具，我们的学习过程会事半功倍。 "></a>另外，用 dlv 也能干第二部分“找到 runtime 源码”的活。<br># 总结<br>今天系统地讲了几招通过命令和工具查看用户代码对应的 runtime 源码或者汇编代码的方法，非常实用。最后再汇总一下：<br>1. go tool compile<br>2. go tool objdump<br>3. dlv<br>后面，我们会用这些工具继续分析 go语言的源码，比如map slice 等，有了这些工具，我们的学习过程会事半功倍。 </h2><p>如果你喜欢我的文章，欢迎给我following跟 👏，这对我很有帮助。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
       </tags>
   </entry>
   <entry>
@@ -1840,71 +1908,29 @@
       </tags>
   </entry>
   <entry>
-    <title>如何用汇编分析Go代码</title>
-    <url>/2024/01/16/%E5%A6%82%E4%BD%95%E7%94%A8%E6%B1%87%E7%BC%96%E5%88%86%E6%9E%90Go%E4%BB%A3%E7%A0%81/</url>
-    <content><![CDATA[<p>今天介绍几个常用的查看 Go 汇编代码、调试 Go 程序的命令和工具，</p>
-<span id="more"></span>
-<p>比较这两段代码</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Class <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> a = &amp;Student&#123;<span class="number">1</span>&#125;</span><br><span class="line">	<span class="built_in">println</span>(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>的执行效率要高于下面这段代码：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Student <span class="keyword">struct</span> &#123;</span><br><span class="line">	Class <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> a = Student&#123;<span class="number">1</span>&#125;</span><br><span class="line">	<span class="keyword">var</span> b = &amp;a</span><br><span class="line">	<span class="built_in">println</span>(b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>并且给你讲了一通道理，你好像没法辩赢他。怎么办？<br>直接用一行命令生成汇编代码，马上可以戳穿他，打他的脸。</p>
-<h1 id="go-tool-生成汇编"><a href="#go-tool-生成汇编" class="headerlink" title="go tool 生成汇编"></a>go tool 生成汇编</h1><p>其实很简单，有两个命令可以做到：</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go tool compile -S main.go</span><br></pre></td></tr></table></figure>
-
-<p>和：</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go build main.go &amp;&amp; go tool objdump ./main</span><br></pre></td></tr></table></figure>
-
-<p> 前者是编译，即将源代码编译成 <code>.o</code> 目标文件，并输出汇编代码。<br>后者是反汇编，即从可执行文件反编译成汇编，所以要先用 <code>go build</code> 命令编译出可执行文件。<br>二者不尽相同，但都能看到前面两个示例代码对应的汇编代码是一致的。同事的“谣言”不攻自破，脸都被你打疼了。</p>
-<h1 id="找到-runtime-源码"><a href="#找到-runtime-源码" class="headerlink" title="找到 runtime 源码"></a>找到 runtime 源码</h1><p>Go 是一门有 runtime 的语言，什么是 runtime？其实就是一段辅助程序，用户没有写的代码，runtime 替我们写了，比如 Go 调度器的代码。</p>
-<p>我们只需要知道用 go 关键字创建 goroutine，就可以疯狂堆业务了。至于 goroutine 是怎么被调度的，根本不需要关心，这些是 runtime 调度器的工作。</p>
-<p>那我们自己写的代码如何和 runtime 里的代码对应起来呢？</p>
-<p>前面介绍的方法就可以做到，只需要加一个 <code>grep</code> 就可以。</p>
-<p>例如，我想知道 go 关键字对应 runtime 里的哪个函数，于是写了一段测试代码：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="built_in">println</span>(<span class="number">1</span>+<span class="number">2</span>)</span><br><span class="line">	&#125;()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>因为 <code>go func()&#123;&#125;()</code> 那一行代码在第 4 行，所以，grep 的时候加一个条件：</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go tool compile -S main.go | grep <span class="string">&quot;main.go:4&quot;</span></span><br><span class="line"></span><br><span class="line">// 或</span><br><span class="line"></span><br><span class="line">go build main.go &amp;&amp; go tool objdump ./main | grep <span class="string">&quot;main.go:4&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/ddda1a97dad5e145c1b83e0cf89bf1f7.png" alt="Pasted image 20240116112336"></p>
-<p>马上就能看到 <code>go func()&#123;&#125;()</code> 对应 <code>newproc()</code> 函数，这时再深入研究下 <code>newproc()</code> 函数就大概知道 goroutine 是如何被创建的。</p>
-<h1 id="与dlv调试代码"><a href="#与dlv调试代码" class="headerlink" title="与dlv调试代码"></a>与dlv调试代码</h1><p>那有同学问了，有没有其他可以调试 Go、以及和 Go 程序互动的方法呢？其实是有的！这就是我们要介绍的 dlv 调试工具，目前它对调试 Go 的程序支持是最好的。</p>
-<p>之前没我怎么研究它，只会一些非常简单的命令，这次学会了几个进阶的指令，威力挺大，也进一步加深了对 Go 的理解。</p>
-<p>下面我们带着一个任务来讲解 dlv 如何使用。</p>
-<p>我们知道，向一个 nil 的 slice append 元素，不会有任何问题。但是向一个 nil 的 map 插入新元素，马上就会报 panic。这是为什么呢？又是在哪 panic 呢？</p>
-<p>首先写出让 map 产生 panic 的示例程序：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> m <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">int</span></span><br><span class="line">	m[<span class="number">1</span>] = <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>接着用 <code>go build</code> 命令编译生成可执行文件：</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">go build main.go</span><br></pre></td></tr></table></figure>
-
-<p>然后，使用 dlv 进入调试状态：</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">dlv <span class="built_in">exec</span> ./main</span><br></pre></td></tr></table></figure>
-
-<p>使用 <code>b</code> 这个命令打断点，有三种方法：</p>
-<ol>
-<li>b + 地址</li>
-<li>b + 代码行数</li>
-<li>b + 函数名</li>
-</ol>
-<p>我们要在对 map 赋值的地方加个断点。位置是第五行，我们在第五行加一个断点。</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">(dlv) b main.go:5</span><br><span class="line">Breakpoint 1 <span class="built_in">set</span> at 0x104203070 <span class="keyword">for</span> main.main() ./main.go:5</span><br><span class="line">(dlv)</span><br></pre></td></tr></table></figure>
-
-<p>执行 <code>c</code> 命令，直接运行到断点处,执行 <code>disass</code> 命令，可以看到汇编指令：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/108eac7ada0934c2e59e6405c399e3ca.png" alt="Pasted image 20240116165330"></p>
-<p>这时使用 <code>si</code> 命令，执行单条指令，多次执行 <code>si</code>，就会执行到 map 赋值函数 &#96;mapassign_fast64:<br><img src="https://images.hxzhouh.com/blog-images/2024/01/df61dc4321789a163071d054e2d40f4b.png" alt="Pasted image 20240116165429"><br><img src="https://images.hxzhouh.com/blog-images/2024/01/c9223b5250b9fdf891adfaeee8493633.png" alt="Pasted image 20240116170428"><br>然后我们在 map_fast64.go上面添加一个断点，</p>
-<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">b /opt/homebrew/Cellar/go/1.21.6/libexec/src/runtime/map_fast64.go:93</span><br></pre></td></tr></table></figure>
-<p>这时再用单步命令 <code>s</code>，就会进入判断 h 的值为 nil 的分支，然后执行 <code>panic</code> 函数：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/3c305ca7f39d3b6bd35f5d640d5d7ef1.png" alt="Pasted image 20240116170619"></p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/123a0062745492be1a90b5028331faea.png" alt="Pasted image 20240116170945"><br>至此，向 nil 的 map 赋值时，产生 panic 的代码就被我们找到了。接着，按图索骥找到对应 runtime 源码的位置，就可以进一步探索了。</p>
-<p>除此之外，我们还可以使用 <code>bt</code> 命令看到调用栈：<br><img src="https://images.hxzhouh.com/blog-images/2024/01/6cd9f5f16328f257c5020ac976a8ba42.png" alt="Pasted image 20240116171018"><br>使用 <code>frame 1</code> 命令可以跳转到相应位置。这里 <code>1</code> 对应图中的 <code>main.go:5</code>，也就是我们前面打断点的地方，是不是非常酷炫。</p>
-<p>上面这张图里我们也能清楚地看到，用户 goroutine 其实是被 goexit 函数一路调用过来的。当用户 goroutine 执行完毕后，就会回到 goexit 函数做一些收尾工作。当然，这是题外话了。</p>
-<h2 id="另外，用-dlv-也能干第二部分“找到-runtime-源码”的活。-总结今天系统地讲了几招通过命令和工具查看用户代码对应的-runtime-源码或者汇编代码的方法，非常实用。最后再汇总一下：1-go-tool-compile2-go-tool-objdump3-dlv后面，我们会用这些工具继续分析-go语言的源码，比如map-slice-等，有了这些工具，我们的学习过程会事半功倍。"><a href="#另外，用-dlv-也能干第二部分“找到-runtime-源码”的活。-总结今天系统地讲了几招通过命令和工具查看用户代码对应的-runtime-源码或者汇编代码的方法，非常实用。最后再汇总一下：1-go-tool-compile2-go-tool-objdump3-dlv后面，我们会用这些工具继续分析-go语言的源码，比如map-slice-等，有了这些工具，我们的学习过程会事半功倍。" class="headerlink" title="另外，用 dlv 也能干第二部分“找到 runtime 源码”的活。# 总结今天系统地讲了几招通过命令和工具查看用户代码对应的 runtime 源码或者汇编代码的方法，非常实用。最后再汇总一下：1. go tool compile2. go tool objdump3. dlv后面，我们会用这些工具继续分析 go语言的源码，比如map slice 等，有了这些工具，我们的学习过程会事半功倍。 "></a>另外，用 dlv 也能干第二部分“找到 runtime 源码”的活。<br># 总结<br>今天系统地讲了几招通过命令和工具查看用户代码对应的 runtime 源码或者汇编代码的方法，非常实用。最后再汇总一下：<br>1. go tool compile<br>2. go tool objdump<br>3. dlv<br>后面，我们会用这些工具继续分析 go语言的源码，比如map slice 等，有了这些工具，我们的学习过程会事半功倍。 </h2><p>如果你喜欢我的文章，欢迎给我following跟 👏，这对我很有帮助。</p>
+    <title>ARTS 0914-0920</title>
+    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
+    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
+<p>82</p>
+<p>83</p>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
+<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
+<li></li>
+</ul>
 ]]></content>
       <categories>
-        <category>go</category>
+        <category>arts</category>
       </categories>
       <tags>
-        <tag>Go</tag>
+        <tag>arts</tag>
       </tags>
   </entry>
   <entry>
@@ -1924,73 +1950,6 @@
 <li>leetcode 19</li>
 </ul>
 <h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0914-0920</title>
-    <url>/2023/09/21/arts/ARTS%200914-0920/</url>
-    <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><p>leetCode: </p>
-<p>82</p>
-<p>83</p>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><ul>
-<li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
-<li></li>
-</ul>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2040,28 +1999,38 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-41</title>
-    <url>/2023/10/09/arts/ARTS-2023-41/</url>
-    <content><![CDATA[<blockquote>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
 <p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
 </blockquote>
 <span id="more"></span>
-
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
-<p>分享一个命令。用来查日志。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
-<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
       </categories>
       <tags>
         <tag>算法</tag>
+        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
@@ -2092,6 +2061,37 @@
 <li>我要坚持写长文博客。。</li>
 <li>看到好看的博客，还是要收藏起来，我的记忆力应该只有七秒。</li>
 </ol>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-41</title>
+    <url>/2023/10/09/arts/ARTS-2023-41/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><p>#算法 #leetcode<br>leetcod 344 翻转字符串 水了一道题</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i, j := <span class="number">0</span>, <span class="built_in">len</span>(s)<span class="number">-1</span>; i &lt; j; i, j = i+<span class="number">1</span>, j<span class="number">-1</span> &#123;  </span><br><span class="line">       s[i], s[j] = s[j], s[i]  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reverseString1</span><span class="params">(s []<span class="type">byte</span>)</span></span> &#123;  </span><br><span class="line">    l := <span class="number">0</span>  </span><br><span class="line">    r := <span class="built_in">len</span>(s) - <span class="number">1</span>  </span><br><span class="line">    <span class="keyword">for</span> l &lt; r &#123;  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       s[r] ^= s[l]  </span><br><span class="line">       s[l] ^= s[r]  </span><br><span class="line">       r--  </span><br><span class="line">       l++  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读<br><a href="https://xargin.com/misc/">https://xargin.com/misc/</a>  曹大的文章，</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具  </p>
+<p>分享一个命令。用来查日志。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat log.2023-10-13-15 |grep ERROR |grep &quot;.onEventWithoutMerge:93&quot; |awk -F&#x27;reqid&#x27; &#x27;&#123;print $2&#125;&#x27; |awk &#x27;&#123;print $1&#125;&#x27; |xargs -P 4 -I &#123;&#125; grep &#123;&#125; log.2023-10-13-15 &gt;allerr.log</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+<p>再我司工作，觉得效率是没用的，绝大多数工作，都是很简单的基本工作。但是，这种情况能持续多久？还是要重视效率起来。</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2193,6 +2193,34 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-45</title>
+    <url>/2023/11/06/arts/ARTS-2023-45/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
+<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS-2023-46</title>
     <url>/2023/11/13/arts/ARTS-2023-46/</url>
     <content><![CDATA[<blockquote>
@@ -2220,34 +2248,6 @@
 </li>
 <li>本周读完了《代码整洁之道：程序员的职业素养》慢慢的回到了正常的节奏了，看书写文字，Obsidian的摸索也开始有点门道了，一切开始慢慢的好转。<a href=""></a></li>
 </ol>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-45</title>
-    <url>/2023/11/06/arts/ARTS-2023-45/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p>#算法 #leetcode</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>#好文 #阅读</p>
-<p><a href="http://pf.bigpixel.cn/zh-CN/city/1.html">http://pf.bigpixel.cn/zh-CN/city/1.html</a><br>一个挺有趣的网站，用千亿像素看世界各个城市<br><a href="https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55">60000 毫秒 Linux 性能分析</a><br>这篇文章介绍了在 60 秒内分析 Linux 性能问题的方法。作者首先介绍了一些基本的性能指标，包括 CPU 使用率、内存使用率、网络流量和 I&#x2F;O 操作。然后，作者介绍了一些用于监控这些指标的工具，包括 top、htop、vmstat、iostat 和 netstat。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p>#工具<br>批量重命名 文件后缀</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">for file in *.md; do mv &quot;$file&quot; &quot;$&#123;file%.md&#125;.txt&quot;; done</span><br></pre></td></tr></table></figure>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p>#碎碎念 #观点</p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2295,6 +2295,27 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS-2023-50</title>
+    <url>/2023/12/11/arts/ARTS-2023-50/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
+<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
+<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
     <title>ARTS-2023-49</title>
     <url>/2023/12/04/arts/ARTS-2023-49/</url>
     <content><![CDATA[<blockquote>
@@ -2322,27 +2343,6 @@
       </tags>
   </entry>
   <entry>
-    <title>ARTS-2023-50</title>
-    <url>/2023/12/11/arts/ARTS-2023-50/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><p><a href="https://leetcode.cn/problems/is-subsequence/?envType=study-plan-v2&envId=top-interview-150">392</a></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">isSubsequence</span><span class="params">(s <span class="type">string</span>, t <span class="type">string</span>)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(t) == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	sIndex := <span class="number">0</span></span><br><span class="line">	tIndex := <span class="number">0</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> sIndex &lt; <span class="built_in">len</span>(s) &amp;&amp; tIndex &lt; <span class="built_in">len</span>(t) &#123;</span><br><span class="line">		<span class="keyword">if</span> s[sIndex] == t[tIndex] &#123;</span><br><span class="line">			sIndex++</span><br><span class="line">		&#125;</span><br><span class="line">		tIndex++</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sIndex == <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p><a href="https://go.dev/blog/survey2023-h2-results">Go Developer Survey 2023 H2 Results </a><br>go 社区2023年开发者报告，感觉跟2022年比较，没啥变化，最大的是，大家开始拥抱AI了。<br><a href="https://fs.blog/stop-reading-news/">Stop Reading News</a><br>大家都不看新闻了，都在看短视频 😄</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><p> <a href="https://link.zhubai.love/api/link?url=https://www.insanelycooltools.com&post_id=2345899633101881344&subscriber_id=2096257190994108416&token=b3bf68a76d446e74c673027bae243b4e&timestamp=1702282461562&signature=7d5f5fa8340d2a5fe973f57ebbbb7e474835975b365d28ea4da032928d4e5ece">Insanely Cool Tools</a></p>
-<p>这个网站收集了各种热门工具和服务资源，初创企业常用的一些工具和服务。<br><a href="https://github.com/trimstray/the-book-of-secret-knowledge">the-book-of-secret-knowledge</a><br>覆盖很广的网络安全知识，方方面面。</p>
-<p><a href="https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming">https://github.com/microsoft/Mastering-GitHub-Copilot-for-Paired-Programming</a><br>微软出的 GitHub Copilot 教程，只有 6 堂课，会教你如何有效利用 GitHub Copilot 以及与 AI 结对编程。 课程一共 10 小时，可以体验如何通过 VSCode 和 GitHub Copilot Chat 进行实时协作，学习如何使用 GitHub Copilot 自动补全代码，处理错误和写单元测试，尽可能教会你使用 GitHub Copilot 的最佳实践，让你可以提升写代码的效率和质量。</p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><p><a href="https://hexo.hxzhouh.com/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/">aws ec2 切换到ipv6</a></p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
     <title>ARTS-2023-48</title>
     <url>/2023/11/27/arts/ARTS-2023-48/</url>
     <content><![CDATA[<blockquote>
@@ -2355,6 +2355,21 @@
 <iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="450" style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/cn/playlist/vol-1000-%E5%9C%A8%E6%97%B6%E5%85%89%E5%8F%98%E5%B9%BB%E4%B8%AD%E6%B0%B8%E4%B8%8D%E5%A4%B1%E5%8E%BB/pl.u-RRbV0gVCmgNxNDx"></iframe>
 
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>ARTS-2023-51</title>
+    <url>/2023/12/18/arts/ARTS-2023-51/</url>
+    <content><![CDATA[<blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+
+<p>本周真是懒呀。。。。。 啥都没做。</p>
+<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
@@ -2376,21 +2391,6 @@
 <li>devv.ai  面向程序员的AIGC 浏览器，</li>
 </ul>
 <h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>ARTS-2023-51</title>
-    <url>/2023/12/18/arts/ARTS-2023-51/</url>
-    <content><![CDATA[<blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS：<br>Algorithm 是一道算法题<br>Review 是读一篇英文文章<br>Technique&#x2F;Tips 是分享一个小技术<br>Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-
-<p>本周真是懒呀。。。。。 啥都没做。</p>
-<h2 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h2><h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><p>最近发现了 <a href="https://dave.cheney.net/">Dave Cheney</a> 大佬的博客，补课中。<br><a href="https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory">https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory</a><br>本文讲的貌似是 go 内存分配大小的问题，但是好像没看太明白。。。。</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2>]]></content>
       <categories>
         <category>arts</category>
       </categories>
