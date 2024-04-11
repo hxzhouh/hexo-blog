@@ -23,36 +23,28 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
      crossorigin="anonymous"></script>
 
-    <meta name="description" content="原文链接:  Go: How Does Go Stop the World? :Author :   Vincent Blanchon  本文基于 go 1.13 在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，以便扫描内存 ,现在一起来看看它内部的原理以及可能存在的问题 STW停止程序运行意味着停止所有运行态的goroutines,一个简">
+    <meta name="description" content="unsafe.Pointer再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。现在我们总结一下三种指针的区别。   普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。 unsafe.Pointer。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。 uintptr。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回">
 <meta property="og:type" content="article">
-<meta property="og:title" content="go 怎么做stw">
-<meta property="og:url" content="http://example.comƒ/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/index.html">
+<meta property="og:title" content="Go 解密： unsafe.Pointer">
+<meta property="og:url" content="http://example.comƒ/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/index.html">
 <meta property="og:site_name" content="萝卜的博客">
-<meta property="og:description" content="原文链接:  Go: How Does Go Stop the World? :Author :   Vincent Blanchon  本文基于 go 1.13 在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，以便扫描内存 ,现在一起来看看它内部的原理以及可能存在的问题 STW停止程序运行意味着停止所有运行态的goroutines,一个简">
+<meta property="og:description" content="unsafe.Pointer再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。现在我们总结一下三种指针的区别。   普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。 unsafe.Pointer。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。 uintptr。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png">
-<meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png">
-<meta property="article:published_time" content="2020-04-28T13:19:00.000Z">
-<meta property="article:modified_time" content="2024-02-26T04:00:54.075Z">
+<meta property="article:published_time" content="2024-04-11T03:34:00.000Z">
+<meta property="article:modified_time" content="2024-04-11T03:34:45.797Z">
 <meta property="article:author" content="hxzhouh">
 <meta property="article:tag" content="go">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png">
 
 
-<link rel="canonical" href="http://example.comƒ/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/">
+<link rel="canonical" href="http://example.comƒ/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.comƒ/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/","path":"2020/04/28/go 怎样做 stw/","title":"go 怎么做stw"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.comƒ/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/","path":"2024/04/11/Go 解密： unsafe.Pointer/","title":"Go 解密： unsafe.Pointer"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>go 怎么做stw | 萝卜的博客</title>
+<title>Go 解密： unsafe.Pointer | 萝卜的博客</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
   <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
@@ -128,7 +120,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#STW"><span class="nav-number">1.</span> <span class="nav-text">STW</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#STW%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.1.</span> <span class="nav-text">STW的步骤</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#System-calls"><span class="nav-number">2.</span> <span class="nav-text">System calls</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Latencies"><span class="nav-number">3.</span> <span class="nav-text">Latencies</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#unsafe-Pointer"><span class="nav-number">1.</span> <span class="nav-text">unsafe.Pointer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Example"><span class="nav-number">2.</span> <span class="nav-text">Example</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -179,7 +171,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.comƒ/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/">
+    <link itemprop="mainEntityOfPage" href="http://example.comƒ/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -192,12 +184,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="go 怎么做stw | 萝卜的博客">
+      <meta itemprop="name" content="Go 解密： unsafe.Pointer | 萝卜的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          go 怎么做stw
+          Go 解密： unsafe.Pointer
         </h1>
 
         <div class="post-meta-container">
@@ -207,15 +199,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2020-04-28 21:19:00" itemprop="dateCreated datePublished" datetime="2020-04-28T21:19:00+08:00">2020-04-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-02-26 12:00:54" itemprop="dateModified" datetime="2024-02-26T12:00:54+08:00">2024-02-26</time>
+      <time title="创建时间：2024-04-11 11:34:00 / 修改时间：11:34:45" itemprop="dateCreated datePublished" datetime="2024-04-11T11:34:00+08:00">2024-04-11</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -228,7 +214,7 @@
     </span>
 
   
-    <span id="/2020/04/28/go%20%E6%80%8E%E6%A0%B7%E5%81%9A%20stw/" class="post-meta-item twikoo_visitors" data-flag-title="go 怎么做stw" title="阅读次数">
+    <span id="/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/" class="post-meta-item twikoo_visitors" data-flag-title="Go 解密： unsafe.Pointer" title="阅读次数">
       <span class="post-meta-item-icon">
         <i class="far fa-eye"></i>
       </span>
@@ -242,14 +228,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>648</span>
+      <span>927</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
+      <span>3 分钟</span>
     </span>
 </div>
 
@@ -259,40 +245,32 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><blockquote>
-<p>原文链接:  <a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-how-does-go-stop-the-world-1ffab8bc8846">Go: How Does Go Stop the World? </a>:<br>Author :   <a target="_blank" rel="noopener" href="https://medium.com/@blanchon.vincent?source=post_page-----1ffab8bc8846----------------------">Vincent Blanchon</a></p>
-</blockquote>
-<p><strong>本文基于 go 1.13</strong></p>
-<p>在垃圾回收算法中，Stop The Word（STW）是一个很重要的概念，他会中断程序运行，添加写屏障，<code>以便扫描内存</code> ,现在一起来看看它内部的原理以及可能存在的问题</p>
-<h1 id="STW"><a href="#STW" class="headerlink" title="STW"></a>STW</h1><p>停止程序运行意味着停止所有运行态的<code>goroutines</code>,一个简单的例子:</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>运行垃圾回收算法将触发两个阶段的STW </p>
+    <div class="post-body" itemprop="articleBody"><h1 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h1><p>再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。<br>现在我们总结一下三种指针的区别。</p>
 <blockquote>
-<p>有关垃圾回收的更多细节，请参考同作者的另外一篇文章<em>“</em><a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-how-does-the-garbage-collector-mark-the-memory-72cfc12c6976"><em>Go: How Does the Garbage Collector Mark the Memory?</em></a></p>
+<ul>
+<li>普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。</li>
+<li><code>unsafe.Pointer</code>。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。</li>
+<li><code>uintptr</code>。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回收。</li>
+</ul>
 </blockquote>
-<h2 id="STW的步骤"><a href="#STW的步骤" class="headerlink" title="STW的步骤"></a>STW的步骤</h2><p>第一步，抢占所有正在运行的<code>goroutines</code></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164159.png"></p>
-<p>第二步，一旦 <code>goroutines</code>被抢占，正在运行的<code>goroutines</code>将在安全的地方暂停，然后所有的p<sup>[1]</sup>都将被标记为暂停，停止运行任何代码。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164444.png"></p>
-<p>第三步，然后，go调度器将M<sup>[2]</sup>与P分离,并且将M放到空闲列表里面。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164609.png"></p>
-<p>对于在每个M上运行的Goroutines，它们将在全局队列<sup>[3]</sup>&gt;中等待：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428164654.png"></p>
-<p>那么，一旦所有的<code>goroutines</code>都停止了，那么唯一活跃的<code>goroutines</code> （垃圾回收<code>goroutines</code>）将会安全的运行，并且在垃圾回收完成后，重新拉起所有的<code>goroutines</code>。具体情况，可以通过 go trace查看。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165140.png"></p>
-<h1 id="System-calls"><a href="#System-calls" class="headerlink" title="System calls"></a>System calls</h1><p>STW时期可能会影响系统调用，因为系统调用可能会在stw时期返回，通过密集执行系统调用的程序来看看怎样处理这种情况，</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="number">10</span>)   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         http.Get(<span class="string">`https://httpstat.us/200`</span>)</span><br><span class="line">         wg.Done()</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;   wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>他的trace情况。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428165604.png"></p>
-<p>系统调用在STW时期返回，但是现在已经没有P在运行了。所以他会放到全局队列里面,等待STW结束后再运行。</p>
-<h1 id="Latencies"><a href="#Latencies" class="headerlink" title="Latencies"></a>Latencies</h1><p>STW的第三步将所有的M与P分离。然而，go将等待调度程序运行、系统调用等自动停止。等待goroutine被抢占应该很快，但是在某些情况下会产生一些延迟，下面是一个极端的例子：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> t <span class="type">int</span></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">20</span> ;i++  &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">         <span class="keyword">for</span> i := <span class="number">0</span>;i &lt; <span class="number">1000000000</span> ;i++ &#123;</span><br><span class="line">            t++</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;()</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   runtime.GC()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>STW时长达到了2.6S</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428172521.png"></p>
-<p>没有函数调用的goroutine将不会被抢占，并且它的P在任务结束之前不会被释放。这将迫使STW等待他， 有几种解决方案可改善循环中的抢占，有关其的更多信息，可以查看作者另外一篇文章 [<a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-goroutine-and-preemption-d6bc2aa2f4b7">Go: Goroutine and Preemption).</a></p>
+<p>相比较C语言而言，Go语言在设计的时候，为了编写方便、效率高以及降低复杂度，被设计成为一门强类型的静态语言。强类型意味着一旦定义了，它的类型就不能改变了；静态意味着类型检查在运行前就做了。<br>同时为了安全的考虑，Go语言是不允许两个指针类型进行转换的。为了解决这个问题， go 语言设计了<code>unsafe.Pointer</code> 。 <code>unsafe.Pointer</code>是一种特殊意义的指针，它可以包含任意类型的地址，有点类似于C语言里的void*指针，全能型的。 </p>
+<h1 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h1><p>在 <a target="_blank" rel="noopener" href="https://pkg.go.dev/unsafe#Pointer">官方文档</a>中，我们看下关于<code>unsafe.Pointer</code>的4个规则。</p>
+<ul>
+<li>A pointer value of any type can be converted to a Pointer.</li>
+<li>A Pointer can be converted to a pointer value of any type.</li>
+<li>A uintptr can be converted to a Pointer.</li>
+<li>A Pointer can be converted to a uintptr.<br>借助<code>unsafe.Pointer</code> 我们就可以实现两个类型之间的互相转换。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;reflect&quot;</span>    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//go:nosplit  </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convert</span><span class="params">(p *<span class="type">int</span>)</span></span> *<span class="type">int32</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> (*<span class="type">int32</span>)(unsafe.Pointer(p))  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">var</span> i <span class="type">int</span> = <span class="number">1</span>  </span><br><span class="line">    q := convert(&amp;i)  </span><br><span class="line">    fmt.Println(reflect.TypeOf(*q))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>output:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">int32</span><br></pre></td></tr></table></figure>
+<p>我们通过<code>unsafe.Pointer</code> 实现了不同类型变量的转化。<br>对于 第三条和第四条,我们可以使用一个复杂点的例子来测试一下。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;  </span><br><span class="line">    name <span class="type">string</span>  </span><br><span class="line">    age  <span class="type">int32</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    user := &amp;User&#123;  </span><br><span class="line">       name: <span class="string">&quot;Tom&quot;</span>,  </span><br><span class="line">       age:  <span class="number">18</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">    pName := (*<span class="type">string</span>)(unsafe.Pointer(user))  </span><br><span class="line">    *pName = <span class="string">&quot;Bob&quot;</span>  </span><br><span class="line">    age := (*<span class="type">int32</span>)(unsafe.Pointer(<span class="type">uintptr</span>(unsafe.Pointer(user)) + unsafe.Offsetof(user.age)))  </span><br><span class="line">    *age = <span class="number">20</span>  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>OutPut:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">&#123;Tom 18&#125;</span><br><span class="line">&#123;Bob 20&#125;</span><br></pre></td></tr></table></figure>
+<p>我们通过内存偏移的方式，定位到我们需要操作的字段，然后改变他们的值。<br>首先，第一个修改<code>user</code>的<code>name</code>值的时候，因为<code>name</code>是第一个字段，所以不用偏移，我们获取<code>user</code>的指针，然后通过<code>unsafe.Pointer</code>转为<code>*string</code>进行赋值操作即可。<br>第二个修改<code>user</code>的<code>age</code>值的时候，因为<code>age</code>不是第一个字段，所以我们需要内存偏移，内存偏移牵涉到的计算只能通过<code>uintptr</code>，所我们要先把<code>user</code>的指针地址转为<code>uintptr</code>，然后我们再通过<code>unsafe.Offsetof(u.age)</code>获取需要偏移的值，进行地址运算(+)偏移即可。<br>现在偏移后，地址已经是<code>user</code>的<code>age</code>字段了，如果要给它赋值，我们需要把<code>uintptr</code>转为<code>*int</code>才可以。所以我们通过把<code>uintptr</code>转为<code>unsafe.Pointer</code>,再转为<code>*int</code>就可以操作了。<br>最终，我们在Go语言上实现了类似C语言的指针操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>unsafe是不安全的，所以我们应该尽可能少的使用它，比如内存的操纵，这是绕过Go本身设计的安全机制的，不当的操作，可能会破坏一块内存，而且这种问题非常不好定位。  </p>
+<p><code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高。如果我们去反编译  <code>convert</code> 函数就会发现，他仅仅是将原本的MOVQ指令变成了MOVL，没有产生任何额外指令。</p>
 
     </div>
 
@@ -309,14 +287,11 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" rel="prev" title="Golang 通过 Consul 实现分布式锁">
-                  <i class="fa fa-angle-left"></i> Golang 通过 Consul 实现分布式锁
+                <a href="/2024/04/03/RWmutex%EF%BC%9A%E7%AB%99%E5%9C%A8%E5%B7%A8%E4%BA%BA%E8%82%A9%E8%86%80%E4%B8%8A%E8%B7%B3%E8%88%9E/" rel="prev" title="RWmutex：站在巨人肩膀上跳舞">
+                  <i class="fa fa-angle-left"></i> RWmutex：站在巨人肩膀上跳舞
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/" rel="next" title="Go - Ordering in Select Statements">
-                  Go - Ordering in Select Statements <i class="fa fa-angle-right"></i>
-                </a>
             </div>
           </div>
     </footer>
