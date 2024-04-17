@@ -1,54 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Go iota, 不是枚举</title>
-    <url>/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/</url>
-    <content><![CDATA[<p>上周再hacker news 上有一篇讨论go enum 的 文章 <a href="https://www.zarl.dev/articles/enums">Go Enums Suck</a>（很开心还能再hacker news  上看到go相关的信息），我不想对这篇文章发表什么看法，作者说的都是正确的 如果把iota 当成enum看，跟其他语言相比较，确实很糟糕，本篇文章，我们讨论一下iota 的用法。</p>
-<span id="more"></span>
-<h1 id="iota-在-Go-中的使用"><a href="#iota-在-Go-中的使用" class="headerlink" title="iota 在 Go 中的使用"></a>iota 在 Go 中的使用</h1><h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Go 语言实际上没有直接支持枚举的关键字。一般我们都是通过 <code>const</code> + <code>iota</code> 实现枚举的能力。<br>有人要问了，为什么一定要使用枚举呢？<code>stackoverflow</code> 上有一个高赞的回答，如下:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">You should always use enums when a variable (especially a method parameter) can only take one out of a small set of possible values. Examples would be things like type constants (contract status: &quot;permanent&quot;, &quot;temp&quot;, &quot;apprentice&quot;), or flags (&quot;execute now&quot;, &quot;defer execution&quot;).</span><br><span class="line"></span><br><span class="line">If you use enums instead of integers (or String codes), you increase compile-time checking and avoid errors from passing in invalid constants, and you document which values are legal to use.</span><br><span class="line"></span><br><span class="line">BTW, overuse of enums might mean that your methods do too much (it&#x27;s often better to have several separate methods, rather than one method that takes several flags which modify what it does), but if you have to use flags or type codes, enums are the way to go.</span><br></pre></td></tr></table></figure>
-<h1 id="如何实现枚举"><a href="#如何实现枚举" class="headerlink" title="如何实现枚举"></a>如何实现枚举</h1><p><code>iota</code> 是 Go 中预声明的一个特殊常量。它会被预声明为0，但是它的值在编译阶段并非是固定的，当预声明的 <code>iota</code> 出现在一个常量声明中的时候，它的值在第n个常量描述中的值为n(从0开始)。所以它只在同类型多个常量声明的情况下才显得有意义。</p>
-<p>比如，大家都了解的电商，订单系统一定会涉及到订单状态的流转。那么这时候，我们一般可以这样做:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay     OrderStatus = <span class="literal">iota</span> <span class="comment">//未支付  1</span></span><br><span class="line">	PendIng   OrderStatus = <span class="literal">iota</span> <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered OrderStatus = <span class="literal">iota</span> <span class="comment">// 已发货 3</span></span><br><span class="line">	Received  OrderStatus = <span class="literal">iota</span> <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>当然，这样看着好麻烦。其实，其他常量可以重复上一行 <code>iota</code> 表达式，我们可以改成这样。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 1</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 3</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>有人会用 0 的值来表示状态吗？一般都不会，我们想以1开头，那么可以这样。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:1,2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>我们还想在 <code>Delivered</code> 后跳过一个数字，才是 <code>Received</code> 的值,也就是 <code>Received=6</code>，那么可以借助 <code>_</code> 符号。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	_</span><br><span class="line">	Received                     <span class="comment">// 已收货 6</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received) <span class="comment">// 打印:6</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>顺着来可以，倒着当然也行。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Max = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Received  OrderStatus = Max - <span class="literal">iota</span> <span class="comment">// 已收货  5</span></span><br><span class="line">	Delivered                          <span class="comment">// 已发货 4</span></span><br><span class="line">	PendIng                            <span class="comment">// 未发货 3</span></span><br><span class="line">	NoPay                              <span class="comment">//未支付 2</span></span><br><span class="line">	Cancelled                          <span class="comment">//订单已取消 1</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received,Delivered) <span class="comment">// 打印:5,4</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>你还可以使用位运算，比如在 go 源码中的包 <code>sync</code> 中的锁上面有这么一段代码。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    mutexLocked = <span class="number">1</span> &lt;&lt; <span class="literal">iota</span>  <span class="comment">//1&lt;&lt;0</span></span><br><span class="line">    mutexWoken               <span class="comment">//1&lt;&lt;1</span></span><br><span class="line">    mutexStarving            <span class="comment">//1&lt;&lt;2</span></span><br><span class="line">    mutexWaiterShift = <span class="literal">iota</span>  <span class="comment">//3</span></span><br><span class="line"></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexLocked的值&quot;</span>,mutexLocked) <span class="comment">//打印：1</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWoken的值&quot;</span>,mutexWoken) <span class="comment">//打印：2</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexStarving的值&quot;</span>,mutexStarving) <span class="comment">//打印：4</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWaiterShift的值&quot;</span>,mutexWaiterShift) <span class="comment">// 打印：3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可能有人平常是直接定义常量值或者用字符串来表示的。<br>比如，上面这些我完全可以用 <code>string</code> 来表示，我还真见过用字符串来表示订单状态的。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="string">&quot;cancelled&quot;</span></span><br><span class="line">	NoPay     = <span class="string">&quot;noPay&quot;</span></span><br><span class="line">	PendIng   = <span class="string">&quot;pendIng&quot;</span></span><br><span class="line">	Delivered = <span class="string">&quot;delivered&quot;</span></span><br><span class="line">	Received  = <span class="string">&quot;received&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>或者直接定义整形常量值。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="number">1</span></span><br><span class="line">	NoPay     = <span class="number">2</span></span><br><span class="line">	PendIng   = <span class="number">3</span></span><br><span class="line">	Delivered = <span class="number">4</span></span><br><span class="line">	Received  = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实上述两种都可以，但是相比之下使用 <code>iota</code> 更有优势。</p>
-<ul>
-<li>能保证一组常量的唯一性，人工定义的不能保证。</li>
-<li>可以为一组动作分享同一种行为。</li>
-<li>避免无效值。</li>
-<li>提高代码阅读性以及维护。</li>
-</ul>
-<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>按照上面我们所演示的，最后我们可以这样操作。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> + <span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                            <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                          <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                        <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                         <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">//公共行为 赋予类型 String() 函数，方便打印值含义</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> [...]<span class="type">string</span>&#123;<span class="string">&quot;cancelled&quot;</span>, <span class="string">&quot;noPay&quot;</span>, <span class="string">&quot;pendIng&quot;</span>, <span class="string">&quot;delivered&quot;</span>, <span class="string">&quot;received&quot;</span>&#125;[order<span class="number">-1</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建公共行为 赋予类型 int 函数 EnumIndex()</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> EnumIndex() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="type">int</span>(order)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> order OrderStatus = Received</span><br><span class="line">	fmt.Println(order.String())    <span class="comment">// 打印:received</span></span><br><span class="line">	fmt.Println(order.EnumIndex()) <span class="comment">// 打印:5</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这篇文章主要介绍了 <code>Golang</code> 中对 <code>iota</code> 的使用介绍，以及我们为什么要使用它。每一种语言的设计都一定不是完美的，我们要适应它。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go - Ordering in Select Statements</title>
     <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
     <content><![CDATA[<p> <a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
@@ -99,27 +51,51 @@
       </tags>
   </entry>
   <entry>
-    <title>2023 年度总结</title>
-    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+    <title>Go iota, 不是枚举</title>
+    <url>/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/</url>
+    <content><![CDATA[<p>上周再hacker news 上有一篇讨论go enum 的 文章 <a href="https://www.zarl.dev/articles/enums">Go Enums Suck</a>（很开心还能再hacker news  上看到go相关的信息），我不想对这篇文章发表什么看法，作者说的都是正确的 如果把iota 当成enum看，跟其他语言相比较，确实很糟糕，本篇文章，我们讨论一下iota 的用法。</p>
 <span id="more"></span>
+<h1 id="iota-在-Go-中的使用"><a href="#iota-在-Go-中的使用" class="headerlink" title="iota 在 Go 中的使用"></a>iota 在 Go 中的使用</h1><h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Go 语言实际上没有直接支持枚举的关键字。一般我们都是通过 <code>const</code> + <code>iota</code> 实现枚举的能力。<br>有人要问了，为什么一定要使用枚举呢？<code>stackoverflow</code> 上有一个高赞的回答，如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">You should always use enums when a variable (especially a method parameter) can only take one out of a small set of possible values. Examples would be things like type constants (contract status: &quot;permanent&quot;, &quot;temp&quot;, &quot;apprentice&quot;), or flags (&quot;execute now&quot;, &quot;defer execution&quot;).</span><br><span class="line"></span><br><span class="line">If you use enums instead of integers (or String codes), you increase compile-time checking and avoid errors from passing in invalid constants, and you document which values are legal to use.</span><br><span class="line"></span><br><span class="line">BTW, overuse of enums might mean that your methods do too much (it&#x27;s often better to have several separate methods, rather than one method that takes several flags which modify what it does), but if you have to use flags or type codes, enums are the way to go.</span><br></pre></td></tr></table></figure>
+<h1 id="如何实现枚举"><a href="#如何实现枚举" class="headerlink" title="如何实现枚举"></a>如何实现枚举</h1><p><code>iota</code> 是 Go 中预声明的一个特殊常量。它会被预声明为0，但是它的值在编译阶段并非是固定的，当预声明的 <code>iota</code> 出现在一个常量声明中的时候，它的值在第n个常量描述中的值为n(从0开始)。所以它只在同类型多个常量声明的情况下才显得有意义。</p>
+<p>比如，大家都了解的电商，订单系统一定会涉及到订单状态的流转。那么这时候，我们一般可以这样做:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay     OrderStatus = <span class="literal">iota</span> <span class="comment">//未支付  1</span></span><br><span class="line">	PendIng   OrderStatus = <span class="literal">iota</span> <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered OrderStatus = <span class="literal">iota</span> <span class="comment">// 已发货 3</span></span><br><span class="line">	Received  OrderStatus = <span class="literal">iota</span> <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
-<hr>
-<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
-<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
-<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
-<li>继续阅读，阅读才能进步。</li>
-<li>学会过鸡贼和抠门的日子。</li>
-<li>把英语用起来 </li>
-<li>学会NodeJS</li>
-</ol>
+<p>当然，这样看着好麻烦。其实，其他常量可以重复上一行 <code>iota</code> 表达式，我们可以改成这样。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> <span class="comment">//订单已取消 0</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 1</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 2</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 3</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 4</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:0,1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有人会用 0 的值来表示状态吗？一般都不会，我们想以1开头，那么可以这样。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                     <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Cancelled, NoPay) <span class="comment">// 打印:1,2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们还想在 <code>Delivered</code> 后跳过一个数字，才是 <code>Received</code> 的值,也就是 <code>Received=6</code>，那么可以借助 <code>_</code> 符号。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span>+<span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                        <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                      <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                    <span class="comment">// 已发货 4</span></span><br><span class="line">	_</span><br><span class="line">	Received                     <span class="comment">// 已收货 6</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received) <span class="comment">// 打印:6</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顺着来可以，倒着当然也行。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Max = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Received  OrderStatus = Max - <span class="literal">iota</span> <span class="comment">// 已收货  5</span></span><br><span class="line">	Delivered                          <span class="comment">// 已发货 4</span></span><br><span class="line">	PendIng                            <span class="comment">// 未发货 3</span></span><br><span class="line">	NoPay                              <span class="comment">//未支付 2</span></span><br><span class="line">	Cancelled                          <span class="comment">//订单已取消 1</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(Received,Delivered) <span class="comment">// 打印:5,4</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你还可以使用位运算，比如在 go 源码中的包 <code>sync</code> 中的锁上面有这么一段代码。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    mutexLocked = <span class="number">1</span> &lt;&lt; <span class="literal">iota</span>  <span class="comment">//1&lt;&lt;0</span></span><br><span class="line">    mutexWoken               <span class="comment">//1&lt;&lt;1</span></span><br><span class="line">    mutexStarving            <span class="comment">//1&lt;&lt;2</span></span><br><span class="line">    mutexWaiterShift = <span class="literal">iota</span>  <span class="comment">//3</span></span><br><span class="line"></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexLocked的值&quot;</span>,mutexLocked) <span class="comment">//打印：1</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWoken的值&quot;</span>,mutexWoken) <span class="comment">//打印：2</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexStarving的值&quot;</span>,mutexStarving) <span class="comment">//打印：4</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;mutexWaiterShift的值&quot;</span>,mutexWaiterShift) <span class="comment">// 打印：3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可能有人平常是直接定义常量值或者用字符串来表示的。<br>比如，上面这些我完全可以用 <code>string</code> 来表示，我还真见过用字符串来表示订单状态的。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="string">&quot;cancelled&quot;</span></span><br><span class="line">	NoPay     = <span class="string">&quot;noPay&quot;</span></span><br><span class="line">	PendIng   = <span class="string">&quot;pendIng&quot;</span></span><br><span class="line">	Delivered = <span class="string">&quot;delivered&quot;</span></span><br><span class="line">	Received  = <span class="string">&quot;received&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>或者直接定义整形常量值。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled = <span class="number">1</span></span><br><span class="line">	NoPay     = <span class="number">2</span></span><br><span class="line">	PendIng   = <span class="number">3</span></span><br><span class="line">	Delivered = <span class="number">4</span></span><br><span class="line">	Received  = <span class="number">5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> OrderStatusMsg = <span class="keyword">map</span>[<span class="type">int</span>]<span class="type">string</span>&#123;</span><br><span class="line">	Cancelled: <span class="string">&quot;订单已取消&quot;</span>,</span><br><span class="line">	NoPay:     <span class="string">&quot;未付款&quot;</span>,</span><br><span class="line">	PendIng:   <span class="string">&quot;未发货&quot;</span>,</span><br><span class="line">	Delivered: <span class="string">&quot;已发货&quot;</span>,</span><br><span class="line">	Received:  <span class="string">&quot;已收货&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(OrderStatusMsg[Cancelled])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实上述两种都可以，但是相比之下使用 <code>iota</code> 更有优势。</p>
+<ul>
+<li>能保证一组常量的唯一性，人工定义的不能保证。</li>
+<li>可以为一组动作分享同一种行为。</li>
+<li>避免无效值。</li>
+<li>提高代码阅读性以及维护。</li>
+</ul>
+<h1 id="延伸"><a href="#延伸" class="headerlink" title="延伸"></a>延伸</h1><p>按照上面我们所演示的，最后我们可以这样操作。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Cancelled OrderStatus = <span class="literal">iota</span> + <span class="number">1</span> <span class="comment">//订单已取消 1</span></span><br><span class="line">	NoPay                            <span class="comment">//未支付 2</span></span><br><span class="line">	PendIng                          <span class="comment">// 未发货 3</span></span><br><span class="line">	Delivered                        <span class="comment">// 已发货 4</span></span><br><span class="line">	Received                         <span class="comment">// 已收货 5</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">//公共行为 赋予类型 String() 函数，方便打印值含义</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> [...]<span class="type">string</span>&#123;<span class="string">&quot;cancelled&quot;</span>, <span class="string">&quot;noPay&quot;</span>, <span class="string">&quot;pendIng&quot;</span>, <span class="string">&quot;delivered&quot;</span>, <span class="string">&quot;received&quot;</span>&#125;[order<span class="number">-1</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//创建公共行为 赋予类型 int 函数 EnumIndex()</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(order OrderStatus)</span></span> EnumIndex() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="type">int</span>(order)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> order OrderStatus = Received</span><br><span class="line">	fmt.Println(order.String())    <span class="comment">// 打印:received</span></span><br><span class="line">	fmt.Println(order.EnumIndex()) <span class="comment">// 打印:5</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这篇文章主要介绍了 <code>Golang</code> 中对 <code>iota</code> 的使用介绍，以及我们为什么要使用它。每一种语言的设计都一定不是完美的，我们要适应它。</p>
 ]]></content>
       <categories>
-        <category>blog</category>
+        <category>go</category>
       </categories>
       <tags>
-        <tag>年度总结</tag>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -206,6 +182,30 @@
       </tags>
   </entry>
   <entry>
+    <title>2023 年度总结</title>
+    <url>/2023/12/29/2023%20%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<p>7点10分，从公司走出去，2023最后一个工作日已经结束了，很快又一年过去了，尝试写一下一年的盘点，留下点记忆。</p>
+<span id="more"></span>
+
+<h1 id="关于我自己"><a href="#关于我自己" class="headerlink" title="关于我自己"></a>关于我自己</h1><p>房子终于交房了，第一次搬进了属于自己的家，装修的不是很好，位置也不是很好，但是这是我的第一个家，我很满足了。以后会越来越好的。<br>跟女票要订婚了，明年会结婚，双喜临门吧，2024年准备结婚。</p>
+<hr>
+<p>再终生学习这件事情上面，我还是没找到什么特别适合我的方式，一直尝试在努力，好像收获也不是特别大，不知道明年我能不能找到答案。<br>2023年看到书也比2022年少了很多，比以前更忙了是一个理由，但是我好像处理不了很复杂的事务，今年好几次被搞到有点崩溃了。</p>
+<h1 id="工作方面"><a href="#工作方面" class="headerlink" title="工作方面"></a>工作方面</h1><p>原地踏步，可以预料到绩效比去年还差。叠加大环境不好，公司一直在裁员，一潭死水，自己的技术也原地踏步，担心35岁危机，如果被裁员，长沙大概率待不下去了，找不到工作。</p>
+<h1 id="Luck-in-2024"><a href="#Luck-in-2024" class="headerlink" title="Luck in 2024"></a>Luck in 2024</h1><ol>
+<li>继续阅读，阅读才能进步。</li>
+<li>学会过鸡贼和抠门的日子。</li>
+<li>把英语用起来 </li>
+<li>学会NodeJS</li>
+</ol>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>年度总结</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>go 解密 defer 的优雅陷阱</title>
     <url>/2024/04/02/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/</url>
     <content><![CDATA[<p>在<a href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
@@ -228,43 +228,6 @@
 ]]></content>
       <categories>
         <category>golang</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go 解密： unsafe.Pointer</title>
-    <url>/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/</url>
-    <content><![CDATA[<h1 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h1><p>再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。<br>现在我们总结一下三种指针的区别。</p>
-<blockquote>
-<ul>
-<li>普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。</li>
-<li><code>unsafe.Pointer</code>。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。</li>
-<li><code>uintptr</code>。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回收。</li>
-</ul>
-</blockquote>
-<p>相比较C语言而言，Go语言在设计的时候，为了编写方便、效率高以及降低复杂度，被设计成为一门强类型的静态语言。强类型意味着一旦定义了，它的类型就不能改变了；静态意味着类型检查在运行前就做了。<br>同时为了安全的考虑，Go语言是不允许两个指针类型进行转换的。为了解决这个问题， go 语言设计了<code>unsafe.Pointer</code> 。 <code>unsafe.Pointer</code>是一种特殊意义的指针，它可以包含任意类型的地址，有点类似于C语言里的void*指针，全能型的。 </p>
-<h1 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h1><p>在 <a href="https://pkg.go.dev/unsafe#Pointer">官方文档</a>中，我们看下关于<code>unsafe.Pointer</code>的4个规则。</p>
-<ul>
-<li>A pointer value of any type can be converted to a Pointer.</li>
-<li>A Pointer can be converted to a pointer value of any type.</li>
-<li>A uintptr can be converted to a Pointer.</li>
-<li>A Pointer can be converted to a uintptr.<br>借助<code>unsafe.Pointer</code> 我们就可以实现两个类型之间的互相转换。</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;reflect&quot;</span>    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//go:nosplit  </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convert</span><span class="params">(p *<span class="type">int</span>)</span></span> *<span class="type">int32</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> (*<span class="type">int32</span>)(unsafe.Pointer(p))  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">var</span> i <span class="type">int</span> = <span class="number">1</span>  </span><br><span class="line">    q := convert(&amp;i)  </span><br><span class="line">    fmt.Println(reflect.TypeOf(*q))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>output:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">int32</span><br></pre></td></tr></table></figure>
-<p>我们通过<code>unsafe.Pointer</code> 实现了不同类型变量的转化。<br>对于 第三条和第四条,我们可以使用一个复杂点的例子来测试一下。</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;  </span><br><span class="line">    name <span class="type">string</span>  </span><br><span class="line">    age  <span class="type">int32</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    user := &amp;User&#123;  </span><br><span class="line">       name: <span class="string">&quot;Tom&quot;</span>,  </span><br><span class="line">       age:  <span class="number">18</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">    pName := (*<span class="type">string</span>)(unsafe.Pointer(user))  </span><br><span class="line">    *pName = <span class="string">&quot;Bob&quot;</span>  </span><br><span class="line">    age := (*<span class="type">int32</span>)(unsafe.Pointer(<span class="type">uintptr</span>(unsafe.Pointer(user)) + unsafe.Offsetof(user.age)))  </span><br><span class="line">    *age = <span class="number">20</span>  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>OutPut:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">&#123;Tom 18&#125;</span><br><span class="line">&#123;Bob 20&#125;</span><br></pre></td></tr></table></figure>
-<p>我们通过内存偏移的方式，定位到我们需要操作的字段，然后改变他们的值。<br>首先，第一个修改<code>user</code>的<code>name</code>值的时候，因为<code>name</code>是第一个字段，所以不用偏移，我们获取<code>user</code>的指针，然后通过<code>unsafe.Pointer</code>转为<code>*string</code>进行赋值操作即可。<br>第二个修改<code>user</code>的<code>age</code>值的时候，因为<code>age</code>不是第一个字段，所以我们需要内存偏移，内存偏移牵涉到的计算只能通过<code>uintptr</code>，所我们要先把<code>user</code>的指针地址转为<code>uintptr</code>，然后我们再通过<code>unsafe.Offsetof(u.age)</code>获取需要偏移的值，进行地址运算(+)偏移即可。<br>现在偏移后，地址已经是<code>user</code>的<code>age</code>字段了，如果要给它赋值，我们需要把<code>uintptr</code>转为<code>*int</code>才可以。所以我们通过把<code>uintptr</code>转为<code>unsafe.Pointer</code>,再转为<code>*int</code>就可以操作了。<br>最终，我们在Go语言上实现了类似C语言的指针操作。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>unsafe是不安全的，所以我们应该尽可能少的使用它，比如内存的操纵，这是绕过Go本身设计的安全机制的，不当的操作，可能会破坏一块内存，而且这种问题非常不好定位。  </p>
-<p><code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高。如果我们去反编译  <code>convert</code> 函数就会发现，他仅仅是将原本的MOVQ指令变成了MOVL，没有产生任何额外指令。</p>
-]]></content>
-      <categories>
-        <category>go</category>
       </categories>
       <tags>
         <tag>go</tag>
@@ -351,6 +314,43 @@
       </tags>
   </entry>
   <entry>
+    <title>Go 解密： unsafe.Pointer</title>
+    <url>/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/</url>
+    <content><![CDATA[<h1 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h1><p>再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。<br>现在我们总结一下三种指针的区别。</p>
+<blockquote>
+<ul>
+<li>普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。</li>
+<li><code>unsafe.Pointer</code>。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。</li>
+<li><code>uintptr</code>。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回收。</li>
+</ul>
+</blockquote>
+<p>相比较C语言而言，Go语言在设计的时候，为了编写方便、效率高以及降低复杂度，被设计成为一门强类型的静态语言。强类型意味着一旦定义了，它的类型就不能改变了；静态意味着类型检查在运行前就做了。<br>同时为了安全的考虑，Go语言是不允许两个指针类型进行转换的。为了解决这个问题， go 语言设计了<code>unsafe.Pointer</code> 。 <code>unsafe.Pointer</code>是一种特殊意义的指针，它可以包含任意类型的地址，有点类似于C语言里的void*指针，全能型的。 </p>
+<h1 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h1><p>在 <a href="https://pkg.go.dev/unsafe#Pointer">官方文档</a>中，我们看下关于<code>unsafe.Pointer</code>的4个规则。</p>
+<ul>
+<li>A pointer value of any type can be converted to a Pointer.</li>
+<li>A Pointer can be converted to a pointer value of any type.</li>
+<li>A uintptr can be converted to a Pointer.</li>
+<li>A Pointer can be converted to a uintptr.<br>借助<code>unsafe.Pointer</code> 我们就可以实现两个类型之间的互相转换。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;reflect&quot;</span>    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//go:nosplit  </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convert</span><span class="params">(p *<span class="type">int</span>)</span></span> *<span class="type">int32</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> (*<span class="type">int32</span>)(unsafe.Pointer(p))  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">var</span> i <span class="type">int</span> = <span class="number">1</span>  </span><br><span class="line">    q := convert(&amp;i)  </span><br><span class="line">    fmt.Println(reflect.TypeOf(*q))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>output:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">int32</span><br></pre></td></tr></table></figure>
+<p>我们通过<code>unsafe.Pointer</code> 实现了不同类型变量的转化。<br>对于 第三条和第四条,我们可以使用一个复杂点的例子来测试一下。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;  </span><br><span class="line">    name <span class="type">string</span>  </span><br><span class="line">    age  <span class="type">int32</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    user := &amp;User&#123;  </span><br><span class="line">       name: <span class="string">&quot;Tom&quot;</span>,  </span><br><span class="line">       age:  <span class="number">18</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">    pName := (*<span class="type">string</span>)(unsafe.Pointer(user))  </span><br><span class="line">    *pName = <span class="string">&quot;Bob&quot;</span>  </span><br><span class="line">    age := (*<span class="type">int32</span>)(unsafe.Pointer(<span class="type">uintptr</span>(unsafe.Pointer(user)) + unsafe.Offsetof(user.age)))  </span><br><span class="line">    *age = <span class="number">20</span>  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>OutPut:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">&#123;Tom 18&#125;</span><br><span class="line">&#123;Bob 20&#125;</span><br></pre></td></tr></table></figure>
+<p>我们通过内存偏移的方式，定位到我们需要操作的字段，然后改变他们的值。<br>首先，第一个修改<code>user</code>的<code>name</code>值的时候，因为<code>name</code>是第一个字段，所以不用偏移，我们获取<code>user</code>的指针，然后通过<code>unsafe.Pointer</code>转为<code>*string</code>进行赋值操作即可。<br>第二个修改<code>user</code>的<code>age</code>值的时候，因为<code>age</code>不是第一个字段，所以我们需要内存偏移，内存偏移牵涉到的计算只能通过<code>uintptr</code>，所我们要先把<code>user</code>的指针地址转为<code>uintptr</code>，然后我们再通过<code>unsafe.Offsetof(u.age)</code>获取需要偏移的值，进行地址运算(+)偏移即可。<br>现在偏移后，地址已经是<code>user</code>的<code>age</code>字段了，如果要给它赋值，我们需要把<code>uintptr</code>转为<code>*int</code>才可以。所以我们通过把<code>uintptr</code>转为<code>unsafe.Pointer</code>,再转为<code>*int</code>就可以操作了。<br>最终，我们在Go语言上实现了类似C语言的指针操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>unsafe是不安全的，所以我们应该尽可能少的使用它，比如内存的操纵，这是绕过Go本身设计的安全机制的，不当的操作，可能会破坏一块内存，而且这种问题非常不好定位。  </p>
+<p><code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高。如果我们去反编译  <code>convert</code> 函数就会发现，他仅仅是将原本的MOVQ指令变成了MOVL，没有产生任何额外指令。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Golang 通过 Consul 实现分布式锁</title>
     <url>/2020/03/24/Golang%20%E9%80%9A%E8%BF%87%20Consul%20%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
     <content><![CDATA[<h1 id="Consul-是什么"><a href="#Consul-是什么" class="headerlink" title="Consul 是什么"></a>Consul 是什么</h1><p>Consul 是一个支持多数据中心分布式高可用的服务发现和配置共享的服务软件,由 HashiCorp 公司用 Go 语言开发, 基于 Mozilla Public License 2.0 的协议进行开源. Consul 支持健康检查,并允许 HTTP 和 DNS 协议调用 API 存储键值对.<br>命令行超级好用的虚拟机管理软件 vgrant 也是 HashiCorp 公司开发的产品.<br>一致性协议采用 Raft 算法,用来保证服务的高可用. 使用 GOSSIP 协议管理成员和广播消息, 并且支持 ACL 访问控制.</p>
@@ -398,7 +398,7 @@
 <p>免密登录的原理：通过密钥认证登录，首先在自己的服务器上生成公钥和私钥，其次将公钥上传到远程服务中，在于远程服务器建立连接通信时，远程服务器首先会验证该服务器上是否包含请求服务器的公钥，若不包含则需要远程登录的用户输入密码。</p>
 <h2 id="创建本地密钥对"><a href="#创建本地密钥对" class="headerlink" title="创建本地密钥对"></a>创建本地密钥对</h2><p>（如果没有~&#x2F;.ssh文件夹，则新建一个.ssh文件夹，mkdir ～&#x2F;.ssh）在本地生成密钥对（公钥与私钥）<br><code>ssh-keygen -t rsa</code></p>
 <p>敲下回车后会有三个交互，第一个是文件名，默认是id_rsa，如需修改，自己输入一个文件名即可。第二个与第三个是密码与密码确认，是以后使用该公钥时要输入的密码，一般不设置，如有强烈的安全需求，自己设置即可。最后会生成两个文件id_rsa，id_rsa.pub。以.pub结尾的公钥，另一个是私钥。</p>
-<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#x6c;&#x74;&#64;&#x31;&#x30;&#46;&#49;&#49;&#50;&#46;&#x31;&#x2e;&#49;">&#103;&#x6c;&#x74;&#64;&#x31;&#x30;&#46;&#49;&#49;&#50;&#46;&#x31;&#x2e;&#49;</a></p>
+<h2 id="上传公钥到目标服务器"><a href="#上传公钥到目标服务器" class="headerlink" title="上传公钥到目标服务器"></a>上传公钥到目标服务器</h2><p>进入～&#x2F;.ssh文件夹中有id_rsa（私钥文件）id_rsa.pub(公钥文件)，将公钥文件id_rsa.pub上传到服务器的.ssh&#x2F;authorized_keys文件中。<br>上传<br><code>scp  ～/.ssh/id_rsa.pub glt@10.112.1.1:~/</code><br>然后 进入远程服务器，找到上传的id_rsa.pub文件，然后将公钥添加到远程服务器的~&#x2F;.ssh&#x2F;authorized_keys 文件中:<br><code>cat ~/id_rsa.pub &gt;&gt; ~./.ssh/authorized_keys</code><br>或者直接用ssh-copy-id命令，将文件上传到服务器：<br>&#96;ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub <a href="mailto:&#103;&#108;&#116;&#x40;&#49;&#x30;&#x2e;&#49;&#x31;&#50;&#46;&#49;&#x2e;&#49;">&#103;&#108;&#116;&#x40;&#49;&#x30;&#x2e;&#49;&#x31;&#50;&#46;&#49;&#x2e;&#49;</a></p>
 <blockquote>
 <p>ssh-copy-id是用来将本地公钥拷贝到远程的authorized_keys文件的脚本命令，它还会将身份标识追加到远程服务器的 <code>～/.ssh/authorized_keys</code> 文件中，并给远程主机的用户目录适当的权限。</p>
 </blockquote>
@@ -430,29 +430,6 @@
       <tags>
         <tag>linux</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Obsidian 最佳实践 -持续更新</title>
-    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
-    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
-<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
-<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
-<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
-<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
-<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
-<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
-</ul>
-<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
-<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
-<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
-<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
-<li>template 插件 </li>
-<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
-</ul>
-<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
   </entry>
   <entry>
     <title>Golang 大杀器之性能剖析 PProf</title>
@@ -563,6 +540,29 @@
       </tags>
   </entry>
   <entry>
+    <title>Obsidian 最佳实践 -持续更新</title>
+    <url>/2023/09/24/Obsidian%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/</url>
+    <content><![CDATA[<h1 id="Obsidian-最佳实践"><a href="#Obsidian-最佳实践" class="headerlink" title="Obsidian 最佳实践"></a>Obsidian 最佳实践</h1><p>#obsidian</p>
+<h1 id="我用Obsidian-来做什么？"><a href="#我用Obsidian-来做什么？" class="headerlink" title="我用Obsidian 来做什么？"></a>我用Obsidian 来做什么？</h1><h2 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h2><p>我的<a href="https://blog.hxzhouh.com/">blog</a> 是用Hugo 编译， 托管在Cloudflare 上面的，具体托管教程请参考：<a href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/">Deploy a Hugo site</a> obsidian再中间的作用就是 管理文章了。我用软链接将 hugo 目录里面的content 连接到 obsidian 的目录，然后配合 插件 QuickAdd &amp; Template 插件，很方便的就添加一篇新的博客。<br>写完博客后，用Raycast 触发一下push（脚本），这样就搞定了。。</p>
+<h2 id="日记"><a href="#日记" class="headerlink" title="日记"></a>日记</h2><p>配合 官方插件 + template </p>
+<h2 id="使用简悦记录网络内容"><a href="#使用简悦记录网络内容" class="headerlink" title="使用简悦记录网络内容"></a>使用简悦记录网络内容</h2><h2 id="本地日记本。"><a href="#本地日记本。" class="headerlink" title="本地日记本。"></a>本地日记本。</h2><p><a href="https://github.com/Kenshin/simpread/discussions/3807">https://github.com/Kenshin/simpread/discussions/3807</a></p>
+<h1 id="一些小技巧"><a href="#一些小技巧" class="headerlink" title="一些小技巧"></a>一些小技巧</h1><ul>
+<li>在Preferences 中 选择编辑器，可以 关闭显示 文档的属性。</li>
+<li>必须先设置好时间格式 ,我统一使用的格式是 YYYY-MM-DD(2023-12-31) 、YYYY-MM-DD HH:mm:ss (2023-12-31 15:06:59)</li>
+</ul>
+<h2 id="限定标签-显示关键字所在行"><a href="#限定标签-显示关键字所在行" class="headerlink" title="限定标签-显示关键字所在行"></a>限定标签-显示关键字所在行</h2><p><a href="https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html">https://coffeetea.top/zh/dataview-snippets/Dvjs-QueryTags-inlineKeywords.html</a><br>用将所有关键字的笔记收集到一个页面。 emm 我也不知道有啥用。</p>
+<h2 id="特定文件夹自动使用某个模板。"><a href="#特定文件夹自动使用某个模板。" class="headerlink" title="特定文件夹自动使用某个模板。"></a>特定文件夹自动使用某个模板。</h2><h1 id="正在使用的插件"><a href="#正在使用的插件" class="headerlink" title="正在使用的插件"></a>正在使用的插件</h1><ul>
+<li><a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 方便的输入时间，具体请参考 GitHub主页，后面一些自动化功能都是基于 <a href="https://github.com/argenos/nldates-obsidian">Natural Language Dates</a> 实现</li>
+<li><a href="https://github.com/platers/obsidian-linter">Linter</a>：一个自动格式化工具，可以实现诸如自动添加创建时间 、更新时间到metadata，自动纠错等功能。很强大，也比较复杂，可以尝试了解一下。</li>
+<li>template 插件 </li>
+<li><a href="https://github.com/coddingtonbear/obsidian-local-rest-api">Obsidian Local REST API</a>该插件为 Obsidian 提供了 REST API，您可以与其他工具中的笔记进行交互，以便您可以自动化需要自动化的操作。目前我只用到了<a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a> 这个拓展，后面或许会写一些有意思的东西，活这个跟Raycast联动起来。。 需要琢磨一下。</li>
+</ul>
+<h1 id="学习资源"><a href="#学习资源" class="headerlink" title="学习资源"></a>学习资源</h1>]]></content>
+      <categories>
+        <category>随笔</category>
+      </categories>
+  </entry>
+  <entry>
     <title>RWmutex：站在巨人肩膀上跳舞</title>
     <url>/2024/04/03/RWmutex%EF%BC%9A%E7%AB%99%E5%9C%A8%E5%B7%A8%E4%BA%BA%E8%82%A9%E8%86%80%E4%B8%8A%E8%B7%B3%E8%88%9E/</url>
     <content><![CDATA[<p>我们在使用mutex 的过程中，不管是读还是写，都通过 Mutex 来保证只有一个 goroutine 访问共享资源，这在某些情况下有点“浪费”。比如说，在写少读多的情况下，即使一段时间内没有写操作，大量并发的读访问也不得不在 Mutex 的保护下变成了串行访问，这个时候使用 Mutex，对性能的影响就比较大。  <strong>RWmutex 就是为了优化这问题而实现的</strong></p>
@@ -610,6 +610,34 @@
       </tags>
   </entry>
   <entry>
+    <title>go trace view trace 显示空白</title>
+    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
+    <content><![CDATA[<blockquote>
+<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
+</blockquote>
+<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
+<p>解决办法：</p>
+<ol>
+<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
+<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
+<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
+</ol>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
+<p>说明配置成功，</p>
+<ol start="4">
+<li>在使用 go trace得时候能够正常加载出 view trace。</li>
+</ol>
+<p>Enjoy！</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>Go</tag>
+        <tag>最佳实践</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>aws ec2 切换到ipv6</title>
     <url>/2023/12/12/aws%20ec2%20%E5%88%87%E6%8D%A2%E5%88%B0ipv6/</url>
     <content><![CDATA[<p>ipv6 出来已经很久了，工作中也处理过很多次ipv6的task，但是从来没想过把自己的ec2切换到ipv4，昨天再邮件回收站里面看到了一个邮件，aws 的ipv4 2024.2.1 要收费了，这就不能忽略了😄，刚好今天有空就把他切换成了ipv6，过程有点折腾。 本文不仅适用ec2，其他linux 主机应该也支持。</p>
@@ -648,72 +676,6 @@
       <tags>
         <tag>linux</tag>
         <tag>ipv6</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go 协程切换的性能分析</title>
-    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[004-blog&#x2F;计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
-<ul>
-<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
-<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
-<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
-<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
-</ul>
-<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
-<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
-<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
-<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
-<p>本文基于 go 1.22.1</p>
-</blockquote>
-<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
-</code></pre>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编译运行</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
-<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
-
-<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
-<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
-<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
-]]></content>
-      <categories>
-        <category>golang</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>go trace view trace 显示空白</title>
-    <url>/2020/03/21/go%20trace%20view%20trace%20%E6%98%BE%E7%A4%BA%E7%A9%BA%E7%99%BD/</url>
-    <content><![CDATA[<blockquote>
-<p>go trace 用来跟踪 goroutines运行情况,跟pprof配合使用，可以起到事半功倍的效果。但是，go trace 的view trace 在chrome下一片空白。</p>
-</blockquote>
-<p>原因是因为谷歌在某一版本的chrome中禁用了本地<a href="crbug.com/1036492.">API</a></p>
-<p>解决办法：</p>
-<ol>
-<li>注册一个chrome token <a href="https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841">https://developers.chrome.com/origintrials/#/register_trial/2431943798780067841</a> 资料随便填写，记得最后一定要 feedback。</li>
-<li>修改 go trace 代码 <code>src/cmd/trace/trace.go</code> 在head中添加一行 <meta http-equiv="origin-trial" content="YOUR_TOKEN_GOES_HERE"> 然后<code> go install</code> 一下</li>
-<li>在 $gopath&#x2F;misc&#x2F;trace&#x2F;trace_viewer_full.html 中 看到</li>
-</ol>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200428161814.png"></p>
-<p>说明配置成功，</p>
-<ol start="4">
-<li>在使用 go trace得时候能够正常加载出 view trace。</li>
-</ol>
-<p>Enjoy！</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>Go</tag>
-        <tag>最佳实践</tag>
       </tags>
   </entry>
   <entry>
@@ -762,85 +724,66 @@
       </tags>
   </entry>
   <entry>
-    <title>hash table 一个古老的经典数据结构</title>
-    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
-    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
-<span id="more"></span>
-<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
-<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
-<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
-<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
-<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
-<blockquote>
-<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
+    <title>go 协程切换的性能分析</title>
+    <url>/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<p>[[Performance analysis of goroutine switching]]<br><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[004-blog&#x2F;计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
+<ul>
+<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
+<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
+<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
+<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
+</ul>
+<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
+<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
+<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
+<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
+<p>本文基于 go 1.22.1</p>
 </blockquote>
-<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
-<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
-<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
-<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
-<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
-<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
-<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
-<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
-<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
+<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
+</code></pre>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
+<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
+<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
+<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
+]]></content>
+      <categories>
+        <category>golang</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>medium能让你快速的赚到钱？ 不可能</title>
+    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
+    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
+<span id="more"></span>
+
+<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
+<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
+<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
+<p>下面我将这样做</p>
 <ol>
-<li>找到键相同的键值对 — 更新键对应的值；</li>
-<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
+<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
+<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
+<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
+<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
 </ol>
-<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
-<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
-<p><code>装载因子:=元素数量÷桶数量</code></p>
-<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
-        <tag>go</tag>
-        <tag>hash</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>leetcode解题笔记-114-原地算法</title>
-    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
-    <content><![CDATA[<blockquote>
-<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
-</blockquote>
-<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
-<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
-
-<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
-
-<p>这样既节省了存储器空间又加快了运算速度。</p>
-<p>example:</p>
-<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
-<p>go 实现</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
-<p>第一趟，处理的节点为3，保持不变</p>
-<p>第二趟，处理节点 4 保持不变</p>
-<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
-<p>第四趟：处理节点6，不变。</p>
-<p>第五趟处理节点 5 不变，</p>
-<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
-<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
-]]></content>
-      <categories>
-        <category>leetCode</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>leetCode</tag>
+        <tag>medium</tag>
+        <tag>副业</tag>
       </tags>
   </entry>
   <entry>
@@ -891,28 +834,85 @@
       </tags>
   </entry>
   <entry>
-    <title>medium能让你快速的赚到钱？ 不可能</title>
-    <url>/2024/02/23/medium%E8%83%BD%E8%AE%A9%E4%BD%A0%E5%BF%AB%E9%80%9F%E7%9A%84%E8%B5%9A%E5%88%B0%E9%92%B1%EF%BC%9F%20%E4%B8%8D%E5%8F%AF%E8%83%BD/</url>
-    <content><![CDATA[<p>medium能让你快速的赚到钱？ 不可能<br>我要用我两个月的经历告诉你们，这是不可能的</p>
-<span id="more"></span>
+    <title>leetcode解题笔记-114-原地算法</title>
+    <url>/2020/03/24/leetcode%E8%A7%A3%E9%A2%98%E7%AC%94%E8%AE%B0-114-%E5%8E%9F%E5%9C%B0%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<blockquote>
+<p>In <a href="https://en.wikipedia.org/wiki/Computer_science">computer science</a>, an <strong>in-place algorithm</strong> is an <a href="https://en.wikipedia.org/wiki/Algorithm">algorithm</a> which transforms input using no auxiliary <a href="https://en.wikipedia.org/wiki/Data_structure">data structure</a>. However a small amount of extra storage space is allowed for auxiliary variables. The input is usually overwritten by the output as the algorithm executes. In-place algorithm updates input sequence only through replacement or swapping of elements. An algorithm which is not in-place is sometimes called <strong>not-in-place</strong> or <strong>out-of-place</strong>.——摘自<a href="https://en.wikipedia.org/wiki/In-place_algorithm">原地算法</a>的维基百科</p>
+</blockquote>
+<p>一句话总结就是: 原地算法不依赖额外的资源或者依赖少数的额外资源，仅依靠输出来覆盖输入的一种算法操作。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>假设要将具有 <em>n</em> 项内容的数组 a 翻转过来。一种看似简单的方法是创建一个大小相等的新数组，用适当的顺序填充副本，然后再删除：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">     allocate b[<span class="number">0.</span>.n-<span class="number">1</span>]  <span class="comment"># 额外设定一个数组</span></span><br><span class="line">     <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to n-<span class="number">1</span> <span class="comment"># 从 0 到 n-1 遍历数组 a</span></span><br><span class="line">         b[n -<span class="number">1</span> - i] := a[i] </span><br><span class="line">     <span class="keyword">return</span> b</span><br></pre></td></tr></table></figure>
 
-<p>我很早就加入了medium，但是没有开通付费会员，也没有怎么使用，也没上面发表过文章，1月份，我在一个论坛里面知道加入MPP会员，写作然后就可以赚钱。这是一个很疯狂的想法。<br>我的主业是一个后端程序员，偶尔有写博客的习惯，但是以前也没有写博客赚钱的想法，我是一个写作上的新手。<br>我开始的时候陆续搬运自己以前写的博客到medium，然后，我的噩梦就开始了，</p>
-<p>我开始每天盯着 我的follows数量，每天看reads 数量，等着更新收益， 然后得到一个0.0x 美元。<br>从一月到二月，我发表了15篇左右的付费文章，我的follows 数量是40，阅读数量大概在200左右。</p>
-<p>我看到medium 上很多人教你，一个星期获得 follows ，2个月2k follows，收益$1000, 发表的文章都是让你如何快速获得follows，打造你的吸引力。。。。<br>可是，这个真的有用嘛？<br>我开始疯狂的给别人follow，给别人的帖子鼓掌，每天打开medium 100次，查看动态是不是有人follow，有时候会增加几个follows，我会开心的发疯，有时候看到掉了follows 我会很失落，我没有吸过毒，但是那种感觉我觉得就是吸毒。严重影响到了我的生活跟工作。<br>这样是不对的。<br>medium 是一个优秀的社区，里面有很多人分享自己写的优秀的文章，比如<a href="https://medium.com/@blanchon.vincent">Vincent</a>等，他是我学习go语言的导师。但是在我这里，变成了我想博人眼球的工具。不应该是这样的。medium 上有很多教人写作的文章，但是 绝对不是像我现在这样，这么计较follows 的数量，为了阅读、follows 不顾一切，有点本末倒置了。</p>
-<p>下面我将这样做</p>
+<p>这种方法虽然简单，但是需要 O(n) 的额外空间以使数组 a 和 b 同时可用。此外，分配存储空间和释放存储空间通常是缓慢的操作。如果我们不再需要数组 a 的话，可使用原地算法，用它自己翻转的内容来覆盖掉原先的内容。这样，无论数组有多大，它都只需要辅助变量 i 和 tmp：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">function reverse_in_place(a[<span class="number">0.</span>.n-<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">from</span> <span class="number">0</span> to floor((n-<span class="number">2</span>)/<span class="number">2</span>)</span><br><span class="line">        tmp := a[i]</span><br><span class="line">        a[i] := a[n − <span class="number">1</span> − i]</span><br><span class="line">        a[n − <span class="number">1</span> − i] := tmp</span><br></pre></td></tr></table></figure>
+
+<p>这样既节省了存储器空间又加快了运算速度。</p>
+<p>example:</p>
+<p><a href="https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/">leetCode 114</a></p>
+<p>go 实现</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">flatten</span><span class="params">(root *TreeNode)</span></span>  &#123;</span><br><span class="line">	<span class="keyword">if</span> root == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	flatten(root.Left)</span><br><span class="line">	flatten(root.Right)</span><br><span class="line">	temp := root.Right</span><br><span class="line">	root.Right = root.Left</span><br><span class="line">	root.Left = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">for</span> root.Right != <span class="literal">nil</span> &#123;</span><br><span class="line">		root = root.Right</span><br><span class="line">	&#125;</span><br><span class="line">	root.Right = temp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是使用前序遍历把右边的树节点移动到左边</p>
+<p>第一趟，处理的节点为3，保持不变</p>
+<p>第二趟，处理节点 4 保持不变</p>
+<p>第三趟，处理节点2 需要把 节点3移动到2的右节点，然后把4 移动到2的最右的右节点</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161451.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161514.png"></p>
+<p>第四趟：处理节点6，不变。</p>
+<p>第五趟处理节点 5 不变，</p>
+<p>第六趟处理节点1 需要把 2 移动到 1 的右节点，然后把 5 移动到 1的最右右节点。</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161751.png"></p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200324161823.png"></p>
+<p>到此，移动完毕，全程只用了一个变量temp。满足原地算法。</p>
+]]></content>
+      <categories>
+        <category>leetCode</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>leetCode</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hash table 一个古老的经典数据结构</title>
+    <url>/2024/02/26/hash%20table%20%E4%B8%80%E4%B8%AA%E5%8F%A4%E8%80%81%E7%9A%84%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<p><a href="https://en.wikipedia.org/wiki/Hash_table">哈希表</a>一种古老的数据结构，在 1953 年就有人使用拉链法实现了哈希表，它能够通过键直接获取该键对应的值。</p>
+<span id="more"></span>
+<p>哈希表是计算机科学中的最重要数据结构之一，这不仅因为它 𝑂(1)的读写性能非常优秀，还因为它提供了键值之间的映射。想要实现一个性能优异的哈希表，需要注意两个关键点 —— 哈希函数和冲突解决方法。</p>
+<h1 id="哈希函数"><a href="#哈希函数" class="headerlink" title="哈希函数"></a>哈希函数</h1><p>实现哈希表的关键点在于哈希函数的选择，哈希函数的选择在很大程度上能够决定哈希表的读写性能。在理想情况下，哈希函数应该能够将不同键映射到不同的索引上，这要求<strong>哈希函数的输出范围大于输入范围</strong>，但是由于键的数量会远远大于映射的范围，所以在实际使用时，这个理想的效果是不可能实现的。</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/115908816b27b8962368c75184a9b3db.png" alt="Pasted image 20240226162401"></p>
+<p>比较实际的方式是让哈希函数的结果能够尽可能的均匀分布，然后通过工程上的手段解决哈希碰撞的问题。哈希函数映射的结果一定要尽可能均匀，结果不均匀的哈希函数会带来更多的哈希冲突以及更差的读写性能。</p>
+<p>如果使用结果分布较为均匀的哈希函数，那么哈希的增删改查的时间复杂度为 𝑂(1)；但是如果哈希函数的结果分布不均匀，那么所有操作的时间复杂度可能会达到 𝑂(𝑛)，由此看来，使用好的哈希函数是至关重要的。</p>
+<h1 id="冲突解决"><a href="#冲突解决" class="headerlink" title="冲突解决"></a>冲突解决</h1><p>就像我们之前所提到的，在通常情况下，哈希函数输入的范围一定会远远大于输出的范围，所以在使用哈希表时一定会遇到冲突，哪怕我们使用了完美的哈希函数，当输入的键足够多也会产生冲突。然而多数的哈希函数都是不够完美的，所以仍然存在发生哈希碰撞的可能，这时就需要一些方法来解决哈希碰撞的问题，常见方法的就是开放寻址法和拉链法。</p>
+<blockquote>
+<p>需要注意的是，这里提到的哈希碰撞不是多个键对应的哈希完全相等，可能是多个哈希的部分相等，例如：两个键对应哈希的前四个字节相同。</p>
+</blockquote>
+<h2 id="开放寻址法"><a href="#开放寻址法" class="headerlink" title="开放寻址法"></a>开放寻址法</h2><p><a href="https://en.wikipedia.org/wiki/Open_addressing">开放寻址法</a>是一种在哈希表中解决哈希碰撞的方法，这种方法的核心思想是<strong>依次探测和比较数组中的元素以判断目标键值对是否存在于哈希表中</strong>，如果我们使用开放寻址法来实现哈希表，那么实现哈希表底层的数据结构就是数组，不过因为数组的长度有限，向哈希表写入 (author, draven) 这个键值对时会从如下的索引开始遍历：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">index := hash(<span class="string">&quot;author&quot;</span>) % array.<span class="built_in">len</span></span><br></pre></td></tr></table></figure>
+<p>当我们向当前哈希表写入新的数据时，如果发生了冲突，就会将键值对写入到下一个索引不为空的位置：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/36c3801d2fdec9f0f37196273076e6c6.png" alt="Pasted image 20240226163147"></p>
+<p>如上图所示，当 Key3 与已经存入哈希表中的两个键值对 Key1 和 Key2 发生冲突时，Key3 会被写入 Key2 后面的空闲位置。当我们再去读取 Key3 对应的值时就会先获取键的哈希并取模，这会先帮助我们找到 Key1，找到 Key1 后发现它与 Key 3 不相等，所以会继续查找后面的元素，直到内存为空或者找到目标元素。</p>
+<p>当需要查找某个键对应的值时，会从索引的位置开始线性探测数组，找到目标键值对或者空内存就意味着这一次查询操作的结束。</p>
+<p>开放寻址法中对性能影响最大的是<strong>装载因子</strong>，它是数组中元素的数量与数组大小的比值。随着装载因子的增加，线性探测的平均用时就会逐渐增加，这会影响哈希表的读写性能。当装载率超过 70% 之后，哈希表的性能就会急剧下降，而一旦装载率达到 100%，整个哈希表就会完全失效，这时查找和插入任意元素的时间复杂度都是 𝑂(𝑛) 的，这时需要遍历数组中的全部元素，所以在实现哈希表时一定要关注装载因子的变化。</p>
+<h2 id="拉链法"><a href="#拉链法" class="headerlink" title="拉链法"></a>拉链法</h2><p>与开放地址法相比，拉链法是哈希表最常见的实现方法，大多数的编程语言都用拉链法实现哈希表，它的实现比较开放地址法稍微复杂一些，但是平均查找的长度也比较短，各个用于存储节点的内存都是动态申请的，可以节省比较多的存储空间。</p>
+<p>实现拉链法一般会使用数组加上链表，不过一些编程语言会在拉链法的哈希中引入红黑树以优化性能，拉链法会使用链表数组作为哈希底层的数据结构，我们可以将它看成可以扩展的二维数组：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c08cf7411207d7e1243b466d389c0d84.png" alt="Pasted image 20240226163743"></p>
+<p>如上图所示，当我们需要将一个键值对 (Key5, Value5) 写入哈希表时，键值对中的键 Key5 都会先经过一个哈希函数，哈希函数返回的哈希会帮助我们选择一个桶，和开放地址法一样，选择桶的方式是直接对哈希返回的结果取模：</p>
+<p>选择了 7 号桶后就可以遍历当前桶中的链表了，在遍历链表的过程中会遇到以下两种情况：</p>
 <ol>
-<li>对我过去两个星期follows的表示真诚的道歉，我follow你们并不是我真的喜欢你的文章，而是我想要你follow 回我。</li>
-<li>认真的对待我的每一篇文章，通过自己的写的文章来打动读者。</li>
-<li>回归生活，热爱生活。多读书，而不是想着一天要写一篇文章，骗几个follows</li>
-<li>medium 是个很好的平台，你的优秀作品能够在这里得到金钱的回报，但是不要太计较得失，作品写得好，自然会有人给你鼓掌。</li>
+<li>找到键相同的键值对 — 更新键对应的值；</li>
+<li>没有找到键相同的键值对 — 在链表的末尾追加新的键值对；</li>
 </ol>
+<p>如果要在哈希表中获取某个键对应的值，会经历如下的过程：<br><img src="https://images.hxzhouh.com/blog-images/2024/02/c83cdf09292493a641d1dca35f44b7b7.png" alt="Pasted image 20240226163932"><br>Key6 展示了一个键在哈希表中不存在的例子，当哈希表发现它命中 5 号桶时，它会依次遍历桶中的链表，然而遍历到链表的末尾也没有找到期望的键，所以哈希表中没有该键对应的值。</p>
+<p>在一个性能比较好的哈希表中，每一个桶中都应该有 0<del>1 个元素，有时会有 2</del>3 个，很少会超过这个数量。计算哈希、定位桶和遍历链表三个过程是哈希表读写操作的主要开销，使用拉链法实现的哈希也有装载因子这一概念：</p>
+<p><code>装载因子:=元素数量÷桶数量</code></p>
+<p>与开放地址法一样，拉链法的装载因子越大，哈希的读写性能就越差。在一般情况下使用拉链法的哈希表装载因子都不会超过 1，当哈希表的装载因子较大时会触发哈希的扩容，创建更多的桶来存储哈希中的元素，保证性能不会出现严重的下降。如果有 1000 个桶的哈希表存储了 10000 个键值对，它的性能是保存 1000 个键值对的 1&#x2F;10，但是仍然比在链表中直接读写好 1000 倍。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文讲述了hashtable 的基本工作原理， 哈希表是一种非常重要的数据结构，它能提供快速的键值映射，并有良好的读写性能。哈希表的性能主要取决于两个关键点：哈希函数的选择和冲突解决方法。<br>实际上还有很多工程上的问题没有回答，比如hash函数的性能，hash 如何动态扩缩容，还有 基于红黑树优化bucket 的性能等，这些都是工程上的问题，不影响我们了解hashtable 的工作原理。<br>下一篇我们将基于 hashtable 的基础知识，深入了解go语言map 的设计与实现。</p>
 ]]></content>
       <categories>
         <category>blog</category>
       </categories>
       <tags>
-        <tag>medium</tag>
-        <tag>副业</tag>
+        <tag>go</tag>
+        <tag>hash</tag>
       </tags>
   </entry>
   <entry>
@@ -1908,6 +1908,31 @@
       </tags>
   </entry>
   <entry>
+    <title>ARTS 0907-0913</title>
+    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
+    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
+<blockquote>
+<p>每人每周写一个 ARTS：</p>
+<p>Algorithm 是一道算法题，</p>
+<p>Review 是读一篇英文文章，</p>
+<p>Technique&#x2F;Tips 是分享一个小技术，</p>
+<p>Share 是分享一个观点。</p>
+</blockquote>
+<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
+<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
+<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
+<li>leetcode 19</li>
+</ul>
+<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>arts</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ARTS 0914-0920</title>
     <url>/2023/09/21/arts/ARTS%200914-0920/</url>
     <content><![CDATA[<p>RTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
@@ -1925,72 +1950,6 @@
 <li><a href="https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/">https://blog.pixielabs.ai/blog/ebpf-function-tracing/post/</a></li>
 <li></li>
 </ul>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>arts</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS-2023-38</title>
-    <url>/2023/09/22/arts/ARTS-2023-38/</url>
-    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
-<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
-</blockquote>
-<span id="more"></span>
-<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
-<p>#算法 #leetcode</p>
-<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>[[55. 跳跃游戏]]</p>
-<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
-<p>#好文 #阅读</p>
-<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
-<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
-<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
-<p>#工具  </p>
-<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
-<ul>
-<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
-<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
-</ul>
-<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
-<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
-<p>#碎碎念 #观点</p>
-]]></content>
-      <categories>
-        <category>arts</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
-        <tag>arts</tag>
-        <tag>leetcode</tag>
-        <tag>好文</tag>
-        <tag>阅读</tag>
-        <tag>工具</tag>
-        <tag>碎碎念</tag>
-        <tag>观点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ARTS 0907-0913</title>
-    <url>/2022/09/30/arts/ARTS%200907-0913/</url>
-    <content><![CDATA[<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。</p>
-<blockquote>
-<p>每人每周写一个 ARTS：</p>
-<p>Algorithm 是一道算法题，</p>
-<p>Review 是读一篇英文文章，</p>
-<p>Technique&#x2F;Tips 是分享一个小技术，</p>
-<p>Share 是分享一个观点。</p>
-</blockquote>
-<h1 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm:"></a>Algorithm:</h1><ul>
-<li>leetcode <a href="https://leetcode-cn.com/problems/reverse-linked-list/">206 </a></li>
-<li>leetcode <a href="https://leetcode-cn.com/problems/linked-list-cycle/solution/">141</a></li>
-<li>leetcode 19</li>
-</ul>
-<h1 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h1><p><a href="https://tech.meituan.com/2020/08/13/openstack-to-kubernetes-in-meituan.html">Kubernetes如何改变美团的云基础设施？</a></p>
 ]]></content>
       <categories>
         <category>arts</category>
@@ -2130,6 +2089,47 @@
       </categories>
       <tags>
         <tag>算法</tag>
+        <tag>leetcode</tag>
+        <tag>好文</tag>
+        <tag>阅读</tag>
+        <tag>工具</tag>
+        <tag>碎碎念</tag>
+        <tag>观点</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ARTS-2023-38</title>
+    <url>/2023/09/22/arts/ARTS-2023-38/</url>
+    <content><![CDATA[<h1 id="ARTS-2023-38"><a href="#ARTS-2023-38" class="headerlink" title="ARTS-2023-38"></a>ARTS-2023-38</h1><blockquote>
+<p>ARTS 是陈浩（网名左耳朵耗子）在极客时间专栏里发起的一个活动，目的是通过分享的方式来坚持学习。 每人每周写一个 ARTS： Algorithm 是一道算法题， Review 是读一篇英文文章， Technique&#x2F;Tips 是分享一个小技术， Share 是分享一个观点。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><hr>
+<p>#算法 #leetcode</p>
+<p><a href="https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-ii/description/?envType=study-plan-v2&envId=top-interview-150">leetCode 122  </a><br>用[[动态规划]]  来做这个题目</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">maxProfit</span><span class="params">(prices []<span class="type">int</span>)</span></span> (ans <span class="type">int</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt; <span class="built_in">len</span>(prices); i++ &#123;</span><br><span class="line">        ans += max(<span class="number">0</span>, prices[i]-prices[i<span class="number">-1</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">max</span><span class="params">(a, b <span class="type">int</span>)</span></span> <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> a &gt; b &#123;</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>[[55. 跳跃游戏]]</p>
+<h2 id="Review"><a href="#Review" class="headerlink" title="Review"></a>Review</h2><hr>
+<p>#好文 #阅读</p>
+<p><a href="https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md">https://go.googlesource.com/proposal/+/master/design/11502-securitypolicy.md</a></p>
+<p>最近开始看 go 的一些设计文档， 考古的， 新的都看，看着现在一些熟悉的东西以前是怎么被设计出来的， 很有意思</p>
+<h2 id="Technique-Tips"><a href="#Technique-Tips" class="headerlink" title="Technique&#x2F;Tips"></a>Technique&#x2F;Tips</h2><hr>
+<p>#工具  </p>
+<p>[[omnivore]] 一个开源的稍后阅读软件，有点类似readwise 的reader，目前属于起步阶段把，有活跃的开发圈子，会一直关注这个软件。</p>
+<ul>
+<li><a href="https://linux.cn/article-16102-1.html">https://linux.cn/article-16102-1.html</a></li>
+<li><a href="https://blog.omnivore.app/p/getting-started-with-omnivore">https://blog.omnivore.app/p/getting-started-with-omnivore</a></li>
+</ul>
+<p>一键屏蔽Twitter上的 黄推，受够了。。<br><a href="https://github.com/daymade/Twitter-Block-Porn">https://github.com/daymade/Twitter-Block-Porn</a></p>
+<h2 id="Share"><a href="#Share" class="headerlink" title="Share"></a>Share</h2><hr>
+<p>#碎碎念 #观点</p>
+]]></content>
+      <categories>
+        <category>arts</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+        <tag>arts</tag>
         <tag>leetcode</tag>
         <tag>好文</tag>
         <tag>阅读</tag>
