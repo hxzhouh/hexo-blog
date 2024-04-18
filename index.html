@@ -164,7 +164,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">43</span>
+        <span class="site-state-item-count">44</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -228,7 +228,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2024-04-18 11:19:00 / Modified: 16:12:44" itemprop="dateCreated datePublished" datetime="2024-04-18T11:19:00+08:00">2024-04-18</time>
+      <time title="Created: 2024-04-18 11:19:00 / Modified: 16:20:29" itemprop="dateCreated datePublished" datetime="2024-04-18T11:19:00+08:00">2024-04-18</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -272,31 +272,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>Blogging, is the last and most important link in my knowledge circulatory system, which takes care of my output, as well as my personal brand. In this post, I describe how my <a href="https://hxzhouh.com/">blog</a>, was built.<br>&lt;! – more –&gt;</p>
-<h1 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h1><p>My blog is structured with hexo+github+Cloudflare pages. In other words, everything is free except for the domain name which requires a fee.</p>
-<h1 id="Blog-setup"><a href="#Blog-setup" class="headerlink" title="Blog setup"></a>Blog setup</h1><p>There are a lot of articles on the web about setting up a blog using this architecture, so I won’t go into it again, but here are a few links that I’ve referenced.</p>
-<ul>
-<li><a target="_blank" rel="noopener" href="https://developers.cloudflare.com/pages/framework-guides/deploy-a-hexo-site/"> cloudflare: Deploy a Hexo site</a></li>
-</ul>
-<h2 id="Themes"><a href="#Themes" class="headerlink" title="Themes"></a>Themes</h2><p>The theme I’m using is the community’s <a target="_blank" rel="noopener" href="https://github.com/next-theme/hexo-theme-next">next-theme</a>, which is in <a target="_blank" rel="noopener" href="https://github.com/theme-next/hexo-theme-"> theme-next </a> next&#x2F;tree&#x2F;master) (no longer maintained). I liked the simplicity of it and the documentation, so I used it. Some of the configuration is also based on <a target="_blank" rel="noopener" href="https://github.com/next-theme/hexo-theme-next">next-theme</a>.</p>
-<h2 id="Plugins-used"><a href="#Plugins-used" class="headerlink" title="Plugins used"></a>Plugins used</h2><h3 id="footnote"><a href="#footnote" class="headerlink" title="footnote"></a>footnote</h3><p>The plugin I use is <a target="_blank" rel="noopener" href="https://github.com/LouisBarranqueiro/hexo-footnotes">hexo-footnotes</a><br>Installation method</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yarn add hexo-footnotes</span><br></pre></td></tr></table></figure>
-<p>Then edit hexo<code> _config.yaml</code> to add the content</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">plugins. </span><br><span class="line">- hexo-footnotes</span><br></pre></td></tr></table></figure>
-<p>Then recompile, push and you’re done!<br>For specific results, you can refer to my article: [A Deep Dive into CNCF’s Cloud-Native AI Whitepaper](<a href="https://hxzhouh.com/2024/04/17/A%20Deep%20Dive%20into%">https://hxzhouh.com/2024/04/17/A%20Deep%20Dive%20into%</a> 20CNCF%E2%80%99s%20Cloud-Native%20AI%20Whitepaper&#x2F;)</p>
-<h3 id="search"><a href="#search" class="headerlink" title="search"></a>search</h3><p>hexo’s local search function has not been working well, so I chose <strong>Algolia Search</strong>, a free account with 10,000 calls per month, which is enough for a small blog.<br>Refer to the documentation:</p>
-<ul>
-<li>[Algolia Search](<a target="_blank" rel="noopener" href="https://github.com/theme-next/hexo-theme-next/blob/master/docs/ALGOLIA-SEARCH.md">https://github.com/theme-next/hexo-theme-next/blob/master/docs/ALGOLIA-SEARCH.md</a><br>Result.<br>! <a target="_blank" rel="noopener" href="https://images.hxzhouh.com/blog-images/2024/04/d15c1f05b91186987fc24de39c1e0350.png">Pasted image 20240418144846</a></li>
-</ul>
-<h3 id="word-count"><a href="#word-count" class="headerlink" title="word count"></a>word count</h3><p>Use <a target="_blank" rel="noopener" href="https://github.com/next-theme/hexo-word-counter">hexo-word-counter</a> to count the number of words in an article and the expected reading time. Once configured, you can display the word count and reading time at the beginning of each article and at the bottom of the page</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-word-counter </span><br><span class="line">hexo clean &amp; hexo s </span><br></pre></td></tr></table></figure>
-<p>This completes the word counting functionality.</p>
-<h3 id="view-count"><a href="#view-count" class="headerlink" title="view count"></a>view count</h3><p>The next theme supports <a target="_blank" rel="noopener" href="https://console.firebase.google.com/">firestore</a> , <a target="_blank" rel="noopener" href="https://console.firebase.google.com/">firestore</a> is a cloud development service launched by Google, which is quite powerful. We use it to realize the view count function, this service is also free.<br>After logging in <a target="_blank" rel="noopener" href="https://console.firebase.google.com/">firestore</a>, select AddProject<br>AddProject<img src="https://images.hxzhouh.com/blog-images/2024/04/b6b861b32cfbaaba51b9909435f79cf9.png" alt="Pasted image 20240418153129"><br>Then select add app , select web -&gt; enter a name and register, wait a moment and the following will appear<br><img src="https://images.hxzhouh.com/blog-images/2024/04/4f0776d24dad651304022ea62a315d0b.png" alt="Pasted image 20240418153543"><br>Record the apiKey and appId:</p>
-<p>Then create a firestore database<br><img src="https://images.hxzhouh.com/blog-images/2024/04/54d849cafe1b3eb72ac666610544d42d.png" alt="Pasted image 20240418153705"><br>I’ve chosen test module as my schema, just enter a name and select a region. Wait a moment.<br>Finally, configure the apiKey and appId above in next config.yaml: and appId and redeploy. Click on a random article, and you’ll see the views.<br><img src="https://images.hxzhouh.com/blog-images/2024/04/bbeb1967bffe7d171f6cdd6969130c82.png" alt="Pasted image 20240418154130"><br>You can also see the data in the firestore database<br><img src="https://images.hxzhouh.com/blog-images/2024/04/55d5dce59a8456601898a54c97e93628.png" alt="Pasted image 20240418154116"><br>Based on firestore, we can expand the content of the blog, which is also a benefit of cloud development. If I have more interesting ideas later, I will write another post about it.</p>
-<p>The plugins I’m currently using are, well, these, and they’re all completely free.</p>
-<h1 id="Content-Management"><a href="#Content-Management" class="headerlink" title="Content Management"></a>Content Management</h1><p>I’m currently using Obsidian to manage all my digital notes, and mine as well.<br>I utilize the Obsidian <code>quickAdd</code> + <code>template</code> plugin to create a new blog post with one click.<br>Images and other media files I am hosting again <code>Cloudflare R2.</code><br>I used Obsidian’s Image auto upload Plugin + picList to upload images. The writing experience is not inferior to medium at all.</p>
-<h1 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h1><p>This is the end of my blogging system, if you are interested in having your own blog, why don’t you give it a try? It’s all free.</p>
-
+          <p>Blogging, is the last and most important link in my knowledge circulatory system, which takes care of my output, as well as my personal brand. In this post, I describe how my <a href="https://hxzhouh.com/">blog</a>, was built.  </p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/04/18/How%20was%20my%20blog%20built?/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -340,7 +324,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/18/%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2%E6%98%AF%E6%80%8E%E4%B9%88%E6%90%AD%E5%BB%BA%E7%9A%84%EF%BC%9F/" class="post-title-link" itemprop="url">How was my blog built?</a>
+          <a href="/2024/04/18/%E6%88%91%E7%9A%84%E5%8D%9A%E5%AE%A2%E6%98%AF%E6%80%8E%E4%B9%88%E6%90%AD%E5%BB%BA%E7%9A%84%EF%BC%9F/" class="post-title-link" itemprop="url">我的博客是怎么搭建的？</a>
         </h2>
 
         <div class="post-meta-container">
@@ -352,7 +336,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2024-04-18 11:19:00 / Modified: 16:11:56" itemprop="dateCreated datePublished" datetime="2024-04-18T11:19:00+08:00">2024-04-18</time>
+      <time title="Created: 2024-04-18 11:19:00 / Modified: 16:20:14" itemprop="dateCreated datePublished" datetime="2024-04-18T11:19:00+08:00">2024-04-18</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
