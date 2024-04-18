@@ -25,13 +25,13 @@
 
     <meta name="description" content="unsafe.Pointer再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。现在我们总结一下三种指针的区别。   普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。 unsafe.Pointer。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。 uintptr。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Go 解密： unsafe.Pointer">
+<meta property="og:title" content="Go解密： unsafe.Pointer">
 <meta property="og:url" content="https://hxzhouh.com/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/index.html">
 <meta property="og:site_name" content="huizhou92">
 <meta property="og:description" content="unsafe.Pointer再上一篇文章中，我们已经对比了Go 语言中的三种指针的区别， 您可以先去看一下这篇文章。现在我们总结一下三种指针的区别。   普通指针。不支持指针运算，保存地址以及类型信息，指向数据不会被gc回收。 unsafe.Pointer。不支持指针运算，保存地址但不保存类型信息，指向数据不会被gc回收。 uintptr。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-04-11T03:34:00.000Z">
-<meta property="article:modified_time" content="2024-04-11T03:34:45.797Z">
+<meta property="article:modified_time" content="2024-04-18T08:42:32.516Z">
 <meta property="article:author" content="huizhou92">
 <meta property="article:tag" content="go">
 <meta name="twitter:card" content="summary">
@@ -41,10 +41,10 @@
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/","path":"2024/04/11/Go 解密： unsafe.Pointer/","title":"Go 解密： unsafe.Pointer"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/11/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20unsafe.Pointer/","path":"2024/04/11/Go 解密： unsafe.Pointer/","title":"Go解密： unsafe.Pointer"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Go 解密： unsafe.Pointer | huizhou92</title>
+<title>Go解密： unsafe.Pointer | huizhou92</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
   <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
@@ -156,7 +156,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-count">61</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -215,12 +215,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="Go 解密： unsafe.Pointer | huizhou92">
+      <meta itemprop="name" content="Go解密： unsafe.Pointer | huizhou92">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Go 解密： unsafe.Pointer
+          Go解密： unsafe.Pointer
         </h1>
 
         <div class="post-meta-container">
@@ -230,9 +230,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
-      
 
-      <time title="Created: 2024-04-11 11:34:00 / Modified: 11:34:45" itemprop="dateCreated datePublished" datetime="2024-04-11T11:34:00+08:00">2024-04-11</time>
+      <time title="Created: 2024-04-11 11:34:00" itemprop="dateCreated datePublished" datetime="2024-04-11T11:34:00+08:00">2024-04-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-04-18 16:42:32" itemprop="dateModified" datetime="2024-04-18T16:42:32+08:00">2024-04-18</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -258,7 +264,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>927</span>
+      <span>928</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -283,6 +289,8 @@
 <li><code>uintptr</code>。支持地址运算，保存地址但不保存类型信息，指向数据会被gc回收。</li>
 </ul>
 </blockquote>
+<span id="more"></span>
+
 <p>相比较C语言而言，Go语言在设计的时候，为了编写方便、效率高以及降低复杂度，被设计成为一门强类型的静态语言。强类型意味着一旦定义了，它的类型就不能改变了；静态意味着类型检查在运行前就做了。<br>同时为了安全的考虑，Go语言是不允许两个指针类型进行转换的。为了解决这个问题， go 语言设计了<code>unsafe.Pointer</code> 。 <code>unsafe.Pointer</code>是一种特殊意义的指针，它可以包含任意类型的地址，有点类似于C语言里的void*指针，全能型的。 </p>
 <h1 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h1><p>在 <a target="_blank" rel="noopener" href="https://pkg.go.dev/unsafe#Pointer">官方文档</a>中，我们看下关于<code>unsafe.Pointer</code>的4个规则。</p>
 <ul>
@@ -291,11 +299,11 @@
 <li>A uintptr can be converted to a Pointer.</li>
 <li>A Pointer can be converted to a uintptr.<br>借助<code>unsafe.Pointer</code> 我们就可以实现两个类型之间的互相转换。</li>
 </ul>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;reflect&quot;</span>    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//go:nosplit  </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convert</span><span class="params">(p *<span class="type">int</span>)</span></span> *<span class="type">int32</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> (*<span class="type">int32</span>)(unsafe.Pointer(p))  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">var</span> i <span class="type">int</span> = <span class="number">1</span>  </span><br><span class="line">    q := convert(&amp;i)  </span><br><span class="line">    fmt.Println(reflect.TypeOf(*q))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;reflect&quot;</span>    </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span></span><br><span class="line">    )  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//go:nosplit  </span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">convert</span><span class="params">(p *<span class="type">int</span>)</span></span> *<span class="type">int32</span> &#123;  </span><br><span class="line">    <span class="keyword">return</span> (*<span class="type">int32</span>)(unsafe.Pointer(p))  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">var</span> i <span class="type">int</span> = <span class="number">1</span>  </span><br><span class="line">    q := convert(&amp;i)  </span><br><span class="line">    fmt.Println(reflect.TypeOf(*q))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>output:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">int32</span><br></pre></td></tr></table></figure>
 <p>我们通过<code>unsafe.Pointer</code> 实现了不同类型变量的转化。<br>对于 第三条和第四条,我们可以使用一个复杂点的例子来测试一下。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;  </span><br><span class="line">    name <span class="type">string</span>  </span><br><span class="line">    age  <span class="type">int32</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    user := &amp;User&#123;  </span><br><span class="line">       name: <span class="string">&quot;Tom&quot;</span>,  </span><br><span class="line">       age:  <span class="number">18</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">    pName := (*<span class="type">string</span>)(unsafe.Pointer(user))  </span><br><span class="line">    *pName = <span class="string">&quot;Bob&quot;</span>  </span><br><span class="line">    age := (*<span class="type">int32</span>)(unsafe.Pointer(<span class="type">uintptr</span>(unsafe.Pointer(user)) + unsafe.Offsetof(user.age)))  </span><br><span class="line">    *age = <span class="number">20</span>  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;unsafe&quot;</span></span><br><span class="line">    )  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;  </span><br><span class="line">    name <span class="type">string</span>  </span><br><span class="line">    age  <span class="type">int32</span>  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    user := &amp;User&#123;  </span><br><span class="line">       name: <span class="string">&quot;Tom&quot;</span>,  </span><br><span class="line">       age:  <span class="number">18</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">    pName := (*<span class="type">string</span>)(unsafe.Pointer(user))  </span><br><span class="line">    *pName = <span class="string">&quot;Bob&quot;</span>  </span><br><span class="line">    age := (*<span class="type">int32</span>)(unsafe.Pointer(<span class="type">uintptr</span>(unsafe.Pointer(user)) + unsafe.Offsetof(user.age)))  </span><br><span class="line">    *age = <span class="number">20</span>  </span><br><span class="line">    fmt.Println(*user)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>OutPut:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  unsafe git:(main) ✗ go run main.go</span><br><span class="line">&#123;Tom 18&#125;</span><br><span class="line">&#123;Bob 20&#125;</span><br></pre></td></tr></table></figure>
 <p>我们通过内存偏移的方式，定位到我们需要操作的字段，然后改变他们的值。<br>首先，第一个修改<code>user</code>的<code>name</code>值的时候，因为<code>name</code>是第一个字段，所以不用偏移，我们获取<code>user</code>的指针，然后通过<code>unsafe.Pointer</code>转为<code>*string</code>进行赋值操作即可。<br>第二个修改<code>user</code>的<code>age</code>值的时候，因为<code>age</code>不是第一个字段，所以我们需要内存偏移，内存偏移牵涉到的计算只能通过<code>uintptr</code>，所我们要先把<code>user</code>的指针地址转为<code>uintptr</code>，然后我们再通过<code>unsafe.Offsetof(u.age)</code>获取需要偏移的值，进行地址运算(+)偏移即可。<br>现在偏移后，地址已经是<code>user</code>的<code>age</code>字段了，如果要给它赋值，我们需要把<code>uintptr</code>转为<code>*int</code>才可以。所以我们通过把<code>uintptr</code>转为<code>unsafe.Pointer</code>,再转为<code>*int</code>就可以操作了。<br>最终，我们在Go语言上实现了类似C语言的指针操作。</p>
@@ -356,13 +364,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">62k</span>
+    <span title="Word count total">63k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:45</span>
+    <span title="Reading time total">3:49</span>
   </span>
 </div>
 
