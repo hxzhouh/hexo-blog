@@ -23,30 +23,30 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
      crossorigin="anonymous"></script>
 
-    <meta name="description" content="本篇文章分析，go 协程切换的速度。">
+    <meta name="description" content="Note: Non-members can read the full story in this link.  IntroductionIn the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was appro">
 <meta property="og:type" content="article">
-<meta property="og:title" content="go 协程切换的性能分析">
-<meta property="og:url" content="https://hxzhouh.com/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/index.html">
+<meta property="og:title" content="Performance analysis of goroutine switching">
+<meta property="og:url" content="https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/index.html">
 <meta property="og:site_name" content="huizhou92">
-<meta property="og:description" content="本篇文章分析，go 协程切换的速度。">
+<meta property="og:description" content="Note: Non-members can read the full story in this link.  IntroductionIn the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was appro">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png">
-<meta property="article:published_time" content="2024-03-20T06:45:00.000Z">
-<meta property="article:modified_time" content="2024-04-18T08:33:43.835Z">
+<meta property="article:published_time" content="2024-03-20T08:32:00.000Z">
+<meta property="article:modified_time" content="2024-04-18T08:33:15.700Z">
 <meta property="article:author" content="huizhou92">
 <meta property="article:tag" content="go">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png">
 
 
-<link rel="canonical" href="https://hxzhouh.com/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">
+<link rel="canonical" href="https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/","path":"2024/03/20/go 协程切换的性能分析/","title":"go 协程切换的性能分析"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/","path":"2024/03/20/Performance analysis of goroutine switching/","title":"Performance analysis of goroutine switching"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>go 协程切换的性能分析 | huizhou92</title>
+<title>Performance analysis of goroutine switching | huizhou92</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
   <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
@@ -145,7 +145,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E5%BC%80%E9%94%80%E6%B5%8B%E8%AF%95"><span class="nav-number">1.</span> <span class="nav-text">协程开销测试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2CPU%E5%BC%80%E9%94%80"><span class="nav-number">1.1.</span> <span class="nav-text">协程切换CPU开销</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B%E5%86%85%E5%AD%98%E5%BC%80%E9%94%80"><span class="nav-number">1.2.</span> <span class="nav-text">协程内存开销</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">2.</span> <span class="nav-text">结论</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Coroutine-Overhead-Test"><span class="nav-number">1.1.</span> <span class="nav-text">Coroutine Overhead Test</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusion"><span class="nav-number">2.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -204,7 +204,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -217,12 +217,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="go 协程切换的性能分析 | huizhou92">
-      <meta itemprop="description" content="本篇文章分析，go 协程切换的速度。">
+      <meta itemprop="name" content="Performance analysis of goroutine switching | huizhou92">
+      <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          go 协程切换的性能分析
+          Performance analysis of goroutine switching
         </h1>
 
         <div class="post-meta-container">
@@ -233,14 +233,14 @@
       </span>
       <span class="post-meta-item-text">Posted on</span>
 
-      <time title="Created: 2024-03-20 14:45:00" itemprop="dateCreated datePublished" datetime="2024-03-20T14:45:00+08:00">2024-03-20</time>
+      <time title="Created: 2024-03-20 16:32:00" itemprop="dateCreated datePublished" datetime="2024-03-20T16:32:00+08:00">2024-03-20</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2024-04-18 16:33:43" itemprop="dateModified" datetime="2024-04-18T16:33:43+08:00">2024-04-18</time>
+      <time title="Modified: 2024-04-18 16:33:15" itemprop="dateModified" datetime="2024-04-18T16:33:15+08:00">2024-04-18</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -266,51 +266,65 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>1.6k</span>
+      <span>1.1k</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">Reading time &asymp;</span>
-      <span>6 mins.</span>
+      <span>4 mins.</span>
     </span>
 </div>
 
-            <div class="post-description">本篇文章分析，go 协程切换的速度。</div>
         </div>
       </header>
 
     
     
     
-    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"><br>上一篇[[004-blog&#x2F;计算机中的时间 线程上下文切换会用掉你多少CPU？]]文章中，中我们用实验的方式验证了Linux进程和线程的上下文切换开销，大约是3-5us之间。这个开销确实不算大，但是海量互联网服务端和一般的计算机程序相比，特点是：</p>
-<ul>
-<li>高并发：每秒钟需要处理成千上万的用户请求。</li>
-<li>周期短：每个用户处理耗时越短越好，经常是ms级别的</li>
-<li>高网络IO：经常需要从其它机器上进行网络IO、如Redis、Mysql等等</li>
-<li>低计算：一般CPU密集型的计算操作并不多<br>即使3-5us的开销，如果上下文切换量特别大的话，也仍然会显得是有那么一些性能低下。例如之前的Web Server之Apache，就是这种模型下的软件产品。（其实当时Linux操作系统在设计的时候，目标是一个通用的操作系统，并不是专门针对服务端高并发来设计的）</li>
-</ul>
-<p>为了避免频繁的上下文切换，还有一种异步非阻塞的开发模型。那就是用一个进程或线程去接收一大堆用户的请求，然后通过IO多路复用的方式来提高性能（进程或线程不阻塞，省去了上下文切换的开销）。Nginx和Node Js就是这种模型的典型代表产品。平心而论，从程序运行效率上来，这种模型最为机器友好，运行效率是最高的（比下面提到的协程开发模型要好）。所以Nginx已经取代了Apache成为了Web Server里的首选。但是这种编程模型的问题在于开发不友好，说白了就是过于机器化，离进程概念被抽象出来的初衷背道而驰。人类正常的线性思维被打乱，应用层开发们被逼得以非人类的思维去编写代码，代码调试也变得异常困难。</p>
-<p>于是就有一些聪明的脑袋们继续在应用层又动起了主意，设计出了不需要进程&#x2F;线程上下文切换的“线程”，协程。用协程去处理高并发的应用场景，既能够符合进程涉及的初衷，让开发者们用人类正常的线性的思维去处理自己的业务，也同样能够省去昂贵的进程&#x2F;线程上下文切换的开销。因此可以说，协程就是Linux处理海量请求应用场景里的进程模型的一个很好的的补丁。</p>
-<p>背景介绍完了，那么我想说的是，毕竟协程的封装虽然轻量，但是毕竟还是需要引入了一些额外的代价的。那么我们来看看这些额外的代价具体多小吧。</p>
-<h1 id="协程开销测试"><a href="#协程开销测试" class="headerlink" title="协程开销测试"></a>协程开销测试</h1><blockquote>
-<p>本文基于 go 1.22.1</p>
+    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037">  </p>
+<blockquote>
+<p>Note: Non-members can read the full story in this <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
 </blockquote>
-<h2 id="协程切换CPU开销"><a href="#协程切换CPU开销" class="headerlink" title="协程切换CPU开销"></a>协程切换CPU开销</h2><pre><code>测试过程是不断在协程之间让出CPU。核心代码如下。
-</code></pre>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    <span class="string">&quot;time&quot;</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>编译运行</p>
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
+<ul>
+<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
+<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
+<li>High network I&#x2F;O: Often requires network I&#x2F;O from other machines, such as Redis, MySQL, etc.</li>
+<li>Low computation: General CPU-intensive operations are not frequent.<span id="more"></span>
+Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</li>
+</ul>
+<p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
+<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process&#x2F;thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process&#x2F;thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
+<p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
+<h2 id="Coroutine-Overhead-Test"><a href="#Coroutine-Overhead-Test" class="headerlink" title="Coroutine Overhead Test"></a>Coroutine Overhead Test</h2><blockquote>
+<p>This article is based on go 1.22.1.</p>
+</blockquote>
+<ul>
+<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>  The test process involves continuously yielding the CPU between coroutines. The core code is as follows.<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>Compilation and execution</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<p>平均每次协程切换的开销是 54ns 相对于前面文章测得的进程切换开销大约3.5us，大约是其1&#x2F;70。比系统调用的造成的开销还要低。  </p>
-<h2 id="协程内存开销"><a href="#协程内存开销" class="headerlink" title="协程内存开销"></a>协程内存开销</h2><p>在空间上，协程初始化创建的时候为其分配的栈有2KB。而线程栈要比这个数字大的多，可以通过ulimit 命令查看，一般都在几兆，我的mac 上是8m 。如果对每个用户创建一个协程去处理，100万并发用户请求只需要2G内存就够了，而如果用线程模型则需要8T。</p>
+<p>The average overhead of each coroutine switch is 54ns, which is approximately 1&#x2F;70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
+<p><strong>Coroutine Memory Overhead</strong><br>In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
 
-<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>协程由于是在用户态来完成上下文切换的，所以切换耗时只有区区50ns多一些，比进程切换要高70倍。单个协程需要的栈内存也足够小，只需要2KB。所以，近几年来协程大火，在互联网后端的高并发场景里大放光彩。</p>
-<p>无论是空间还是时间性能都比进程（线程）好这么多，那么Linus为啥不把它在操作系统里实现？操作系统为了实现实时性更好的目的，对一些优先级比较高的进程是会抢占其它进程的CPU的。而协程无法实现这一点，还得依赖于挡前使用CPU的协程主动释放，于操作系统的实现目的不相吻合。所以协程的高效是以牺牲可抢占性为代价的。<br>协程最终也是附着在操作系统线程上执行的。<br>我们需要考虑的一个问题是。<br>难道用了协程，线程就不切换了吗？线程的切换频率，基本取决于线程的数量，使用协程，需要指定每个线程的任务，同样的任务量，协程需要的线程数量应该始终高于自动分配的线程池。<br>因而：<br>    使用线程 &#x3D; 线程切换开销（小）<br>    使用协程 &#x3D; 线程切换开销（大）+ 协程切换开销<br>    然后CPU开销：<br>    线程的指令周期 &#x3D; 中断检测 + 指令执行（包括取指、转换和执行）<br>    协程的指令周期 &#x3D; 中断检测 + 指令执行 + 中断检测 + 协程信号检测<br>    所以我有以下结论：<br>    性能上，io多路复用 + 线程池是完全碾压协程的；但是在方便程度上，还是协程好用  </p>
-<p>由于go的协程调用起来太方便了，所以一些go的程序员就很随意使用go 这个关键字。要知道go这条指令在切换到协程之前，得先把协程创建出来。而一次创建加上调度开销就涨到400ns，差不多相当于一次系统调用的耗时了。虽然协程很高效，但是也不要乱用，否则Rob Pike花大精力优化出来的性能，被你随意一go又给葬送掉了。</p>
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
+<p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
+<p>Coroutines ultimately execute attached to operating system threads.</p>
+<p>A question we need to consider is:<br>Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>Therefore:<br>Using threads &#x3D; thread switch overhead (low)<br>Using coroutines &#x3D; thread switch overhead (high) + coroutine switch overhead  </p>
+<p>Then CPU overhead:<br>Instruction cycles of threads &#x3D; interrupt detection + instruction execution (including fetch, decode, and execute)<br>Instruction cycles of coroutines &#x3D; interrupt detection + instruction execution + interrupt detection + coroutine signal detection  </p>
+<p>So, I have the following conclusion:<br>In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
+<p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
+<p>If you like my articles, consider to :</p>
+<ol>
+<li>Drop me a follow -&gt; <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/">huizhou92</a></li>
+<li>Leave a clap👏 (50 👏👏👏👏would be the best) and a comment if you want to interact with me.</li>
+<li>Receive an email every time I post on Medium -&gt; <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/subscribe">Click here</a>!</li>
+<li>If you find my article helpful to you, please buy me a cup of <a target="_blank" rel="noopener" href="https://www.buymeacoffee.com/hxzhouh">coffee</a></li>
+</ol>
 
     </div>
 
@@ -327,13 +341,13 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2024/03/19/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%B8%AD%E7%9A%84%E6%97%B6%E9%97%B4%20%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%87%E6%8D%A2%E4%BC%9A%E7%94%A8%E6%8E%89%E4%BD%A0%E5%A4%9A%E5%B0%91CPU%EF%BC%9F/" rel="prev" title="计算机中的时间 线程上下文切换会用掉你多少CPU？">
-                  <i class="fa fa-angle-left"></i> 计算机中的时间 线程上下文切换会用掉你多少CPU？
+                <a href="/2024/03/20/go%20%E5%8D%8F%E7%A8%8B%E5%88%87%E6%8D%A2%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/" rel="prev" title="go 协程切换的性能分析">
+                  <i class="fa fa-angle-left"></i> go 协程切换的性能分析
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/" rel="next" title="Performance analysis of goroutine switching">
-                  Performance analysis of goroutine switching <i class="fa fa-angle-right"></i>
+                <a href="/2024/03/27/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/" rel="next" title="Go iota, 不是枚举">
+                  Go iota, 不是枚举 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
