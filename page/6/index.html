@@ -31,7 +31,7 @@
 <meta property="og:description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="huizhou92">
-<meta property="article:tag" content="golang 效率工具">
+<meta property="article:tag" content="Golang, Self Improvement,Read,Wirte, Computer Science, Cloud Computing, Data Storage, Efficiency Tools, Backend Engineer, huizhou92">
 <meta name="twitter:card" content="summary">
 
 
@@ -153,18 +153,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">55</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -189,6 +189,151 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/" class="post-title-link" itemprop="url">Go - Ordering in Select Statements</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-04-29 22:50:50" itemprop="dateCreated datePublished" datetime="2020-04-29T22:50:50+08:00">2020-04-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2023-11-20 14:57:46" itemprop="dateModified" datetime="2023-11-20T14:57:46+08:00">2023-11-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+        </span>
+    </span>
+
+  
+    <span id="/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/" class="post-meta-item twikoo_visitors" data-flag-title="Go - Ordering in Select Statements" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span id="twikoo_visitors"></span>
+    </span>
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>812</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>3 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p> <a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a target="_blank" rel="noopener" href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png"></p>
+<blockquote>
+<p>本文基于 go 1.14 </p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+
+<p>在 select 的每次迭代中，case 都会被打乱：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png"></p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1 id="Non-ready-channels"><a href="#Non-ready-channels" class="headerlink" title="Non-ready channels"></a>Non-ready channels</h1><p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png"></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a target="_blank" rel="noopener" href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1 id="Simplification"><a href="#Simplification" class="headerlink" title="Simplification"></a>Simplification</h1><p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png"></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -887,7 +1032,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">3:33</span>
+    <span title="Reading time total">3:36</span>
   </span>
 </div>
 
