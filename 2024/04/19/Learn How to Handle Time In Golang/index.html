@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="introduce some important functions and methods in the time package">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Learn How to Handle Time In Golang">
+<meta property="og:url" content="https://hxzhouh.com/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="introduce some important functions and methods in the time package">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png">
+<meta property="article:published_time" content="2024-04-19T10:43:00.000Z">
+<meta property="article:modified_time" content="2024-04-19T10:58:30.587Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/","path":"2024/04/19/Learn How to Handle Time In Golang/","title":"Learn How to Handle Time In Golang"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Learn How to Handle Time In Golang | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#This-article-will-introduce-some-important-functions-and-methods-in-the-time-package-hoping-to-help-those-who-often-need-to-deal-with-time-related-issues-in-Go-Handle-Time-Zones"><span class="nav-number">1.</span> <span class="nav-text">This article will introduce some important functions and methods in the time package, hoping to help those who often need to deal with time-related issues in Go.Handle Time Zones</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Time-Instant-time-Time"><span class="nav-number">2.</span> <span class="nav-text">Time Instant time.Time</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Getting-time-Time"><span class="nav-number">2.0.0.1.</span> <span class="nav-text">Getting time.Time</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Converting-Timestamps"><span class="nav-number">2.0.0.2.</span> <span class="nav-text">Converting Timestamps</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Getting-Basic-Fields"><span class="nav-number">2.0.0.3.</span> <span class="nav-text">Getting Basic Fields</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Duration-time-Duration"><span class="nav-number">3.</span> <span class="nav-text">Duration time.Duration</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Time-Calculation"><span class="nav-number">4.</span> <span class="nav-text">Time Calculation</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Usage-Example"><span class="nav-number">4.0.0.1.</span> <span class="nav-text">Usage Example</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Formatting-Time"><span class="nav-number">5.</span> <span class="nav-text">Formatting Time</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Example"><span class="nav-number">5.0.0.1.</span> <span class="nav-text">Example</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Timezone-Conversion"><span class="nav-number">6.</span> <span class="nav-text">Timezone Conversion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">7.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Learn How to Handle Time In Golang | huizhou92">
+      <meta itemprop="description" content="introduce some important functions and methods in the time package">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Learn How to Handle Time In Golang
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-04-19 18:43:00 / Modified: 18:58:30" itemprop="dateCreated datePublished" datetime="2024-04-19T18:43:00+08:00">2024-04-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.9k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>7 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">introduce some important functions and methods in the time package</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png" alt="99e178071ff04a758df4210c2e330fc8.png~tplv-6bxrjdptv7-image"><br>Handling time is a common task for programmers. In Go, the standard library <code>time</code> provides the necessary capabilities.</p>
+<h2 id="This-article-will-introduce-some-important-functions-and-methods-in-the-time-package-hoping-to-help-those-who-often-need-to-deal-with-time-related-issues-in-Go-Handle-Time-Zones"><a href="#This-article-will-introduce-some-important-functions-and-methods-in-the-time-package-hoping-to-help-those-who-often-need-to-deal-with-time-related-issues-in-Go-Handle-Time-Zones" class="headerlink" title="This article will introduce some important functions and methods in the time package, hoping to help those who often need to deal with time-related issues in Go.Handle Time Zones"></a>This article will introduce some important functions and methods in the <code>time</code> package, hoping to help those who often need to deal with time-related issues in Go.<br><span id="more"></span><br>Handle Time Zones</h2><p>In programming, we often encounter the issue of an <strong>eight-hour time difference</strong>. This is caused by differences in time zones. To better handle them, we need to understand several time definition standards.</p>
+<p>GMT (Greenwich Mean Time) is based on the Earth’s rotation and revolution to calculate time. It defines noon as the time when the sun passes through the Royal Greenwich Observatory in the suburbs of London, UK. GMT was the former world standard time.</p>
+<p>UTC (Coordinated Universal Time) is more precise than GMT, calculated based on atomic clocks. In situations where precision to the second is not required, UTC can be considered equivalent to GMT. UTC is the current world standard time.</p>
+<p>From the Prime Meridian at Greenwich, going east is positive, going west is negative. The globe is divided into 24 standard time zones, with neighboring time zones differing by one hour.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In mainland China, the standard time used is in the GMT+8 time zone, known as China Standard Time (CST).</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">go</span> run main.<span class="keyword">go</span></span><br><span class="line"><span class="number">2022</span><span class="number">-07</span><span class="number">-17</span> <span class="number">16</span>:<span class="number">37</span>:<span class="number">31.186043</span> +<span class="number">0800</span> CST m=+<span class="number">0.000066647</span></span><br></pre></td></tr></table></figure>
+
+<p>This is the result under the default time zone, and <code>+0800 CST</code> is indicated in the <code>time.Now()</code> printout.</p>
+<p>Suppose we are in the Los Angeles time zone in the United States, what result do we get?</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">TZ=<span class="string">&quot;America/Los_Angeles&quot;</span> go run main.go</span></span><br><span class="line">2022-07-17 01:39:12.391505 -0700 PDT m=+0.000069514</span><br></pre></td></tr></table></figure>
+
+<p>As seen, the result at this time is <code>-0700 PDT</code>, which is Pacific Daylight Time. Due to the time zone difference, the results of the two executions differ by 15 hours.</p>
+<p>Note that when using Docker containers, the system’s default time zone is UTC time (0 time zone), which is eight hours behind Beijing time as we need, leading to the classic scenario of the <strong>eight-hour time difference</strong> problem.</p>
+<p>Strategies for dealing with time zone issues can be found in detail in the loading logic of the <code>initLocal()</code> function in <code>src/time/zoneinfo_unix.go</code>. For example, you can solve it by specifying the environment variable <code>TZ</code> or modifying the <code>/etc/localtime</code> file.</p>
+<p>Because time zone issues are very important, they are discussed in the first part of the article. Let’s now move on to the usage of the <code>time</code> package.</p>
+<h2 id="Time-Instant-time-Time"><a href="#Time-Instant-time-Time" class="headerlink" title="Time Instant time.Time"></a>Time Instant <code>time.Time</code></h2><p>The core object in the <code>time</code> package is the <code>time.Time</code> struct. Its definition, used to represent a specific moment in time, is as follows:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Time <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// wall and ext encode the wall time seconds,</span></span><br><span class="line">    <span class="comment">// wall time nanoseconds, and optional monotonic</span></span><br><span class="line">    <span class="comment">// clock reading in nanoseconds.</span></span><br><span class="line">    wall <span class="type">uint64</span></span><br><span class="line">    ext  <span class="type">int64</span></span><br><span class="line">    loc  *Location</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In computer time handling, two types of clocks are mainly involved:</p>
+<ul>
+<li>Wall clock, also known as clock time, used to represent specific dates and times.</li>
+<li>Monotonic clocks, which always guarantee that time moves forward without the issue of wall clock rollback, making them suitable for measuring durations.</li>
+</ul>
+<p>The <code>wall</code> and <code>ext</code> fields are used to record wall clock and monotonic clock times, with nanosecond precision. The bits of these fields are associated with specific information such as years, months, days, hours, minutes, and seconds.</p>
+<p>The <code>loc</code> field records the time zone location. When <code>loc</code> is <code>nil</code>, it defaults to UTC time.</p>
+<p>Because <code>time.Time</code> is used to represent time instants with nanosecond precision, it is typically stored and passed as a value in programs, rather than a pointer.</p>
+<p>That is, in time variables or struct fields, we should use <code>time.Time</code> rather than <code>*time.Time</code>.</p>
+<h5 id="Getting-time-Time"><a href="#Getting-time-Time" class="headerlink" title="Getting time.Time"></a>Getting <code>time.Time</code></h5><p>We can get the current local time using the <code>Now</code> function:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Now</span><span class="params">()</span></span> Time &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Or, using the <code>Date</code> function, we can get a specified time based on the year, month, day, and other parameters, along with the time zone:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Date</span><span class="params">(year <span class="type">int</span>, month Month, day, hour, min, sec, nsec <span class="type">int</span>, loc *Location)</span></span> Time &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Converting-Timestamps"><a href="#Converting-Timestamps" class="headerlink" title="Converting Timestamps"></a>Converting Timestamps</h5><p>In the computer world, UTC time 0 on January 1, 1970, is considered Unix time 0. To convert a time instant into a Unix timestamp, we calculate the number of seconds, microseconds, etc., elapsed from Unix time 0 to the specified instant.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> Unix() <span class="type">int64</span>       <span class="comment">// Seconds since Unix time 0</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> UnixMicro() <span class="type">int64</span>  <span class="comment">// Microseconds since Unix time 0</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> UnixMilli() <span class="type">int64</span>  <span class="comment">// Milliseconds since Unix time 0</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> UnixNano() <span class="type">int64</span>   <span class="comment">// Nanoseconds since Unix time 0</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="Getting-Basic-Fields"><a href="#Getting-Basic-Fields" class="headerlink" title="Getting Basic Fields"></a>Getting Basic Fields</h5><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">t := time.Now()</span><br><span class="line">fmt.Println(t.Date())        <span class="comment">// 2022 July 17</span></span><br><span class="line">fmt.Println(t.Year())        <span class="comment">// 2022</span></span><br><span class="line">fmt.Println(t.Month())       <span class="comment">// July</span></span><br><span class="line">fmt.Println(t.ISOWeek())     <span class="comment">// 2022 28</span></span><br><span class="line">fmt.Println(t.Clock())       <span class="comment">// 22 21 56</span></span><br><span class="line">fmt.Println(t.Day())         <span class="comment">// 17</span></span><br><span class="line">fmt.Println(t.Weekday())     <span class="comment">// Sunday</span></span><br><span class="line">fmt.Println(t.Hour())        <span class="comment">// 22</span></span><br><span class="line">fmt.Println(t.Minute())      <span class="comment">// 21</span></span><br><span class="line">fmt.Println(t.Second())      <span class="comment">// 56</span></span><br><span class="line">fmt.Println(t.Nanosecond())  <span class="comment">// 494313000</span></span><br><span class="line">fmt.Println(t.YearDay())     <span class="comment">// 198</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Duration-time-Duration"><a href="#Duration-time-Duration" class="headerlink" title="Duration time.Duration"></a>Duration <code>time.Duration</code></h2><p><code>time.Duration</code> represents the time elapsed between two <code>time.Time</code> instants. It uses an <code>int64</code> to represent the count of nanoseconds, allowing for approximately 290 years of representation.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A Duration represents the elapsed time between two instants</span></span><br><span class="line"><span class="comment">// as an int64 nanosecond count. The representation limits the</span></span><br><span class="line"><span class="comment">// largest representable duration to approximately 290 years.</span></span><br><span class="line"><span class="keyword">type</span> Duration <span class="type">int64</span></span><br></pre></td></tr></table></figure>
+
+<p>In Go, <code>time.Duration</code> is simply a number in nanoseconds. If a duration is equal to 1000000000, it represents 1 second, or 1000 milliseconds, or 1000000 microseconds, or 1000000000 nanoseconds.</p>
+<p>For example, the duration between two time instants separated by 1 hour can be calculated as:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>*<span class="number">60</span>*<span class="number">60</span>*<span class="number">1000</span>*<span class="number">1000</span>*<span class="number">1000</span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>time</code> package defines constant values for these durations:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    Nanosecond  Duration = <span class="number">1</span></span><br><span class="line">    Microsecond          = <span class="number">1000</span> * Nanosecond</span><br><span class="line">    Millisecond         </span><br><span class="line"></span><br><span class="line"> = <span class="number">1000</span> * Microsecond</span><br><span class="line">    Second               = <span class="number">1000</span> * Millisecond</span><br><span class="line">    Minute               = <span class="number">60</span> * Second</span><br><span class="line">    Hour                 = <span class="number">60</span> * Minute</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>Additionally, <code>time.Duration</code> provides methods to get values at various time granularities:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Nanoseconds() <span class="type">int64</span>   <span class="comment">// Nanoseconds</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Microseconds() <span class="type">int64</span>  <span class="comment">// Microseconds</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Milliseconds() <span class="type">int64</span>  <span class="comment">// Milliseconds</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Seconds() <span class="type">float64</span>     <span class="comment">// Seconds</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Minutes() <span class="type">float64</span>     <span class="comment">// Minutes</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(d Duration)</span></span> Hours() <span class="type">float64</span>       <span class="comment">// Hours</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Time-Calculation"><a href="#Time-Calculation" class="headerlink" title="Time Calculation"></a>Time Calculation</h2><p>After learning about time instants and durations, let’s see how to perform time calculations.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> Add(d Duration) Time &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Add</code> adds or subtracts (positive <code>d</code> means addition, negative <code>d</code> means subtraction) a <code>time.Duration</code> to a <code>time.Time</code>. We can add or subtract durations of specific nanosecond levels to a specific instant in time.</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> Sub(u Time) Duration &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Sub</code> returns the duration between two time instants.</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> AddDate(years <span class="type">int</span>, months <span class="type">int</span>, days <span class="type">int</span>) Time &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>AddDate</code> adds or subtracts values based on the year, month, and day dimensions to a <code>time.Time</code>.</li>
+</ul>
+<p>Of course, calculating based on the current time instant <code>time.Now()</code> is the most common requirement. Therefore, the <code>time</code> package also provides the following convenient time calculation functions:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Since</span><span class="params">(t Time)</span></span> Duration &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Since</code> is a shortcut for <code>time.Now().Sub(t)</code>.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Until</span><span class="params">(t Time)</span></span> Duration &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Until</code> is a shortcut for <code>t.Sub(time.Now())</code>.</p>
+<h5 id="Usage-Example"><a href="#Usage-Example" class="headerlink" title="Usage Example"></a>Usage Example</h5><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">t := time.Now()</span><br><span class="line">fmt.Println(t)                              <span class="comment">// 2022-07-17 22:41:06.001567 +0800 CST m=+0.000057466</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Adding 1 hour to the time</span></span><br><span class="line">fmt.Println(t.Add(time.Hour * <span class="number">1</span>))           <span class="comment">// 2022-07-17 23:41:06.001567 +0800 CST m=+3600.000057466</span></span><br><span class="line"><span class="comment">// Adding 15 minutes</span></span><br><span class="line">fmt.Println(t.Add(time.Minute * <span class="number">15</span>))        <span class="comment">// 2022-07-17 22:56:06.001567 +0800 CST m=+900.000057466</span></span><br><span class="line"><span class="comment">// Adding 10 seconds</span></span><br><span class="line">fmt.Println(t.Add(time.Second * <span class="number">10</span>))        <span class="comment">// 2022-07-17 22:41:16.001567 +0800 CST m=+10.000057466</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Subtracting 1 hour</span></span><br><span class="line">fmt.Println(t.Add(-time.Hour * <span class="number">1</span>))          <span class="comment">// 2022-07-17 21:41:06.001567 +0800 CST m=-3599.999942534</span></span><br><span class="line"><span class="comment">// Subtracting 15 minutes</span></span><br><span class="line">fmt.Println(t.Add(-time.Minute * <span class="number">15</span>))       <span class="comment">// 2022-07-17 22:26:06.001567 +0800 CST m=-899.999942534</span></span><br><span class="line"><span class="comment">// Subtracting 10 seconds</span></span><br><span class="line">fmt.Println(t.Add(-time.Second * <span class="number">10</span>))       <span class="comment">// 2022-07-17 22:40:56.001567 +0800 CST m=-9.999942534</span></span><br><span class="line"></span><br><span class="line">time.Sleep(time.Second * <span class="number">5</span>)</span><br><span class="line">t2 := time.Now()</span><br><span class="line"><span class="comment">// Calculating the duration from t to t2</span></span><br><span class="line">fmt.Println(t2.Sub(t))                      <span class="comment">// 5.004318874s</span></span><br><span class="line"><span class="comment">// Time after 1 year</span></span><br><span class="line">t3 := t2.AddDate(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line"><span class="comment">// Calculating the duration from t to the current time</span></span><br><span class="line">fmt.Println(time.Since(t))                   <span class="comment">// 5.004442316s</span></span><br><span class="line"><span class="comment">// Calculating the duration from now to next year</span></span><br><span class="line">fmt.Println(time.Until(t3))                  <span class="comment">// 8759h59m59.999864s</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Formatting-Time"><a href="#Formatting-Time" class="headerlink" title="Formatting Time"></a>Formatting Time</h2><p>In other languages, a universal time template is typically used to format time. For example, in Python, <code>%Y</code> represents year, <code>%m</code> represents month, <code>%d</code> represents day, and so on.</p>
+<p>However, Go is different. It uses a <strong>fixed time</strong> (it’s important to note that using other times is not allowed) as the layout template, and this fixed time is the birth time of the Go language.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Mon Jan <span class="number">2</span> <span class="number">15</span>:<span class="number">04</span>:<span class="number">05</span> MST <span class="number">2006</span></span><br></pre></td></tr></table></figure>
+
+<p>Formatting time involves two conversion functions:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Parse</span><span class="params">(layout, value <span class="type">string</span>)</span></span> (Time, <span class="type">error</span>) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Parse</code> converts a time string to a <code>time.Time</code> object based on the layout it can correspond to.</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> Format(layout <span class="type">string</span>) <span class="type">string</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Format</code> converts a <code>time.Time</code> object to a time string based on the given layout.</li>
+</ul>
+<h5 id="Example"><a href="#Example" class="headerlink" title="Example"></a>Example</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">const (</span><br><span class="line">    layoutISO = &quot;2006-01-02&quot;</span><br><span class="line">    layoutUS  = &quot;January 2, 2006&quot;</span><br><span class="line">)</span><br><span class="line">date := &quot;2012-08-09&quot;</span><br><span class="line">t, _ := time.Parse(layoutISO, date)</span><br><span class="line">fmt.Println(t)                              // 2012-08-09 00:00:00 +0000 UTC</span><br><span class="line">fmt.Println(t.Format(layoutUS))             // August 9, 2012</span><br></pre></td></tr></table></figure>
+
+<p>In the <code>time</code> package, Go provides some predefined layout template constants that can be directly used.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">const (</span><br><span class="line">    Layout      = &quot;01/02 03:04:05PM &#x27;06 -0700&quot;  // The reference time, in numerical order.</span><br><span class="line">    ANSIC       = &quot;Mon Jan _2 15:04:05 2006&quot;</span><br><span class="line">    UnixDate    = &quot;Mon Jan _2 15:04:05 MST 2006&quot;</span><br><span class="line">    RubyDate    = &quot;Mon Jan 02 15:04:05 -0700 2006&quot;</span><br><span class="line">    RFC822      = &quot;02 Jan 06 15:04 MST&quot;</span><br><span class="line">    RFC822Z     = &quot;02 Jan 06 15:04 -0700&quot;       // RFC822 with numeric zone</span><br><span class="line">    RFC850      = &quot;Monday, 02-Jan-06 15:04:05 MST&quot;</span><br><span class="line">    RFC1123     = &quot;Mon, 02 Jan 2006 15:04:05 MST&quot;</span><br><span class="line">    RFC1123Z    = &quot;Mon, 02 Jan 2006 15:04:05 -0700&quot; // RFC1123 with numeric zone</span><br><span class="line">    RFC3339     = &quot;2006-01-02T15:04:05Z07:00&quot;</span><br><span class="line">    RFC3339Nano = &quot;2006-01-02T15:04:05.999999999Z07:00&quot;</span><br><span class="line">    Kitchen     = &quot;3:04PM&quot;</span><br><span class="line">    // Handy time stamps.</span><br><span class="line">    Stamp       = &quot;Jan _2 15:04:05&quot;</span><br><span class="line">    StampMilli  = &quot;Jan _2 15:04:05.000&quot;</span><br><span class="line">    StampMicro  = &quot;Jan _2 15:04:05.000000&quot;</span><br><span class="line">    StampNano  </span><br><span class="line"></span><br><span class="line"> = &quot;Jan _2 15:04:05.000000000&quot;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>Here’s a table of optional layout parameters:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Year            06/2006</span><br><span class="line">Month           01/1/Jan/January</span><br><span class="line">Day             02/2/_2</span><br><span class="line">Weekday         Mon/Monday</span><br><span class="line">Hour            03/3/15</span><br><span class="line">Minute          04/4</span><br><span class="line">Second          05/5</span><br><span class="line">Milliseconds    .000/.999</span><br><span class="line">Microseconds    .000000/.999999</span><br><span class="line">Nanoseconds     .000000000/.999999999</span><br><span class="line">am/pm           PM/pm</span><br><span class="line">Timezone        MST</span><br><span class="line">Timezone offset -0700/-07/-07:00/Z0700/Z07:00</span><br></pre></td></tr></table></figure>
+
+<h2 id="Timezone-Conversion"><a href="#Timezone-Conversion" class="headerlink" title="Timezone Conversion"></a>Timezone Conversion</h2><p>At the beginning of the article, we discussed timezone issues. If in your code, you need to get the result of the same <code>time.Time</code> in different time zones, you can use its <code>In</code> method.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t Time)</span></span> In(loc *Location) Time &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>It’s straightforward to use. Let’s see an example code:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">now := time.Now()</span><br><span class="line">fmt.Println(now)                               <span class="comment">// 2022-07-18 21:19:59.9636 +0800 CST m=+0.000069242</span></span><br><span class="line"></span><br><span class="line">loc, _ := time.LoadLocation(<span class="string">&quot;UTC&quot;</span>)</span><br><span class="line">fmt.Println(now.In(loc))                        <span class="comment">// 2022-07-18 13:19:59.9636 +0000 UTC</span></span><br><span class="line"></span><br><span class="line">loc, _ = time.LoadLocation(<span class="string">&quot;Europe/Berlin&quot;</span>)</span><br><span class="line">fmt.Println(now.In(loc))                        <span class="comment">// 2022-07-18 15:19:59.9636 +0200 CEST</span></span><br><span class="line"></span><br><span class="line">loc, _ = time.LoadLocation(<span class="string">&quot;America/New_York&quot;</span>)</span><br><span class="line">fmt.Println(now.In(loc))                        <span class="comment">// 2022-07-18 09:19:59.9636 -0400 EDT</span></span><br><span class="line"></span><br><span class="line">loc, _ = time.LoadLocation(<span class="string">&quot;Asia/Dubai&quot;</span>)</span><br><span class="line">fmt.Println(now.In(loc))                        <span class="comment">// 2022-07-18 17:19:59.9636 +0400 +04</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>In general, the functions and methods provided by the <code>time</code> package for time processing meet our usage needs.</p>
+<p>Interestingly, Go’s time formatting conversion must adopt Go’s birth time. It’s quite self-centered.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/go/" rel="tag"># go</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/18/Go1.22%20a%20new%20math%20%20lib/" rel="prev" title="Go1.22 a new math  lib">
+                  <i class="fa fa-angle-left"></i> Go1.22 a new math  lib
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">65k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:58</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
