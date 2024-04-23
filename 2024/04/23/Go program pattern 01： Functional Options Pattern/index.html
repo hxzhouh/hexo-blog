@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="Go is not a fully object-oriented language, and some object-oriented patterns are not well-suited for it. However, over the years, Go has developed its own set of patterns. Today, I would like to intr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go program pattern 01: Functional Options Pattern">
+<meta property="og:url" content="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2001%EF%BC%9A%20Functional%20Options%20Pattern/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="Go is not a fully object-oriented language, and some object-oriented patterns are not well-suited for it. However, over the years, Go has developed its own set of patterns. Today, I would like to intr">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-04-23T06:29:00.000Z">
+<meta property="article:modified_time" content="2024-04-23T06:30:02.726Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2001%EF%BC%9A%20Functional%20Options%20Pattern/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2001%EF%BC%9A%20Functional%20Options%20Pattern/","path":"2024/04/23/Go program pattern 01： Functional Options Pattern/","title":"Go program pattern 01: Functional Options Pattern"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Go program pattern 01: Functional Options Pattern | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#What-is-the-Functional-Options-Pattern"><span class="nav-number">1.</span> <span class="nav-text">What is the Functional Options Pattern?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#An-Example"><span class="nav-number">2.</span> <span class="nav-text">An Example</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Approach-1-Declare-a-new-constructor-function-for-each-different-configuration-option"><span class="nav-number">2.1.</span> <span class="nav-text">Approach 1: Declare a new constructor function for each different configuration option</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Approach-2-Use-a-dedicated-configuration-struct"><span class="nav-number">2.2.</span> <span class="nav-text">Approach 2: Use a dedicated configuration struct</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Approach-3-Use-the-Functional-Options-Pattern"><span class="nav-number">2.3.</span> <span class="nav-text">Approach 3: Use the Functional Options Pattern</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Summary"><span class="nav-number">3.</span> <span class="nav-text">Summary</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2001%EF%BC%9A%20Functional%20Options%20Pattern/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Go program pattern 01: Functional Options Pattern | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go program pattern 01: Functional Options Pattern
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-04-23 14:29:00 / Modified: 14:30:02" itemprop="dateCreated datePublished" datetime="2024-04-23T14:29:00+08:00">2024-04-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.1k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>4 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Go is not a fully object-oriented language, and some object-oriented patterns are not well-suited for it. However, over the years, Go has developed its own set of patterns. Today, I would like to introduce a common pattern: the Functional Options Pattern.</p>
+<span id="more"></span>
+
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<h2 id="What-is-the-Functional-Options-Pattern"><a href="#What-is-the-Functional-Options-Pattern" class="headerlink" title="What is the Functional Options Pattern?"></a>What is the Functional Options Pattern?</h2><p>Go does not have constructors like other languages. Instead, it typically uses a <code>New</code> function to act as a constructor. However, when a structure has many fields that need to be initialized, there are multiple ways to do so. One preferred way is to use the Functional Options Pattern.</p>
+<p>The Functional Options Pattern is a pattern for constructing structs in Go. It involves designing a set of expressive and flexible APIs to help configure and initialize the struct.</p>
+<p>The <a target="_blank" rel="noopener" href="https://github.com/uber-go/guide/blob/master/style.md#functional-options">Go Language Specification</a> by Uber mentions this pattern:</p>
+<blockquote>
+<p>Functional options are a pattern in which you declare an opaque <code>Option</code> type that records information in some internal structure. You accept these variable numbers of options and operate on the complete information recorded by the options on the internal structure.</p>
+<p>Use this pattern for optional parameters in constructors and other public APIs where you expect these parameters to be extended, especially when there are already three or more parameters on these functions.</p>
+</blockquote>
+<h2 id="An-Example"><a href="#An-Example" class="headerlink" title="An Example"></a>An Example</h2><p>To better understand this pattern, let’s walk through an example.<br>Let’s define a <code>Server</code> struct:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    host <span class="type">string</span></span><br><span class="line">    port <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(host <span class="type">string</span>, port <span class="type">int</span>)</span></span> *Server &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Server&#123;</span><br><span class="line">        host,</span><br><span class="line">        port,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Server)</span></span> Start() <span class="type">error</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>How do we use it?</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    svr := New(<span class="string">&quot;localhost&quot;</span>, <span class="number">1234</span>)</span><br><span class="line">    <span class="keyword">if</span> err := svr.Start(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>But what if we want to extend the configuration options for the <code>Server</code>? There are generally three approaches:</p>
+<ul>
+<li>Declare a new constructor function for each different configuration option.</li>
+<li>Define a new <code>Config</code> struct to store the configuration information.</li>
+<li>Use the Functional Options Pattern.</li>
+</ul>
+<h3 id="Approach-1-Declare-a-new-constructor-function-for-each-different-configuration-option"><a href="#Approach-1-Declare-a-new-constructor-function-for-each-different-configuration-option" class="headerlink" title="Approach 1: Declare a new constructor function for each different configuration option"></a>Approach 1: Declare a new constructor function for each different configuration option</h3><p>This approach involves defining dedicated constructor functions for different options. Let’s say we added two fields to the <code>Server</code> struct:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    host    <span class="type">string</span></span><br><span class="line">    port    <span class="type">int</span></span><br><span class="line">    timeout time.Duration</span><br><span class="line">    maxConn <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Typically, <code>host</code> and <code>port</code> are required fields, while <code>timeout</code> and <code>maxConn</code> are optional. We can keep the original constructor function and assign default values to these two fields:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(host <span class="type">string</span>, port <span class="type">int</span>)</span></span> *Server &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Server&#123;</span><br><span class="line">        host,</span><br><span class="line">        port,</span><br><span class="line">        time.Minute,</span><br><span class="line">        <span class="number">100</span>,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Then, we can provide two additional constructor functions for <code>timeout</code> and <code>maxConn</code>:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewWithTimeout</span><span class="params">(host <span class="type">string</span>, port <span class="type">int</span>, timeout time.Duration)</span></span> *Server &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Server&#123;</span><br><span class="line">        host,</span><br><span class="line">        port,</span><br><span class="line">        timeout,</span><br><span class="line">        <span class="number">100</span>,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewWithTimeoutAndMaxConn</span><span class="params">(host <span class="type">string</span>, port <span class="type">int</span>, timeout time.Duration, maxConn <span class="type">int</span>)</span></span> *Server &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Server&#123;</span><br><span class="line">        host,</span><br><span class="line">        port,</span><br><span class="line">        timeout,</span><br><span class="line">        maxConn,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This approach works well for configurations that are unlikely to change frequently. Otherwise, you would need to create new constructor functions every time you need to add a new configuration. This approach is used in the Go standard library, such as the <code>Dial</code> and <code>DialTimeout</code> functions in the <code>net</code> package:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Dial</span><span class="params">(network, address <span class="type">string</span>)</span></span> (Conn, <span class="type">error</span>)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DialTimeout</span><span class="params">(network, address <span class="type">string</span>, timeout time.Duration)</span></span> (Conn, <span class="type">error</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Approach-2-Use-a-dedicated-configuration-struct"><a href="#Approach-2-Use-a-dedicated-configuration-struct" class="headerlink" title="Approach 2: Use a dedicated configuration struct"></a>Approach 2: Use a dedicated configuration struct</h3><p>This approach is also common, especially when there are many configuration options. Typically, you create a <code>Config</code> struct that contains all the configuration options for the <code>Server</code>. This approach allows for easy extension without breaking the API of the <code>Server</code>, even when adding more configuration options in the future.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    cfg Config</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Config <span class="keyword">struct</span> &#123;</span><br><span class="line">    Host    <span class="type">string</span></span><br><span class="line">    Port    <span class="type">int</span></span><br><span class="line">    Timeout time.Duration</span><br><span class="line">    MaxConn <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(cfg Config)</span></span> *Server &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;Server&#123;</span><br><span class="line">        cfg,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>When using this approach, you need to construct a <code>Config</code> instance first, which brings us back to the original problem of configuring the <code>Server</code>. If you modify the fields in <code>Config</code>, you may need to define a constructor function for <code>Config</code> if the fields are changed to private.</p>
+<h3 id="Approach-3-Use-the-Functional-Options-Pattern"><a href="#Approach-3-Use-the-Functional-Options-Pattern" class="headerlink" title="Approach 3: Use the Functional Options Pattern"></a>Approach 3: Use the Functional Options Pattern</h3><p>A better solution is to use the Functional Options Pattern.</p>
+<p>In this pattern, we define an <code>Option</code> function type:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Option <span class="function"><span class="keyword">func</span><span class="params">(*Server)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>The <code>Option</code> type is a function type that takes a <code>*Server</code> parameter. Then, the constructor function for <code>Server</code> accepts a variable number of <code>Option</code> types as parameters:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">New</span><span class="params">(options ...Option)</span></span> *Server &#123;</span><br><span class="line">    svr := &amp;Server&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> _, f := <span class="keyword">range</span> options &#123;</span><br><span class="line">        f(svr)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> svr</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>How do the options work? We need to define a series of related functions that return <code>Option</code>:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithHost</span><span class="params">(host <span class="type">string</span>)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">        s.host = host</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithPort</span><span class="params">(port <span class="type">int</span>)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">        s.port = port</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithTimeout</span><span class="params">(timeout time.Duration)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">        s.timeout = timeout</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithMaxConn</span><span class="params">(maxConn <span class="type">int</span>)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">        s.maxConn = maxConn</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>To use this pattern, the client code would look like this:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;log&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;server&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    svr := New(</span><br><span class="line">        WithHost(<span class="string">&quot;localhost&quot;</span>),</span><br><span class="line">        WithPort(<span class="number">8080</span>),</span><br><span class="line">        WithTimeout(time.Minute),</span><br><span class="line">        WithMaxConn(<span class="number">120</span>),</span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">if</span> err := svr.Start(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Adding new options in the future only requires adding corresponding <code>WithXXX</code> functions.</p>
+<p>This pattern is widely used in third-party libraries, such as <code>github.com/gocolly/colly</code>:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Collector <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewCollector</span><span class="params">(options ...CollectorOption)</span></span> *Collector</span><br><span class="line"></span><br><span class="line"><span class="comment">// Defines a series of CollectorOptions</span></span><br><span class="line"><span class="keyword">type</span> CollectorOption <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">AllowURLRevisit</span><span class="params">()</span></span> CollectorOption</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">AllowedDomains</span><span class="params">(domains ...<span class="type">string</span>)</span></span> CollectorOption</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>However, when Uber’s Go Programming Style Guide mentions this pattern, it suggests defining an <code>Option</code> interface instead of an <code>Option</code> function type. This <code>Option</code> interface has an unexported method, and the options are recorded in an unexported <code>options</code> struct.</p>
+<p>Can you understand Uber’s example?</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> options <span class="keyword">struct</span> &#123;</span><br><span class="line">    cache  <span class="type">bool</span></span><br><span class="line">    logger *zap.Logger</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Option <span class="keyword">interface</span> &#123;</span><br><span class="line">    apply(*options)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> cacheOption <span class="type">bool</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c cacheOption)</span></span> apply(opts *options) &#123;</span><br><span class="line">    opts.cache = <span class="type">bool</span>(c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithCache</span><span class="params">(c <span class="type">bool</span>)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> cacheOption(c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> loggerOption <span class="keyword">struct</span> &#123;</span><br><span class="line">    Log *zap.Logger</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(l loggerOption)</span></span> apply(opts *options) &#123;</span><br><span class="line">    opts.logger = l.Log</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithLogger</span><span class="params">(log *zap.Logger)</span></span> Option &#123;</span><br><span class="line">    <span class="keyword">return</span> loggerOption&#123;Log: log&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Open creates a connection.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Open</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    addr <span class="type">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    opts ...Option,</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> (*Connection, <span class="type">error</span>) &#123;</span><br><span class="line">    options := options&#123;</span><br><span class="line">        cache:  defaultCache,</span><br><span class="line">        logger: zap.NewNop(),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> _, o := <span class="keyword">range</span> opts &#123;</span><br><span class="line">        o.apply(&amp;options)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>In real-world projects, when dealing with a large number of options or options from different sources (e.g., from files or environment variables), consider using the Functional Options Pattern.</p>
+<p>Note that in actual work, we should not rigidly apply the pattern as described above. For example, in Uber’s example, the <code>Open</code> function does not only accept a variable number of <code>Option</code> parameters because the <code>addr</code> parameter is required. Therefore, the Functional Options Pattern is more suitable for cases with many configurations and optional parameters.</p>
+<p>References:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://golang.cafe/blog/golang-functional-options-pattern.html">https://golang.cafe/blog/golang-functional-options-pattern.html</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/uber-go/guide/blob/master/style.md#functional-options">https://github.com/uber-go/guide/blob/master/style.md#functional-options</a></li>
+</ul>
+<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/go/" rel="tag"># go</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/23/Decryption%20go%EF%BC%9A%20understand%20go%20language%20pointer_%20english/" rel="prev" title="Decryption go: understand go language pointer">
+                  <i class="fa fa-angle-left"></i> Decryption go: understand go language pointer
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/" rel="next" title="Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition">
+                  Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">70k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">4:16</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
