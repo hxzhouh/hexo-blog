@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="Understand the history and current status of Rust, and why I want to learn Rust">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust Lesson 1： A Gopher&#39;s View on Rust">
+<meta property="og:url" content="https://hxzhouh.com/2024/04/26/Rust%20Lesson%201%20A%20Gopher's%20View%20on%20Rust/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="Understand the history and current status of Rust, and why I want to learn Rust">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/f0511d1952c37285e033a815d94fdafe.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/d3e4b587df3b6506555016e0e5d81e82.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/268bb398052726a456879a821561db54.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/455a441a093721eb30097e64719b718b.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/2827e93a0c773f5a5a96d57843c30fdd.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/32d3930c49c4fcb209a74b0b347bf3ac.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/b906bd07490a8c0f1b5c509a0f8974a5.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/04/4d25094f8a0cfe86a13b2da3056cb192.png">
+<meta property="article:published_time" content="2024-04-26T01:43:00.000Z">
+<meta property="article:modified_time" content="2024-04-26T01:44:17.176Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="go">
+<meta property="article:tag" content="rust">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/04/f0511d1952c37285e033a815d94fdafe.png">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/04/26/Rust%20Lesson%201%20A%20Gopher's%20View%20on%20Rust/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/26/Rust%20Lesson%201%20A%20Gopher's%20View%20on%20Rust/","path":"2024/04/26/Rust Lesson 1 A Gopher's View on Rust/","title":"Rust Lesson 1： A Gopher's View on Rust"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Rust Lesson 1： A Gopher's View on Rust | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Why-should-I-learn-Rust"><span class="nav-number">1.</span> <span class="nav-text">1. Why should I learn Rust?</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Rust%E2%80%99s-History-and-Current-Status"><span class="nav-number">2.</span> <span class="nav-text">2. Rust’s History and Current Status</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-The-Birth-and-Evolution-of-Rust"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 The Birth and Evolution of Rust</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Rust%E2%80%99s-Current-Status"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 Rust’s Current Status</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-The-Design-Philosophy-of-Rust"><span class="nav-number">3.</span> <span class="nav-text">3. The Design Philosophy of Rust</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-Core-Values-of-Rust"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 Core Values of Rust</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-Secondary-Values-of-Rust"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 Secondary Values of Rust</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-Comparison-with-Go%E2%80%99s-Values"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 Comparison with Go’s Values</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Conclusion"><span class="nav-number">4.</span> <span class="nav-text">4 Conclusion</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-References"><span class="nav-number">5.</span> <span class="nav-text">5 References</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">70</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">47</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/26/Rust%20Lesson%201%20A%20Gopher's%20View%20on%20Rust/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Rust Lesson 1： A Gopher's View on Rust | huizhou92">
+      <meta itemprop="description" content="Understand the history and current status of Rust, and why I want to learn Rust">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Rust Lesson 1： A Gopher's View on Rust
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-04-26 09:43:00 / Modified: 09:44:17" itemprop="dateCreated datePublished" datetime="2024-04-26T09:43:00+08:00">2024-04-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>3k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>11 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">Understand the history and current status of Rust, and why I want to learn Rust</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><blockquote>
+<p>source ：<a target="_blank" rel="noopener" href="https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust">https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust</a></p>
+</blockquote>
+<p>To talk about which backend programming language has been the hottest in the past two years,If <a target="_blank" rel="noopener" href="https://www.rust-lang.org/">Rust</a> claims to be second , and no one dares to say first . <a target="_blank" rel="noopener" href="https://survey.stackoverflow.co/2023/#section-admired-and-desired-programming-scripting-and-markup-languages">Rust has topped the Stack Overflow’s most admired programming languages for 8 consecutive years</a>, and it has even been referred to as the “perfect programming language” by Jack Dorsey, the co-founder of Twitter:<br><a target="_blank" rel="noopener" href="https://twitter.com/jack/status/1474263588651126788">https://twitter.com/jack/status/1474263588651126788</a></p>
+<h1 id="1-Why-should-I-learn-Rust"><a href="#1-Why-should-I-learn-Rust" class="headerlink" title="1. Why should I learn Rust?"></a>1. Why should I learn Rust?</h1><p>Learning Rust isn’t about riding the hype train; it’s about practical development needs. In certain situations, Go’s performance isn’t particularly good due to issues like STW. From benchmarks, Rust’s performance is three times better than Go’s: <a target="_blank" rel="noopener" href="https://goodmanwen.github.io/Programming-Language-Benchmarks-Visualization/">The Computer Language Benchmarks Game Visualization</a> In our own business, after rewriting a gateway service in Rust, performance improved by about 70%. This is a significant improvement for our business scenario. Moreover, Rust’s widespread use in the Linux kernel validates its reliability, making Rust worth trying.</p>
+<p>However, the rise of Rust in certain domains has indeed sparked some dissatisfaction and controversy in other programming language communities. Particularly, the proposition from some in the Rust community to “Rewrite Everything in Rust” has made many programming language communities, especially the C++ community, quite uneasy. The Go community, on the other hand, is relatively more open and friendly. The mainstream view is that Go and Rust can complement each other, with each language playing its role in its respective areas of strength. Through cooperation rather than confrontation, developers can be provided with better choices. For more details, you can refer to an article co-authored by Steve Francia, former product manager of the Go team and author of Hugo, <a target="_blank" rel="noopener" href="https://thenewstack.io/rust-vs-go-why-theyre-better-together/">Rust vs. Go: Why They’re Better Together</a>.</p>
+<p>In other words, Go is still my primary language, but considering the requirements of my work, I need to systematically learn Rust. To avoid the “from learning to giving up” scenario, I plan to learn Rust while outputting. On one hand, this can motivate me to learn, and on the other hand, I hope to interact with readers promptly and correct any misunderstandings in learning.</p>
+<p>I’ve always believed that when you start learning a new language, you must understand its history and current status. This way, you can build an overall understanding of the language and anticipate its future direction. Moreover, it can establish a sense of “security” in learning, believing that it can bring you enough value and returns, thus enabling you to learn more confidently.</p>
+<p>In this article, I’ll first explore the history of Rust’s development and its current state, as well as its unique design philosophy. I’ll also make a simple comparison with Go, hoping to provide myself and the readers with a preliminary understanding of Rust.</p>
+<h1 id="2-Rust’s-History-and-Current-Status"><a href="#2-Rust’s-History-and-Current-Status" class="headerlink" title="2. Rust’s History and Current Status"></a>2. Rust’s History and Current Status</h1><h2 id="2-1-The-Birth-and-Evolution-of-Rust"><a href="#2-1-The-Birth-and-Evolution-of-Rust" class="headerlink" title="2.1 The Birth and Evolution of Rust"></a>2.1 The Birth and Evolution of Rust</h2><p>Rust was born in 2006, a year earlier than the “conspiracy” of the three Google giants to create the Go language. However, compared to the three founders of Go: Ken Thompson, Turing Award winner, co-inventor of C syntax, and father of Unix; Rob Pike, leader of the Plan 9 operating system and original designer of UTF-8 encoding; and Robert Griesemer, one of the designers of the HotSpot virtual machine for Java and the JavaScript V8 engine for the Chrome browser, the identity and status of Rust’s father, Graydon Hoare, were not so “prominent”. At that time, he was just a Canadian developer under 30 years old working at Mozilla Research:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/04/f0511d1952c37285e033a815d94fdafe.png" alt="Pasted image 20240424162718"></p>
+<p>The birth of a new generation programming language often comes with a story, such as the founders of Go frequently encountering long compile times in C++ projects at Google. Whenever they started compiling a C++ project, they had to wait for a long time, during which they could drink several cups of coffee. This deeply impressed them and made them realize the need to design a new language with faster compilation speed, thus Go was born. Similar to the “drink coffee, wait for C++ project to compile” scenario, the birth of Rust also has a story:</p>
+<p>In 2006, 29-year-old Hoare returned home to Vancouver one day, only to find that the elevator was broken, and the elevator software crashed! He had to climb the stairs back to his 21st-floor apartment. As he climbed the stairs, he felt very annoyed. He thought, “We programmers actually can’t create an elevator that can work properly without crashing!” Hoare knew that many such crashes were caused by issues with memory usage in programs. The software inside devices like elevators is usually written in C++ or C, languages known for allowing programmers to write code that runs very fast and is quite compact. The problem is that these languages also make it easy to inadvertently introduce memory errors, which can lead to crashes. Hoare decided to do something about it. So he opened his laptop and started designing a new programming language, one that he hoped could write small and fast code without memory errors, and he named it <strong>Rust</strong>.</p>
+<p>This story is obviously unverifiable. But what can be confirmed is that for several years starting from 2006, the personal language project Rust created by Hoare was not actually used to improve elevator systems, but was sponsored by Mozilla and used in the continuous development of Mozilla’s browser engine Servo. Mozilla officially announced the project in 2010, and Hoare also introduced the Rust language for the first time in a <a target="_blank" rel="noopener" href="http://venge.net/graydon/talks/intro-talk-2.pdf">speech in 2010</a>:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/d3e4b587df3b6506555016e0e5d81e82.png" alt="Pasted image 20240424162832"><br>The first line of Rust code was also open-sourced in 2010:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/268bb398052726a456879a821561db54.png" alt="Pasted image 20240424162852"><br>In addition, the initial Rust compiler was implemented in OCaml, and in 2011, the Rust team re-implemented the compiler in Rust based on LLVM and achieved bootstrapping. That same year, Rust also got its own logo, <a target="_blank" rel="noopener" href="https://bugzilla.mozilla.org/show_bug.cgi?id=680521">inspired by a bicycle gear</a>:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/455a441a093721eb30097e64719b718b.png" alt="Pasted image 20240424162917"><br>In 2012, <a target="_blank" rel="noopener" href="https://www.infoq.com/news/2012/08/Interview-Rust/">Graydon Hoare was interviewed by InfoQ</a> and talked about leading the Rust team in developing Rust, a systems programming language at Mozilla, including Rust’s features, advantages and differences compared to C&#x2F;C++&#x2F;Java&#x2F;Go, and Rust 1.0 release plans.</p>
+<p>However, in the following year, in 2013, <a target="_blank" rel="noopener" href="https://wikitia.com/wiki/Graydon_Hoare">Graydon Hoare resigned as leader of the Rust team due to exhaustion</a>, leaving his own Rust team and distancing himself from Rust development. Hoare’s departure was a significant loss for the Rust team and the language itself, but the Rust community and team took proactive measures to ensure the continued development and evolution of Rust.</p>
+<p>In November 2014, <a target="_blank" rel="noopener" href="https://blog.rust-lang.org/2014/11/20/Cargo.html">Rust officially announced cargo and crates.io</a>. Cargo is Rust’s project build manager, while crates.io is the central package repository for Rust code maintained by the Rust team. With cargo, developers can easily build and publish packages to crates.io or pull dependencies of Rust code from crates.io.</p>
+<p>On May 15, 2015, Rust reached a milestone moment: <a target="_blank" rel="noopener" href="https://blog.rust-lang.org/2015/05/15/Rust-1.0.html">Rust 1.0 was officially released!</a>, which was 3 years later than <a target="_blank" rel="noopener" href="https://go.dev/blog/go1">the release of Go 1.0</a>. However, as the official blog stated, “the release of version 1.0 marks the end of the chaos. This version is the formal beginning of our stability commitment, providing a solid foundation for building applications and libraries. From now on, major changes are essentially out of scope (some minor warnings apply, such as compiler errors).”</p>
+<p>After the release of Rust 1.0, the release cycle and rhythm of Rust were determined, with <a target="_blank" rel="noopener" href="https://blog.rust-lang.org/2014/10/30/Stability.html">a stable version released every 6 weeks</a>. Following this rhythm, Rust 1.1 Beta was released simultaneously with Rust 1.0. After six weeks of testing, Rust 1.1 Beta became Rust 1.1 stable, and Rust 1.2 Beta was released, and so on. Of course, Rust also has a nightly build version, which contains the latest but unstable features. Compared to the Go community and developers who can only “get high” twice a year, Rust developers and the community are more fortunate to “get high” every six weeks!</p>
+<p>Rust’s evolution is <a target="_blank" rel="noopener" href="https://github.com/rust-lang/rfcs">driven by RFCs (Request For Comments)</a>, and this measure was <a target="_blank" rel="noopener" href="https://github.com/rust-lang/rfcs/blob/master/text/0002-rfc-process.md">established based on RFCs before the release of Rust 1.0</a>. This is similar to the Go Proposal process, but it feels more standardized and rigorous, which of course is related to the composition and rules of governance structures of the two languages.</p>
+<p>However, the</p>
+<p> evolution and development of Rust is not as smooth and perfect as one might expect. For example, at the <a target="_blank" rel="noopener" href="https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-Rust-2018.html">Rust 2018 edition launch event</a>, <a target="_blank" rel="noopener" href="https://github.com/alexcrichton">Alex Crichton</a>, one of the core members of the Rust team, mentioned in the keynote speech that in the evolution of the Rust language, some past design decisions may not have been optimal, which sometimes hinders the language’s progress. One example is the error handling mechanism. However, Rust’s development team has proven that they are good at introspection and adjustment. For example, the aforementioned error handling mechanism was greatly improved with the introduction of the “Try” trait in Rust 1.26, and with the release of Rust 1.31, the Rust 2018 edition resolved many issues with Rust’s design.</p>
+<h2 id="2-2-Rust’s-Current-Status"><a href="#2-2-Rust’s-Current-Status" class="headerlink" title="2.2 Rust’s Current Status"></a>2.2 Rust’s Current Status</h2><p>In the past decade, Rust has gradually developed from a personal project of Graydon Hoare to a popular systems programming language with a large and active community. According to <a target="_blank" rel="noopener" href="https://octoverse.github.com/projects#languages">GitHub’s 2020 Octoverse report</a>, Rust was the fastest-growing programming language in the GitHub open-source community, with 235% more contributors than in 2019, making it the most loved language in the Stack Overflow Developer Survey for five consecutive years from 2016 to 2020.</p>
+<p>However, it should be pointed out that Rust is still not widely used in large-scale commercial projects, especially compared to C&#x2F;C++&#x2F;Java&#x2F;Go. The main reason is that Rust’s ecosystem and maturity are still not comparable to those languages. For example, the Alibaba e-commerce team mentioned in 2017 that they have 100,000+ Java developers and have invested heavily in Java and the JVM ecosystem. They also mentioned that in recent years, Alibaba has considered using Rust to solve some distributed computing problems, but has not yet considered using Rust in large-scale commercial projects due to concerns about the immaturity of Rust’s ecosystem.</p>
+<p>However, Rust is gradually being adopted and applied in some fields and areas where C&#x2F;C++ is traditionally dominant, such as systems programming, game development, and blockchain systems. For example, in the blockchain field, in addition to the Solana project I mentioned earlier, the Parity project, which is known for the development of the Polkadot blockchain framework, is also developed in Rust. In addition, in the blockchain field, some small and medium-sized blockchain projects also use Rust to develop blockchain systems. For example, the <a target="_blank" rel="noopener" href="https://github.com/rust-bitcoin/rust-bitcoin">Bitcoin Light client library BTC-Rust</a> implemented by the Bitcoin-NG team is developed in Rust.</p>
+<h1 id="3-The-Design-Philosophy-of-Rust"><a href="#3-The-Design-Philosophy-of-Rust" class="headerlink" title="3. The Design Philosophy of Rust"></a>3. The Design Philosophy of Rust</h1><p><strong>The design philosophy of a programming language is like the values of a person—it dictates its behavior.</strong> If you don’t agree with someone’s values, it’s hard to maintain a continuous relationship, as they say, “different paths do not converge.” Similarly, if you don’t agree with the design philosophy of a programming language, you’ll likely encounter the problems mentioned earlier in your subsequent language learning, which may dampen your motivation to continue learning. Therefore, before diving into Rust syntax and coding, let’s first understand Rust’s design philosophy. After understanding these, you’ll have a deeper understanding of why you’re learning Rust.</p>
+<h2 id="3-1-Core-Values-of-Rust"><a href="#3-1-Core-Values-of-Rust" class="headerlink" title="3.1 Core Values of Rust"></a>3.1 Core Values of Rust</h2><p>In June 2019, Rust core team member Stephen Klabnik delivered a speech titled <a target="_blank" rel="noopener" href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a> at QCon London, where he outlined his personal understanding of Rust’s core values, <strong>which are the points Rust’s team refuses to compromise on when making design decisions</strong>, including memory safety, execution speed, and productivity:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/2827e93a0c773f5a5a96d57843c30fdd.png" alt="Pasted image 20240424163821"></p>
+<p>According to Stephen Klabnik, these three core values are ordered, with memory safety being paramount, followed by high performance, and finally productivity. When conflicts arise among them, decisions are made according to the highest value!</p>
+<p>This is consistent with the official description of Rust:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/32d3930c49c4fcb209a74b0b347bf3ac.png" alt="Pasted image 20240424163834"></p>
+<p>The “Reliable” corresponds to memory safety, while “efficient” has two meanings: runtime efficiency and high productivity during development.</p>
+<p>These three values are the design goals of the Rust language and the essence of its characteristics and advantages. After losing Graydon Hoare, the father of the language, these values became the fundamental basis for the Rust core team to determine the direction of language evolution.</p>
+<ol>
+<li><strong>Memory Safety</strong><br>Memory safety is <strong>the most important value</strong> for Rust. It means that Rust programs won’t suffer from memory leaks, buffer overflows, dangling pointers, and other memory-related errors at runtime (without using unsafe code). These errors not only lead to program crashes but can also result in security vulnerabilities. Rust ensures memory safety by features like ownership, lifetimes, and borrowing, which are thoroughly checked at compile time.</li>
+</ol>
+<p>Rust’s memory safety mechanism not only enhances program stability and reliability but also reduces development and maintenance complexity. With Rust’s ability to detect memory errors at compile time, developers don’t have to spend a lot of time and effort searching for and fixing these errors.</p>
+<ol>
+<li><strong>High Performance</strong></li>
+</ol>
+<p>High performance is the second core value of Rust, closely following memory safety. One of Rust’s design goals is to be a high-performance systems programming language. Through features like zero-cost abstractions, move semantics, and generic programming, Rust enables programs to achieve performance comparable to traditional systems programming languages like C and C++ at runtime.</p>
+<p>Rust’s high-performance mechanism not only improves program execution speed but also reduces hardware costs. Because Rust can better utilize hardware resources, Rust programs typically outperform programs in other languages with the same hardware conditions and resource overhead.</p>
+<ol>
+<li><strong>Productivity</strong></li>
+</ol>
+<p>Productivity is the third core value of Rust. One of Rust’s design goals is to be a language that enhances developer productivity. With features like the Cargo package manager, smart editor support, rich library ecosystem, and detailed system documentation, Rust makes it easier for developers to write, debug, and maintain Rust programs.</p>
+<h2 id="3-2-Secondary-Values-of-Rust"><a href="#3-2-Secondary-Values-of-Rust" class="headerlink" title="3.2 Secondary Values of Rust"></a>3.2 Secondary Values of Rust</h2><p>Stephen Klabnik also summarized three secondary values of Rust:<br><img src="https://images.hxzhouh.com/blog-images/2024/04/b906bd07490a8c0f1b5c509a0f8974a5.png" alt="Pasted image 20240424163847"></p>
+<p>We see that Rust’s secondary values include ergonomics, compile times, and correctness. These values are also design goals of the Rust language, but unlike the primary core values mentioned above, they are subject to compromise.</p>
+<p><strong>Ergonomics</strong> refers to the ease of use of the Rust language, which is an important design goal of Rust. Rust aims to make it easier for developers to write Rust programs through simple syntax and a rich library ecosystem.</p>
+<p><strong>Compile Times</strong> refer to the compilation time of the Rust compiler. Rust’s compiler is slow, which is a problem that the Rust team is actively working to optimize. However, the Rust team is more concerned about the final execution speed of the binary than making the compiler faster, hence why compile time is a secondary value.</p>
+<p><strong>Correctness</strong> refers to the correctness of Rust programs. Rust really cares about whether your program is correct and aims to ensure the correctness of Rust programs as much as possible through a powerful type system and static checks. However, Rust is not willing to rely entirely on types and proof assistants to prove the correctness of your code.</p>
+<h2 id="3-3-Comparison-with-Go’s-Values"><a href="#3-3-Comparison-with-Go’s-Values" class="headerlink" title="3.3 Comparison with Go’s Values"></a>3.3 Comparison with Go’s Values</h2><p>Let’s compare Go’s official introduction to Go’s implicit values (design philosophy):<br><img src="https://images.hxzhouh.com/blog-images/2024/04/4d25094f8a0cfe86a13b2da3056cb192.png" alt="Pasted image 20240424163901"></p>
+<p>In the official description of Go, there are three keywords: Simple, Secure, and Scalable.</p>
+<p><strong>Simple</strong> is the primary design principle of Go. The designers of Go hope that Go can be simple and easy to use, enabling developers to learn and use Go more quickly to rapidly develop production capabilities. Go has a simple and understandable syntax, and it removes many complex features found in other programming languages, such as type hierarchies and inheritance, making Go more concise, easy to learn, read, use, and maintain.</p>
+<p><strong>Secure</strong> is about making Go more secure and reliable, avoiding common security vulnerabilities found in many other programming languages. Go achieves this by automatically managing memory through garbage collection, avoiding common memory leaks and buffer overflow issues found in many other programming languages. Additionally, Go provides lightweight goroutines and channels, making it easier for developers to implement concurrent programming. With data race detection tools, Go also prevents common data race issues in concurrent programming. Furthermore, Go provides a simple and easy-to-use explicit error handling mechanism, ensuring no error handling is missed by developers.</p>
+<p><strong>Scalable</strong> is reflected in Go’s engineering orientation, built-in concurrency, and a philosophy that emphasizes composition. The designers of Go hope that Go can better support scalability, enabling Go programs to better adapt to different organizational scales, workloads, and hardware environments. Go achieves this through simple syntax, module-based reproducible build management, extremely fast compilation speed, high-quality standard library, practical toolchain, powerful built-in concurrency mechanism, and interface-oriented programming, making Go programs more scalable and productive.</p>
+<h1 id="4-Conclusion"><a href="#4-Conclusion" class="headerlink" title="4 Conclusion"></a>4 Conclusion</h1><p>In summary, Rust prioritizes safety, low-level control, and optimal performance, while Go emphasizes simplicity, security, scalability, and engineering efficiency. There are differences in their positioning and design philosophies, but they also share some common characteristics, such as modern toolchains and active communities.</p>
+<p>In this article, we’ve learned about the birth, current development, and unique design philosophy of Rust. By comparing it with Go, we can see some differences in their backgrounds, goals, and design philosophies.</p>
+<p>As software systems become increasingly complex, the demand for security, performance, and concurrency is also rising. As a new language focused on low-level systems programming and performance optimization, Rust is attracting more and more developers’ attention. I believe that through comprehensive and systematic learning of Rust later on, we will all gain a deeper understanding and mastery of Rust.</p>
+<p>If you find Rust’s values align with yours and you agree with Rust’s future development, stay tuned for the next article, where we’ll start hands-on learning Rust!</p>
+<h1 id="5-References"><a href="#5-References" class="headerlink" title="5 References"></a>5 References</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Rust_(programming_language)">Rust Wikipedia</a> </li>
+<li><a target="_blank" rel="noopener" href="https://www.technologyreview.com/2023/02/14/1067869/rust-worlds-fastest-growing-programming-language/">How Rust went from a side project to the world’s most-loved programming language</a> </li>
+<li><a target="_blank" rel="noopener" href="https://rustmagazine.org/issue-1/2022-review-the-adoption-of-rust-in-business/">2022 Review | The adoption of Rust in Business</a> </li>
+<li><a target="_blank" rel="noopener" href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a> </li>
+<li><a target="_blank" rel="noopener" href="https://rustacean.net/">Unofficial Rust mascot Ferris</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/go/" rel="tag"># go</a>
+              <a href="/tags/rust/" rel="tag"># rust</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/25/The%20Magical%20Algorithms%20Written%20by%20Two%20Old%20Men,%20Dominating%20the%20World/" rel="prev" title="The Magical Algorithms Written by Two Old Men, Dominating the World!">
+                  <i class="fa fa-angle-left"></i> The Magical Algorithms Written by Two Old Men, Dominating the World!
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">75k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">4:31</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
