@@ -153,7 +153,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">70</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -164,7 +164,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">47</span>
+        <span class="site-state-item-count">49</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -189,6 +189,129 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/" class="post-title-link" itemprop="url">Performance analysis of goroutine switching</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2024-03-20 16:32:00" itemprop="dateCreated datePublished" datetime="2024-03-20T16:32:00+08:00">2024-03-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-04-18 16:33:15" itemprop="dateModified" datetime="2024-04-18T16:33:15+08:00">2024-04-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.1k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>4 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037">  </p>
+<blockquote>
+<p>Note: Non-members can read the full story in this <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
+</blockquote>
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
+<ul>
+<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
+<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
+<li>High network I&#x2F;O: Often requires network I&#x2F;O from other machines, such as Redis, MySQL, etc.</li>
+<li>Low computation: General CPU-intensive operations are not frequent.
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1196,123 +1319,8 @@
 
 
 
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="huizhou92">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="huizhou92">
-      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | huizhou92">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/" class="post-title-link" itemprop="url">浅析Go 主流日志库：从设计层学习如何集成日志轮转与切割功能</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2024-02-16 18:05:00" itemprop="dateCreated datePublished" datetime="2024-02-16T18:05:00+08:00">2024-02-16</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2024-04-09 18:20:18" itemprop="dateModified" datetime="2024-04-09T18:20:18+08:00">2024-04-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Views">
-      <span class="post-meta-item-icon">
-        <i class="far fa-eye"></i>
-      </span>
-      <span class="post-meta-item-text">Views: </span>
-      <span class="firestore-visitors-count"></span>
-    </span>
-    <span class="post-meta-break"></span>
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>1.7k</span>
-    </span>
-    <span class="post-meta-item" title="Reading time">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">Reading time &asymp;</span>
-      <span>6 mins.</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在现有的日志库中，包括 <code>go</code> 1.21.0 引入的 <code>slog</code> 日志库，它们通常都支持对日志文件进行轮转与切割，只不过这些功能并不直接被内置，而是需要我们主动配置来启用。</p>
-<p>本文将探讨几个热门的日志库如 <code>logrus</code>、<code>zap</code> 和官网的 <code>slog</code>，我将分析这些库的的关键设计元素，探讨它们是如何支持日志轮转与切割功能的配置。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/02/16/%E6%B5%85%E6%9E%90Go%20%E4%B8%BB%E6%B5%81%E6%97%A5%E5%BF%97%E5%BA%93%EF%BC%9A%E4%BB%8E%E8%AE%BE%E8%AE%A1%E5%B1%82%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E9%9B%86%E6%88%90%E6%97%A5%E5%BF%97%E8%BD%AE%E8%BD%AC%E4%B8%8E%E5%88%87%E5%89%B2%E5%8A%9F%E8%83%BD/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
   <nav class="pagination">
-    <a class="extend prev" rel="prev" title="Previous page" aria-label="Previous page" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" title="Next page" aria-label="Next page" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" title="Previous page" aria-label="Previous page" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" title="Next page" aria-label="Next page" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 </div>
@@ -1340,7 +1348,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">4:31</span>
+    <span title="Reading time total">4:34</span>
   </span>
 </div>
 
