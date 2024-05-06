@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="原文链接：https:&#x2F;&#x2F;discord.com&#x2F;blog&#x2F;how-discord-moved-engineering-to-cloud-development-environments 介绍如果您一直关注我们之前的工程博客文章，您会知道，构建和维护Discord是一项复杂的任务。我们的软件开发在一个多语言的单一代码库中进行，其中Python、Typescript、Rust、Elixir和C&amp;#x">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DISCORD 如何将工程转移到云开发环境">
+<meta property="og:url" content="https://hxzhouh.com/2024/05/06/DISCORD%20%E5%A6%82%E4%BD%95%E5%B0%86%E5%B7%A5%E7%A8%8B%E8%BD%AC%E7%A7%BB%E5%88%B0%E4%BA%91%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="原文链接：https:&#x2F;&#x2F;discord.com&#x2F;blog&#x2F;how-discord-moved-engineering-to-cloud-development-environments 介绍如果您一直关注我们之前的工程博客文章，您会知道，构建和维护Discord是一项复杂的任务。我们的软件开发在一个多语言的单一代码库中进行，其中Python、Typescript、Rust、Elixir和C&amp;#x">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/65d7ab31adc625e013ce709c_3I-9ahl1LkT0bqglH-BoShQ11tIYECFYHbGzSIXqzFqHlOKsVHTfil63skYjP3UQB8Zzj4cD__WpeUeBQct1ebnQPiUnZEk1436ppRuqlxWJ3asp_MB3LUxJgz7GRWjwhyGnZOmUBj7xL8t_Re7aUUY.png">
+<meta property="og:image" content="https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/65d7ab5b128ec85ab5a0652a_4WVsDbGfFq2uxnUD1ifK1Mvt7pt8lA8A1X7ETMPuwcCL-SnOF458gWZ1vW3oAA-07EUXgYc20gAK2C8WhMS4QxOK1XQkLPbgMzGAmrGbLXbmuZ0X7cejYgqWatDkxkTiteMFbUr0ZLA-9gOFul_fYqM.png">
+<meta property="article:published_time" content="2024-05-06T15:11:00.000Z">
+<meta property="article:modified_time" content="2024-05-06T15:35:10.970Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="工程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/65d7ab31adc625e013ce709c_3I-9ahl1LkT0bqglH-BoShQ11tIYECFYHbGzSIXqzFqHlOKsVHTfil63skYjP3UQB8Zzj4cD__WpeUeBQct1ebnQPiUnZEk1436ppRuqlxWJ3asp_MB3LUxJgz7GRWjwhyGnZOmUBj7xL8t_Re7aUUY.png">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/05/06/DISCORD%20%E5%A6%82%E4%BD%95%E5%B0%86%E5%B7%A5%E7%A8%8B%E8%BD%AC%E7%A7%BB%E5%88%B0%E4%BA%91%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/05/06/DISCORD%20%E5%A6%82%E4%BD%95%E5%B0%86%E5%B7%A5%E7%A8%8B%E8%BD%AC%E7%A7%BB%E5%88%B0%E4%BA%91%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/","path":"2024/05/06/DISCORD 如何将工程转移到云开发环境/","title":"DISCORD 如何将工程转移到云开发环境"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DISCORD 如何将工程转移到云开发环境 | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Coder"><span class="nav-number">3.</span> <span class="nav-text">Coder</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%A3%E4%B9%88%EF%BC%8C%E8%BF%81%E7%A7%BB%E8%BF%87%E7%A8%8B%E5%A6%82%E4%BD%95%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">那么，迁移过程如何？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB"><span class="nav-number">4.1.</span> <span class="nav-text">迁移</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%8F%E9%AA%8C%E6%95%99%E8%AE%AD"><span class="nav-number">4.2.</span> <span class="nav-text">经验教训</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%91%E4%BB%AC%E4%BC%9A%E5%81%9A%E4%BA%9B%E4%BB%80%E4%B9%88%E4%B8%8D%E5%90%8C"><span class="nav-number">4.3.</span> <span class="nav-text">我们会做些什么不同</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">73</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">50</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/06/DISCORD%20%E5%A6%82%E4%BD%95%E5%B0%86%E5%B7%A5%E7%A8%8B%E8%BD%AC%E7%A7%BB%E5%88%B0%E4%BA%91%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DISCORD 如何将工程转移到云开发环境 | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DISCORD 如何将工程转移到云开发环境
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-05-06 23:11:00 / Modified: 23:35:10" itemprop="dateCreated datePublished" datetime="2024-05-06T23:11:00+08:00">2024-05-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/blog/" itemprop="url" rel="index"><span itemprop="name">blog</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>3.5k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>13 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>原文链接：<a target="_blank" rel="noopener" href="https://discord.com/blog/how-discord-moved-engineering-to-cloud-development-environments">https://discord.com/blog/how-discord-moved-engineering-to-cloud-development-environments</a></p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a><strong>介绍</strong></h2><p>如果您一直关注我们之前的<a target="_blank" rel="noopener" href="https://discord.com/blogs?engineering">工程博客文章</a>，您会知道，构建和维护Discord是一项复杂的任务。我们的软件开发在一个多语言的单一代码库中进行，其中Python、Typescript、Rust、Elixir和C&#x2F;C++是最活跃的开发语言。我们还为包括Android、iOS、MacOS、Windows和Linux在内的所有主要平台开发和发布产品。</p>
+<p>内部开发者体验团队负责软件开发生命周期的大约前三分之一。我们的主要任务包括构建和维护IDE体验、管理开发环境、提供构建、开发和测试代码的工具、扩展和维护CI基础设施，以及拥有变更管理流程和支持工具基础设施。虽然我们可以深入探讨这些主题中的任何一个，但本博客文章重点介绍了我们如何在<a target="_blank" rel="noopener" href="https://coder.com/">Coder</a>团队的帮助下，将所有后端和基础设施开发过渡到基于Linux的云开发环境。</p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a><strong>背景</strong></h2><p>在过去的几年中，Discord的工程组织经历了快速增长，规模增加了两倍多。Discord作为一家混合公司，在旧金山和荷兰设有实体办公室，但我们的工程团队主要远程运作。</p>
+<p>我们的大多数开发者使用MacBook。在过渡到远程开发机之前，我们确保工程师可以在Mac和Ubuntu机器上完全启动Discord，并使用Homebrew创建了自定义工具来配置笔记本电脑。然而，我们遇到了一些问题，其中一个<code>brew upgrade</code> 可能会阻止开发者的进程。我们通过硬固定每个软件包和传递依赖项解决了许多这些问题，尽管这使得安装任意软件包变得更加困难。我们已经从Homebrew转移到Nix来安装系统依赖，允许工程师根据需要使用Homebrew。</p>
+<p>我们的本地服务编排工具也在发展。我们开始使用Makefiles和procfiles，但很快就超出了这个系统的能力。我们尝试过使用Docker和docker-compose，但由于各种原因，这并不适合我们。当时，docker-for-Mac的性能不佳，而且在（重新）构建循环中增加的摩擦力使我们寻求更快、更简单的解决方案。我们最终转向了基于<a target="_blank" rel="noopener" href="http://supervisord.org/">supervisor</a>的系统，并开发了工具来轻松定义和运行服务及其依赖项。</p>
+<p>然而，在开发循环中不使用容器带来了权衡。管理两个不可复制的环境成为工具团队的重大负担。我们经常发现自己在调试特定和独特的问题以解锁工程师。随着公司的持续增长，我们清楚地认识到我们需要专注于单一的基于Linux的开发环境。这促使我们探索云开发环境（CDEs），并最终评估Coder。</p>
+<p>将开发转移到云提供商托管的VM上带来了许多好处，如不变性、可复制性、可配置性、增强的安全性和内置的IAM。此外，它还提供了更广泛的工具和自动化选项来管理和维护环境。</p>
+<p>CDEs的一个核心要求是良好的编辑器和开发循环体验。幸运的是，VS Code的<a target="_blank" rel="noopener" href="https://code.visualstudio.com/docs/remote/remote-overview">远程开发扩展</a>稳定且提供了强大的体验。大多数Discord工程师使用VSCode，所以我们认为这种体验足够好，可以开始这段旅程。</p>
+<p>可复制和一致的环境对于稳定的体验至关重要。尽管理论上理想的环境是完全不变的，但这并不实际。我们选择在重启时挂载并保留_&#x2F;home_目录，允许开发者从上次离开的地方继续。这为存储仓库、dotfiles、个人工具和自定义工作区提供了空间。虽然这种方法偏离了一些不变性原则，并可能引入潜在问题，但我们仍然可以更新模板和映像，而无需完全重建工作区，从而获得两全其美的效果。</p>
+<p>尽管CDEs有许多好处，但重要的是要承认其缺点。值得注意的是，没有任何解决方案可以与在localhost上工作的性能相媲美，而且通过SSH工作增加的延迟可能相当大。在不稳定的网络条件下，延迟、连接中断和总体体验下降的情况被报告。</p>
+<p>通过网络发送大型HTML和JavaScript包会显著增加关键保存和重建循环的时间。因此，许多工程师更喜欢在本地笔记本电脑上进行前端工作，在远程机器上进行后端工作。这种方法需要一个“分裂大脑”的存储库或在笔记本电脑和远程机器之间同步API和UI代码的更改。这增加了认知负荷，当然不是理想的情况。</p>
+<p><img src="https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/65d7ab31adc625e013ce709c_3I-9ahl1LkT0bqglH-BoShQ11tIYECFYHbGzSIXqzFqHlOKsVHTfil63skYjP3UQB8Zzj4cD__WpeUeBQct1ebnQPiUnZEk1436ppRuqlxWJ3asp_MB3LUxJgz7GRWjwhyGnZOmUBj7xL8t_Re7aUUY.png" alt="开发者的笔记本电脑访问云中的远程服务的图表，后端服务远程运行，本地服务可选本地或远程。明确指出代码可以本地或远程存储，这可能会引起混淆。"></p>
+<p>尽管存在这些权衡，我们坚信好处大于不利之处！</p>
+<h2 id="Coder"><a href="#Coder" class="headerlink" title="Coder"></a><strong>Coder</strong></h2><p>我们最初与Coder的接触始于2020年底。当时，Coder是一个小型工程团队，他们是Discord的狂热用户。他们的早期产品完全是Kubernetes原生的，这吸引了我们，因为Discord是一个重度Kubernetes用户。考虑到构建具有我们所需功能的类似解决方案所需的时间和努力，评估Coder的产品是一个明显的决定。</p>
+<p>从功能上讲，Coder提供了您所期望的所有功能，团队最近从头开始重建了他们的产品，解决了我们在早期接触中遇到的许多问题。值得注意的是，我们在使用Kubernetes和容器作为主要开发环境时遇到了许多问题。开发Discord需要一个高度复杂的环境，许多移动部分，我们发现，在<a target="_blank" rel="noopener" href="https://github.com/nestybox/sysbox">Sysbox</a>环境中开发使得维护和调试各个虚拟化层面的各种问题变得具有挑战性。此外，我们还注意到了嘈杂的邻居、延迟峰值和高于预期的延迟。</p>
+<p>在2023年，我们转移到了Coder的V2产品，这使我们能够向开发者交付VM，从而解决了我们的大部分问题。他们的V2产品中的另一个显著变化是他们的网络堆栈的重写，现在利用Tailscale和WireGuard实现了更稳定、安全和高性能的网络。转移到VM使我们能够完全访问主机，并极大地简化了架构，从而实现了稳定和快速的环境。在迁移到V2之后，我们收到了大量工程师的反馈，他们表示开发通常感觉更快、更流畅。此外，我们不再看到关于高延迟和连接中断的支持票证和问题。这些都是全方位的巨大胜利。</p>
+<p><img src="https://assets-global.website-files.com/5f9072399b2640f14d6a2bf4/65d7ab5b128ec85ab5a0652a_4WVsDbGfFq2uxnUD1ifK1Mvt7pt8lA8A1X7ETMPuwcCL-SnOF458gWZ1vW3oAA-07EUXgYc20gAK2C8WhMS4QxOK1XQkLPbgMzGAmrGbLXbmuZ0X7cejYgqWatDkxkTiteMFbUr0ZLA-9gOFul_fYqM.png" alt="显示人们对Coder V2感到满意的Discord消息的拼贴画。"></p>
+<h2 id="那么，迁移过程如何？"><a href="#那么，迁移过程如何？" class="headerlink" title="那么，迁移过程如何？"></a><strong>那么，迁移过程如何？</strong></h2><p>我们从MacBooks的本地开发转移到使用Coder的过程充满了学习和适应。以下是我们的迁移过程的详细账户，我们学到的经验教训，以及如果我们要再次进行迁移，我们会做些什么不同。</p>
+<h3 id="迁移"><a href="#迁移" class="headerlink" title="迁移"></a><strong>迁移</strong></h3><p>(非常)简化的迁移计划看起来是这样的：</p>
+<ol>
+<li>巩固体验 - 默认体验应该“顺利工作”</li>
+<li>增加更广泛的采用 - 与开发者进行小规模测试，收集代表性反馈，然后转向公开测试</li>
+<li>硬性截止 - 完善文档，扩大培训，支持渠道，并完全废除MacBooks上的后端开发</li>
+</ol>
+<p>我们的迁移从“简单”的工作开始，创建开发容器，安装系统依赖，设置用户账户、权限和任何需要安装的预先存在的软件。在这段时间内，稍微投入一些自动化以加快我们的反馈循环是重要的。</p>
+<p>我上面说的“简单”工作，因为这些类型的迁移不仅仅是技术问题，而且很大程度上是人的问题。很容易忽视执行影响整个工程组织的大规模迁移需要多少工作。我们需要了解人们会错过什么样的体验，他们需要学习什么，以及他们会感到最大的痛苦在哪里。我们进行了访谈，获得了早期反馈，当然，我们自己也在环境中进行了实际使用。</p>
+<p>为了在公司内部获得广泛的采用，我们确定并招募了来自各个部门的“冠军”，他们对工具感到热情。这些个体帮助测试了新环境并提供了定期反馈。日常循环和需求的多样性至关重要，因为它使我们能够识别日常开发中可能出现的各种问题。我们通过这个过程发现了许多问题，并与这些早期的测试者密切合作解决了他们的问题。我们对不同的构建工具进行了基准测试，进行了网络负载测试，并确保最常见的开发循环保持功能性和效率。</p>
+<p>我们相信，如果我们开发并交付能够增强工程体验的工具，开发者将自然而然地被激励去采用新功能。我们了解需要一个硬性切换日期，因为总会有一些人抗拒变化，但我们努力提供如此引人注目的体验，以至于人们会选择独立过渡。当然，当他们的MacBooks出现问题时，我们会推动人们尝试使用Coder，但我们看到了令人欣慰的大量个体愿意尝试远程环境。</p>
+<p>随着Apple的<code>M1 ARM-based</code>芯片的到来，我们加快了时间表，并决定在截止日期上更快行动。新的M1笔记本电脑开始向开发者发货，我们发现在新硬件上运行我们的后端堆栈存在几个问题。Rosetta仿真对某些应用程序有效，但并非全部。当我们发现唯一可用的新硬件是Apple Silicon时，我们决定加快第三个里程碑的进程，废除基于MacOS的后端开发，并选择加速过渡的时间表。</p>
+<h3 id="经验教训"><a href="#经验教训" class="headerlink" title="经验教训"></a><strong>经验教训</strong></h3><p>我们了解到，在Kubernetes中运行的容器中模拟开发机器是具有挑战性的。例如，我们无法运行特权容器，因此我们必须找到在开发中更改内核参数的独特解决方案。这在运行像Scylla这样需要内核模块或内核参数更新的应用程序时带来了困难。我们通过在每个节点上有一个特权守护程序来设置底层主机的内核参数来解决这个问题。然而，我们还面临其他问题，并且事后看来，我们本可以提前识别这些问题并为它们制定计划。</p>
+<p>理所当然的是，我们还了解到开发者有多重视响应性。如果开发者的输入速度比系统渲染速度快，这会干扰他们的工作流程。我们还认识到了顺畅的入职过程的重要性，特别是对于不习惯使用命令行的开发者。我们增加了文档、培训材料、录制的视频，并为那些没有多年高度调整工具的人创建了丰富的默认dotfiles。我们在这个“最后一公里”的工作上花了大量时间，但仍然感觉不足以满足每个人的需求。</p>
+<h3 id="我们会做些什么不同"><a href="#我们会做些什么不同" class="headerlink" title="我们会做些什么不同"></a><strong>我们会做些什么不同</strong></h3><p>迁移后出现的主要问题是网络延迟和连接中断。鉴于我们的工程师分布在美国各地和其他各个地点，预测最坏情况的场景是具有挑战性的。尽管我们利用了Coder的早期卫星功能在不同地区建立Kubernetes集群以减少延迟，但一些开发者仍然遇到了显著的性能问题。</p>
+<p>事后看来，我们应该开发更好的工具来在不同的网络条件下理解和优化网络性能。我们应该更早地投资于监控和诊断工具，以便我们可以实时跟踪和解决这些问题。此外，我们可能会考虑在不同地区进行更广泛的测试，以确保我们的解决方案在各种网络条件下都能表现良好。</p>
+<p>总的来说，虽然我们遇到了一些挑战，但迁移到云开发环境的整体经验是积极的。我们学到了很多宝贵的经验教训，这些教训将指导我们未来的技术决策和改进。我们也看到了显著的生产力提升和开发者满意度的提高，这证明了我们的努力是值得的。</p>
+<p>我们期待在未来继续优化我们的云开发环境，并利用我们从这次迁移中学到的经验教训，为我们的工程团队提供更好的工具和体验。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B7%A5%E7%A8%8B/" rel="tag"># 工程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/" rel="prev" title="Mac: Slowing Down Your Disk Speed by 60x">
+                  <i class="fa fa-angle-left"></i> Mac: Slowing Down Your Disk Speed by 60x
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">79k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">4:48</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
