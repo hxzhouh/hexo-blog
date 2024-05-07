@@ -23,19 +23,19 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
      crossorigin="anonymous"></script>
 
-    <meta name="description" content="原文链接 Vincent Blanchon    本文基于 go 1.14   select 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。 Orderselect 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时">
+    <meta name="description" content="原文链接 Vincent Blanchon    本文基于 go 1.14   select 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go - Ordering in Select Statements">
 <meta property="og:url" content="https://hxzhouh.com/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/index.html">
 <meta property="og:site_name" content="huizhou92">
-<meta property="og:description" content="原文链接 Vincent Blanchon    本文基于 go 1.14   select 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。 Orderselect 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时">
+<meta property="og:description" content="原文链接 Vincent Blanchon    本文基于 go 1.14   select 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png">
 <meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429223415.png">
 <meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png">
 <meta property="og:image" content="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png">
 <meta property="article:published_time" content="2020-04-29T14:50:50.000Z">
-<meta property="article:modified_time" content="2023-11-20T06:57:46.513Z">
+<meta property="article:modified_time" content="2024-05-06T15:49:27.142Z">
 <meta property="article:author" content="huizhou92">
 <meta property="article:tag" content="go">
 <meta property="article:tag" content="底层">
@@ -244,7 +244,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2023-11-20 14:57:46" itemprop="dateModified" datetime="2023-11-20T14:57:46+08:00">2023-11-20</time>
+      <time title="Modified: 2024-05-06 23:49:27" itemprop="dateModified" datetime="2024-05-06T23:49:27+08:00">2024-05-06</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -270,7 +270,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>812</span>
+      <span>813</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -295,6 +295,7 @@
 <p>本文基于 go 1.14 </p>
 </blockquote>
 <p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<span id="more"></span>
 <h1 id="Order"><a href="#Order" class="headerlink" title="Order"></a>Order</h1><p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
 <p>看一个有三个就绪的channel的例子：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
