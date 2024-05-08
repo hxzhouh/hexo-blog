@@ -153,7 +153,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">75</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -198,6 +198,111 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/08/8%20Ways%20to%20Sql%20That%20Can%20Decrease%20Performance%20by%20100%20Times./">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2024/05/08/8%20Ways%20to%20Sql%20That%20Can%20Decrease%20Performance%20by%20100%20Times./" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-05-08 16:02:28 / Modified: 16:31:14" itemprop="dateCreated datePublished" datetime="2024-05-08T16:02:28+08:00">2024-05-08</time>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>652</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>2 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="LIMIT-语句"><a href="#LIMIT-语句" class="headerlink" title="LIMIT 语句"></a>LIMIT 语句</h2><p>分页查询是最常用的场景之一，但也通常也是最容易出问题的地方。比如对于下面简单的语句，一般 DBA 想到的办法是在 type，name， create_time 字段上加组合索引。这样条件排序都能有效的利用到索引，性能迅速提升。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   operation</span><br><span class="line"><span class="keyword">WHERE</span>  type <span class="operator">=</span> <span class="string">&#x27;SQLStats&#x27;</span></span><br><span class="line">       <span class="keyword">AND</span> name <span class="operator">=</span> <span class="string">&#x27;SlowLog&#x27;</span></span><br><span class="line"><span class="keyword">ORDER</span>  <span class="keyword">BY</span> create_time</span><br><span class="line">LIMIT  <span class="number">1000</span>, <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+<p>好吧，可能90%以上的 DBA 解决该问题就到此为止。但当 LIMIT 子句变成 “LIMIT 1000000,10” 时，程序员仍然会抱怨：我只取10条记录为什么还是慢？<br>要知道数据库也并不知道第1000000条记录从什么地方开始，即使有索引也需要从头计算一次。出现这种性能问题，多数情形下是程序员偷懒了。<br>在前端数据浏览翻页，或者大数据分批导出等场景下，是可以将上一页的最大值当成参数作为查询条件的。SQL 重新设计如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>   <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>     operation</span><br><span class="line"><span class="keyword">WHERE</span>    type <span class="operator">=</span> <span class="string">&#x27;SQLStats&#x27;</span></span><br><span class="line"><span class="keyword">AND</span>      name <span class="operator">=</span> <span class="string">&#x27;SlowLog&#x27;</span></span><br><span class="line"><span class="keyword">AND</span>      create_time <span class="operator">&gt;</span> <span class="string">&#x27;2017-03-16 14:00:00&#x27;</span></span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> create_time limit <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+<p>在新设计下查询时间基本固定，不会随着数据量的增长而发生变化。</p>
+<h2 id="隐式转换"><a href="#隐式转换" class="headerlink" title="隐式转换"></a>隐式转换</h2><p>SQL语句中查询变量和字段定义类型不匹配是另一个常见的错误。比如下面的语句：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">explain extended SELECT *</span></span><br><span class="line">     &gt; FROM   my_balance b</span><br><span class="line">     &gt; WHERE  b.bpn = 14000000123</span><br><span class="line">     &gt;       AND b.isverified IS NULL ;</span><br><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">show warnings;</span></span><br><span class="line">| Warning | 1739 | Cannot use ref access on index &#x27;bpn&#x27; due to type or collation conversion on field &#x27;bpn&#x27;</span><br></pre></td></tr></table></figure>
+<p>其中字段 bpn 的定义为 varchar(20)，MySQL 的策略是将字符串转换为数字之后再比较。函数作用于表字段，索引失效。<br>上述情况可能是应用程序框架自动填入的参数，而不是程序员的原意。现在应用框架很多很繁杂，使用方便的同时也小心它可能给自己挖坑。</p>
+<h2 id="关联更新、删除"><a href="#关联更新、删除" class="headerlink" title="关联更新、删除"></a>关联更新、删除</h2><p>虽然 MySQL5.6 引入了物化特性，但需要特别注意它目前仅仅针对查询语句的优化。对于更新或删除需要手工重写成 JOIN。</p>
+<p>比如下面 UPDATE 语句，MySQL 实际执行的是循环&#x2F;嵌套子查询（DEPENDENT SUBQUERY)，其执行时间可想而知。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> operation o</span><br><span class="line"><span class="keyword">SET</span>    status <span class="operator">=</span> <span class="string">&#x27;applying&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span>  o.id <span class="keyword">IN</span> (<span class="keyword">SELECT</span> id</span><br><span class="line">                <span class="keyword">FROM</span>   (<span class="keyword">SELECT</span> o.id,</span><br><span class="line">                               o.status</span><br><span class="line">                        <span class="keyword">FROM</span>   operation o</span><br><span class="line">                        <span class="keyword">WHERE</span>  o.group <span class="operator">=</span> <span class="number">123</span></span><br><span class="line">                               <span class="keyword">AND</span> o.status <span class="keyword">NOT</span> <span class="keyword">IN</span> ( <span class="string">&#x27;done&#x27;</span> )</span><br><span class="line">                        <span class="keyword">ORDER</span>  <span class="keyword">BY</span> o.parent,</span><br><span class="line">                                  o.id</span><br><span class="line">                        LIMIT  <span class="number">1</span>) t);</span><br></pre></td></tr></table></figure>
+
+<p>执行计划：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| <span class="built_in">id</span> | select_type        | table | <span class="built_in">type</span>  | possible_keys | key     | key_len | ref   | rows | Extra                                               |</span><br><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| 1  | PRIMARY            | o     | index |               | PRIMARY | 8       |       | 24   | Using <span class="built_in">where</span>; Using temporary                        |</span><br><span class="line">| 2  | DEPENDENT SUBQUERY |       |       |               |         |         |       |      | Impossible WHERE noticed after reading const tables |</span><br><span class="line">| 3  | DERIVED            | o     | ref   | idx_2,idx_5   | idx_5   | 8       | const | 1    | Using <span class="built_in">where</span>; Using filesort                         |</span><br><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/08/%E8%B0%B7%E6%AD%8C%E5%A6%82%E4%BD%95%E5%86%99%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -228,7 +333,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2024-05-08 09:51:00 / Modified: 14:33:25" itemprop="dateCreated datePublished" datetime="2024-05-08T09:51:00+08:00">2024-05-08</time>
+      <time title="Created: 2024-05-08 09:51:00 / Modified: 16:02:28" itemprop="dateCreated datePublished" datetime="2024-05-08T09:51:00+08:00">2024-05-08</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -962,114 +1067,6 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="huizhou92">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="huizhou92">
-      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | huizhou92">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/" class="post-title-link" itemprop="url">Go program pattern 03: Inversion of Control</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2024-04-23 14:32:00 / Modified: 15:33:51" itemprop="dateCreated datePublished" datetime="2024-04-23T14:32:00+08:00">2024-04-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Views">
-      <span class="post-meta-item-icon">
-        <i class="far fa-eye"></i>
-      </span>
-      <span class="post-meta-item-text">Views: </span>
-      <span class="firestore-visitors-count"></span>
-    </span>
-    <span class="post-meta-break"></span>
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>637</span>
-    </span>
-    <span class="post-meta-item" title="Reading time">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">Reading time &asymp;</span>
-      <span>2 mins.</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>In the previous article, I briefly introduced the composite pattern in Go, which was explained in a simple manner. We understood that Go can achieve polymorphism in object-oriented programming through composition.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1178,7 +1175,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1196,7 +1193,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/" class="post-title-link" itemprop="url">Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</a>
+          <a href="/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/" class="post-title-link" itemprop="url">Go program pattern 03: Inversion of Control</a>
         </h2>
 
         <div class="post-meta-container">
@@ -1208,7 +1205,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2024-04-23 14:30:00 / Modified: 15:42:25" itemprop="dateCreated datePublished" datetime="2024-04-23T14:30:00+08:00">2024-04-23</time>
+      <time title="Created: 2024-04-23 14:32:00 / Modified: 15:33:51" itemprop="dateCreated datePublished" datetime="2024-04-23T14:32:00+08:00">2024-04-23</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1234,7 +1231,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>684</span>
+      <span>637</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -1252,10 +1249,10 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
+          <p>In the previous article, I briefly introduced the composite pattern in Go, which was explained in a simple manner. We understood that Go can achieve polymorphism in object-oriented programming through composition.</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/#more" rel="contents">
+              <a class="btn" href="/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -1301,13 +1298,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">83k</span>
+    <span title="Word count total">84k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">5:02</span>
+    <span title="Reading time total">5:05</span>
   </span>
 </div>
 
