@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="Title: 8 Common SQL Slow Query Statements and How to Optimize ThemSubtitle: Learn how to optimize SQL queries for better performanceThanks to Moore’s Law, computer performance has greatly improved, al">
+<meta property="og:type" content="article">
+<meta property="og:title" content="huizhou92">
+<meta property="og:url" content="https://hxzhouh.com/2024/05/08/%E6%9C%AA%E5%91%BD%E5%90%8D/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="Title: 8 Common SQL Slow Query Statements and How to Optimize ThemSubtitle: Learn how to optimize SQL queries for better performanceThanks to Moore’s Law, computer performance has greatly improved, al">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-05-08T09:31:35.461Z">
+<meta property="article:modified_time" content="2024-05-08T09:45:30.957Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="Golang, Self Improvement,Read,Wirte, Computer Science, Cloud Computing, Data Storage, Efficiency Tools, Backend Engineer, huizhou92">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/05/08/%E6%9C%AA%E5%91%BD%E5%90%8D/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/05/08/%E6%9C%AA%E5%91%BD%E5%90%8D/","path":"2024/05/08/未命名/","title":""}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title> | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Title-8-Common-SQL-Slow-Query-Statements-and-How-to-Optimize-Them"><span class="nav-number">1.</span> <span class="nav-text">Title: 8 Common SQL Slow Query Statements and How to Optimize Them</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Subtitle-Learn-how-to-optimize-SQL-queries-for-better-performance"><span class="nav-number">1.1.</span> <span class="nav-text">Subtitle: Learn how to optimize SQL queries for better performance</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LIMIT-Statement"><span class="nav-number">1.2.</span> <span class="nav-text">LIMIT Statement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Implicit-Conversion"><span class="nav-number">1.3.</span> <span class="nav-text">Implicit Conversion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Join-Updates-and-Deletions"><span class="nav-number">1.4.</span> <span class="nav-text">Join Updates and Deletions</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mixed-Sorting"><span class="nav-number">1.5.</span> <span class="nav-text">Mixed Sorting</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EXISTS-Statement"><span class="nav-number">1.6.</span> <span class="nav-text">EXISTS Statement</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Condition-Pushdown"><span class="nav-number">1.7.</span> <span class="nav-text">Condition Pushdown</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Narrowing-the-Scope-in-Advance"><span class="nav-number">1.8.</span> <span class="nav-text">Narrowing the Scope in Advance</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Conclusion"><span class="nav-number">1.9.</span> <span class="nav-text">Conclusion</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">50</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/08/%E6%9C%AA%E5%91%BD%E5%90%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-05-08 17:31:35 / Modified: 17:45:30" itemprop="dateCreated datePublished" datetime="2024-05-08T17:31:35+08:00">2024-05-08</time>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.7k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>6 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Title-8-Common-SQL-Slow-Query-Statements-and-How-to-Optimize-Them"><a href="#Title-8-Common-SQL-Slow-Query-Statements-and-How-to-Optimize-Them" class="headerlink" title="Title: 8 Common SQL Slow Query Statements and How to Optimize Them"></a>Title: 8 Common SQL Slow Query Statements and How to Optimize Them</h1><h2 id="Subtitle-Learn-how-to-optimize-SQL-queries-for-better-performance"><a href="#Subtitle-Learn-how-to-optimize-SQL-queries-for-better-performance" class="headerlink" title="Subtitle: Learn how to optimize SQL queries for better performance"></a>Subtitle: Learn how to optimize SQL queries for better performance</h2><p>Thanks to Moore’s Law, computer performance has greatly improved, along with advancements in databases and various anti-pattern designs advocated by microservices. As a result, we now have fewer opportunities to write complex SQL queries. The industry (yes, even Google) has started advocating against specialized SQL optimization, as the resources saved do not outweigh the cost of employee salaries. However, as engineers, we should strive for technical excellence to become rocket scientists in our field.</p>
+<p>In this article, I will introduce eight common SQL slow query statements and explain how to optimize their performance. I hope this will be helpful to you.</p>
+<h2 id="LIMIT-Statement"><a href="#LIMIT-Statement" class="headerlink" title="LIMIT Statement"></a>LIMIT Statement</h2><p>Pagination is one of the most commonly used scenarios, but it is also prone to problems. For example, for the simple statement below, a typical solution suggested by DBAs is to add a composite index on the <code>type</code>, <code>name</code>, and <code>create_time</code> fields. This way, the conditions and sorting can effectively utilize the index, resulting in a significant performance improvement.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   operation</span><br><span class="line"><span class="keyword">WHERE</span>  type <span class="operator">=</span> <span class="string">&#x27;SQLStats&#x27;</span></span><br><span class="line">       <span class="keyword">AND</span> name <span class="operator">=</span> <span class="string">&#x27;SlowLog&#x27;</span></span><br><span class="line"><span class="keyword">ORDER</span>  <span class="keyword">BY</span> create_time</span><br><span class="line">LIMIT  <span class="number">1000</span>, <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+<p>Okay, this might solve the problem for over 90% of DBAs. However, when the LIMIT clause becomes “LIMIT 1000000, 10”, programmers still complain, “Why is it slow when I’m only fetching 10 records?” You see, the database doesn’t know where the 1,000,000th record starts, so even with an index, it still needs to calculate from the beginning. In most cases, this performance issue is caused by lazy programming.</p>
+<p>In scenarios such as frontend data browsing or exporting large data in batches, you can use the maximum value of the previous page as a parameter for querying. The SQL can be redesigned as follows:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>   <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>     operation</span><br><span class="line"><span class="keyword">WHERE</span>    type <span class="operator">=</span> <span class="string">&#x27;SQLStats&#x27;</span></span><br><span class="line"><span class="keyword">AND</span>      name <span class="operator">=</span> <span class="string">&#x27;SlowLog&#x27;</span></span><br><span class="line"><span class="keyword">AND</span>      create_time <span class="operator">&gt;</span> <span class="string">&#x27;2017-03-16 14:00:00&#x27;</span></span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> create_time</span><br><span class="line">LIMIT    <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+<p>With this new design, the query time remains constant and does not change with the increasing data volume.</p>
+<h2 id="Implicit-Conversion"><a href="#Implicit-Conversion" class="headerlink" title="Implicit Conversion"></a>Implicit Conversion</h2><p>Another common mistake in SQL statements is when the types of query variables and field definitions do not match. Take the following statement as an example:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">explain extended SELECT *</span></span><br><span class="line">     &gt; FROM   my_balance b</span><br><span class="line">     &gt; WHERE  b.bpn = 14000000123</span><br><span class="line">     &gt;       AND b.isverified IS NULL ;</span><br><span class="line"><span class="meta prompt_">mysql&gt; </span><span class="language-bash">show warnings;</span></span><br><span class="line">| Warning | 1739 | Cannot use ref access on index &#x27;bpn&#x27; due to type or collation conversion on field &#x27;bpn&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>In this case, the field <code>bpn</code> is defined as <code>varchar(20)</code>, and MySQL’s strategy is to convert the string to a number before comparing. This causes the function to be applied to the table field, rendering the index ineffective.</p>
+<p>Such cases may be caused by parameters automatically filled in by the application framework, rather than the programmer’s intention. Nowadays, application frameworks are often complex, and while they provide convenience, they can also create pitfalls.</p>
+<h2 id="Join-Updates-and-Deletions"><a href="#Join-Updates-and-Deletions" class="headerlink" title="Join Updates and Deletions"></a>Join Updates and Deletions</h2><p>Although MySQL 5.6 introduced materialization, it only optimizes SELECT statements. For UPDATE or DELETE statements, you need to manually rewrite them using JOIN.</p>
+<p>For example, consider the following UPDATE statement. MySQL actually performs a loop&#x2F;nested subquery (DEPENDENT SUBQUERY), and you can imagine the execution time.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> operation o</span><br><span class="line"><span class="keyword">SET</span>    status <span class="operator">=</span> <span class="string">&#x27;applying&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span>  o.id <span class="keyword">IN</span> (<span class="keyword">SELECT</span> id</span><br><span class="line">                <span class="keyword">FROM</span>   (<span class="keyword">SELECT</span> o.id,</span><br><span class="line">                               o.status</span><br><span class="line">                        <span class="keyword">FROM</span>   operation o</span><br><span class="line">                        <span class="keyword">WHERE</span>  o.group <span class="operator">=</span> <span class="number">123</span></span><br><span class="line">                               <span class="keyword">AND</span> o.status <span class="keyword">NOT</span> <span class="keyword">IN</span> ( <span class="string">&#x27;done&#x27;</span> )</span><br><span class="line">                        <span class="keyword">ORDER</span>  <span class="keyword">BY</span> o.parent,</span><br><span class="line">                                  o.id</span><br><span class="line">                        LIMIT  <span class="number">1</span>) t);</span><br></pre></td></tr></table></figure>
+
+<p>The execution plan is as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| <span class="built_in">id</span> | select_type        | table | <span class="built_in">type</span>  | possible_keys | key     | key_len | ref   | rows | Extra                                               |</span><br><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| 1  | PRIMARY            | o     | index |               | PRIMARY | 8       |       | 24   | Using <span class="built_in">where</span>; Using temporary                        |</span><br><span class="line">| 2  | DEPENDENT SUBQUERY |       |       |               |         |         |       |      | Impossible WHERE noticed after reading const tables |</span><br><span class="line">| 3  | DERIVED            | o     | ref   | idx_2,idx_5   | idx_5   | 8       | const | 1    | Using <span class="built_in">where</span>; Using filesort                         |</span><br><span class="line">+----+--------------------+-------+-------+---------------+---------+---------+-------+------+-----------------------------------------------------+</span><br></pre></td></tr></table></figure>
+
+<p>After rewriting it as a JOIN, the subquery’s select type changes from DEPENDENT SUBQUERY to DERIVED, significantly speeding up the execution time from 7 seconds to 2 milliseconds.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> operation o</span><br><span class="line">       <span class="keyword">JOIN</span>  (<span class="keyword">SELECT</span> o.id,</span><br><span class="line">                            o.status</span><br><span class="line">                     <span class="keyword">FROM</span>   operation o</span><br><span class="line">                     <span class="keyword">WHERE</span>  o.group <span class="operator">=</span> <span class="number">123</span></span><br><span class="line">                            <span class="keyword">AND</span> o.status <span class="keyword">NOT</span> <span class="keyword">IN</span> ( <span class="string">&#x27;done&#x27;</span> )</span><br><span class="line">                     <span class="keyword">ORDER</span>  <span class="keyword">BY</span> o.parent,</span><br><span class="line">                               o.id</span><br><span class="line">                     LIMIT  <span class="number">1</span>) t</span><br><span class="line">         <span class="keyword">ON</span> o.id <span class="operator">=</span> t.id</span><br><span class="line"><span class="keyword">SET</span>    status <span class="operator">=</span> <span class="string">&#x27;applying&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>The simplified execution plan is as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+----+-------------+-------+------+---------------+-------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| <span class="built_in">id</span> | select_type | table | <span class="built_in">type</span> | possible_keys | key   | key_len | ref   | rows | Extra                                               |</span><br><span class="line">+----+-------------+-------+------+---------------+-------+---------+-------+------+-----------------------------------------------------+</span><br><span class="line">| 1  | PRIMARY     |       |      |               |       |         |       |      | Impossible WHERE noticed after reading const tables |</span><br><span class="line">| 2  | DERIVED     | o     | ref  | idx_2,idx_5   | idx_5 | 8       | const | 1    | Using <span class="built_in">where</span>; Using filesort                         |</span><br><span class="line">+----+-------------+-------+------+---------------+-------+---------+-------+------+-----------------------------------------------------+</span><br></pre></td></tr></table></figure>
+
+<h2 id="Mixed-Sorting"><a href="#Mixed-Sorting" class="headerlink" title="Mixed Sorting"></a>Mixed Sorting</h2><p>MySQL cannot utilize indexes for mixed sorting. However, in certain scenarios, there are still opportunities to improve performance using special methods.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   my_order o</span><br><span class="line">       <span class="keyword">INNER</span> <span class="keyword">JOIN</span> my_appraise a <span class="keyword">ON</span> a.orderid <span class="operator">=</span> o.id</span><br><span class="line"><span class="keyword">ORDER</span>  <span class="keyword">BY</span> a.is_reply <span class="keyword">ASC</span>,</span><br><span class="line">          a.appraise_time <span class="keyword">DESC</span></span><br><span class="line">LIMIT  <span class="number">0</span>, <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<p>The execution plan shows a full table scan:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+----+-------------+-------+--------+-------------+---------+---------+---------------+---------+-+</span><br><span class="line">| <span class="built_in">id</span> | select_type | table | <span class="built_in">type</span>   | possible_keys     | key     | key_len | ref      | rows    | Extra</span><br><span class="line">+----+-------------+-------+--------+-------------+---------+---------+---------------+---------+-+</span><br><span class="line">|  1 | SIMPLE      | a     | ALL    | idx_orderid | NULL    | NULL    | NULL    | 1967647 | Using filesort |</span><br><span class="line">|  1 | SIMPLE      | o     | eq_ref | PRIMARY     | PRIMARY | 122     | a.orderid |       1 | NULL           |</span><br><span class="line">+----+-------------+-------+--------+---------+---------+---------+-----------------+---------+-+</span><br></pre></td></tr></table></figure>
+
+<p>Since <code>is_reply</code> only has two states, 0 and 1, we can rewrite it as follows, reducing the execution time from 1.58 seconds to 2 milliseconds:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   ((<span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line">         <span class="keyword">FROM</span>   my_order o</span><br><span class="line">                <span class="keyword">INNER</span> <span class="keyword">JOIN</span> my_appraise a</span><br><span class="line">                        <span class="keyword">ON</span> a.orderid <span class="operator">=</span> o.id</span><br><span class="line">                           <span class="keyword">AND</span> is_reply <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">         <span class="keyword">ORDER</span>  <span class="keyword">BY</span> appraise_time <span class="keyword">DESC</span></span><br><span class="line">         LIMIT  <span class="number">0</span>, <span class="number">20</span>)</span><br><span class="line">        <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">        (<span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line">         <span class="keyword">FROM</span>   my_order o</span><br><span class="line">                <span class="keyword">INNER</span> <span class="keyword">JOIN</span> my_appraise a</span><br><span class="line">                        <span class="keyword">ON</span> a.orderid <span class="operator">=</span> o.id</span><br><span class="line">                           <span class="keyword">AND</span> is_reply <span class="operator">=</span> <span class="number">1</span></span><br><span class="line">         <span class="keyword">ORDER</span>  <span class="keyword">BY</span> appraise_time <span class="keyword">DESC</span></span><br><span class="line">         LIMIT  <span class="number">0</span>, <span class="number">20</span>)) t</span><br><span class="line"><span class="keyword">ORDER</span>  <span class="keyword">BY</span>  is_reply <span class="keyword">ASC</span>,</span><br><span class="line">          appraisetime <span class="keyword">DESC</span></span><br><span class="line">LIMIT  <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="EXISTS-Statement"><a href="#EXISTS-Statement" class="headerlink" title="EXISTS Statement"></a>EXISTS Statement</h2><p>When dealing with EXISTS clauses, MySQL still uses nested subqueries for execution. Take the following SQL statement as an example:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   my_neighbor n</span><br><span class="line">       <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> my_neighbor_apply sra</span><br><span class="line">              <span class="keyword">ON</span> n.id <span class="operator">=</span> sra.neighbor_id</span><br><span class="line">                 <span class="keyword">AND</span> sra.user_id <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span>  n.topic_status <span class="operator">&lt;</span> <span class="number">4</span></span><br><span class="line">       <span class="keyword">AND</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span></span><br><span class="line">                  <span class="keyword">FROM</span>   message_info m</span><br><span class="line">                  <span class="keyword">WHERE</span>  n.id <span class="operator">=</span> m.neighbor_id</span><br><span class="line">                         <span class="keyword">AND</span> m.inuser <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span>)</span><br><span class="line">       <span class="keyword">AND</span> n.topic_type <span class="operator">&lt;&gt;</span> <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+--------------------+-------+------+-----+------------------------------------------+---------+-------+---------+ -----+</span><br><span class="line">| <span class="built_in">id</span> | select_type        | table | <span class="built_in">type</span> | possible_keys | key     | key_len | ref      | rows    | Extra</span><br><span class="line">+----+--------------------+-------+------+ -----+------------------------------------------+---------+-------+---------+ -----+</span><br><span class="line">|  1 | PRIMARY            | n     | ALL  |  | NULL     | NULL    | NULL    | 1086041 | Using <span class="built_in">where</span>                   |</span><br><span class="line">|  1 | PRIMARY            | sra   | ref  |  | idx_user_id | 123     | const |       1 | Using <span class="built_in">where</span>          |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | m     | ref  |  | idx_message_info   | 122     | const |       1 | Using index condition; Using <span class="built_in">where</span> |</span><br><span class="line">+----+--------------------+-------+------+ -----+------------------------------------------+---------+-------+---------+ -----+</span><br></pre></td></tr></table></figure>
+
+<p>By removing the EXISTS clause and changing it to a JOIN, we can avoid nested subqueries and reduce the execution time from 1.93 seconds to 1 millisecond.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   my_neighbor n</span><br><span class="line">       <span class="keyword">INNER</span> <span class="keyword">JOIN</span> message_info m</span><br><span class="line">               <span class="keyword">ON</span> n.id <span class="operator">=</span> m.neighbor_id</span><br><span class="line">                  <span class="keyword">AND</span> m.inuser <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line">       <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> my_neighbor_apply sra</span><br><span class="line">              <span class="keyword">ON</span> n.id <span class="operator">=</span> sra.neighbor_id</span><br><span class="line">                 <span class="keyword">AND</span> sra.user_id <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span>  n.topic_status <span class="operator">&lt;</span> <span class="number">4</span></span><br><span class="line">       <span class="keyword">AND</span> n.topic_type <span class="operator">&lt;&gt;</span> <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+
+<p>The new execution plan is as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br><span class="line">| <span class="built_in">id</span> | select_type | table | <span class="built_in">type</span>   | possible_keys | key   | key_len | ref   | rows | Extra |</span><br><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br><span class="line">|  1 | SIMPLE      | m     | ref    | | idx_message_info   | 122     | const |    1 | Using index condition |</span><br><span class="line">|  1 | SIMPLE      | n     | eq_ref | | PRIMARY   | 122     | ighbor_id |    1 | Using <span class="built_in">where</span>      |</span><br><span class="line">|  1 | SIMPLE      | sra   | ref    | | idx_user_id | 123     | const |    1 | Using <span class="built_in">where</span>           |</span><br><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br></pre></td></tr></table></figure>
+
+<h2 id="Condition-Pushdown"><a href="#Condition-Pushdown" class="headerlink" title="Condition Pushdown"></a>Condition Pushdown</h2><p>There are cases where external query conditions cannot be pushed down to complex views or subqueries:</p>
+<ol>
+<li>Aggregated subqueries</li>
+<li>Subqueries with LIMIT</li>
+<li>UNION or UNION ALL subqueries</li>
+<li>Subqueries in output fields</li>
+</ol>
+<p>Consider the following statement, where the condition affects the aggregated subquery:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   (<span class="keyword">SELECT</span> target,</span><br><span class="line">               <span class="built_in">Count</span>(<span class="operator">*</span>)</span><br><span class="line">        <span class="keyword">FROM</span>   operation</span><br><span class="line">        <span class="keyword">GROUP</span>  <span class="keyword">BY</span> target) t</span><br><span class="line"><span class="keyword">WHERE</span>  target <span class="operator">=</span> <span class="string">&#x27;rm-xxxx&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+-------------+------------+-------+---------------+-------------+---------+-------+------+-------------+</span><br><span class="line">| <span class="built_in">id</span> | select_type | table      | <span class="built_in">type</span>  | possible_keys | key         | key_len | ref   | rows | Extra       |</span><br><span class="line">+----+-------------+------------+-------+---------------+-------------+---------+-------+------+-------------+</span><br><span class="line">|  1 | PRIMARY     | n          | ALL   | NULL          | NULL        | NULL    | NULL  | 1086041 | Using <span class="built_in">where</span> |</span><br><span class="line">|  1 | PRIMARY     | sra        | ref   | NULL          | idx_user_id | 123     | const |    1 | Using <span class="built_in">where</span> |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | m | ref   | NULL          | idx_message_info   | 122     | const |    1 | Using index condition; Using <span class="built_in">where</span> |</span><br><span class="line">+----+-------------+------------+-------+---------------+-------------+---------+-------+------+-------------+</span><br></pre></td></tr></table></figure>
+
+<p>By removing the EXISTS clause and changing it to a JOIN, we can avoid nested subqueries and reduce the execution time from 1.93 seconds to 1 millisecond.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span>   my_neighbor n</span><br><span class="line">       <span class="keyword">INNER</span> <span class="keyword">JOIN</span> message_info m</span><br><span class="line">               <span class="keyword">ON</span> n.id <span class="operator">=</span> m.neighbor_id</span><br><span class="line">                  <span class="keyword">AND</span> m.inuser <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line">       <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> my_neighbor_apply sra</span><br><span class="line">              <span class="keyword">ON</span> n.id <span class="operator">=</span> sra.neighbor_id</span><br><span class="line">                 <span class="keyword">AND</span> sra.user_id <span class="operator">=</span> <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span>  n.topic_status <span class="operator">&lt;</span> <span class="number">4</span></span><br><span class="line">       <span class="keyword">AND</span> n.topic_type <span class="operator">&lt;&gt;</span> <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+
+<p>The new execution plan is as follows:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br><span class="line">| <span class="built_in">id</span> | select_type | table | <span class="built_in">type</span>   | possible_keys | key   | key_len | ref   | rows | Extra |</span><br><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br><span class="line">|  1 | SIMPLE      | m     | ref    | | idx_message_info   | 122     | const |    1 | Using index condition |</span><br><span class="line">|  1 | SIMPLE      | n     | eq_ref | | PRIMARY   | 122     | ighbor_id |    1 | Using <span class="built_in">where</span>      |</span><br><span class="line">|  1 | SIMPLE      | sra   | ref    | | idx_user_id | 123     | const |    1 | Using <span class="built_in">where</span>           |</span><br><span class="line">+----+-------------+-------+--------+ -----+------------------------------------------+---------+ -----+------+ -----+</span><br></pre></td></tr></table></figure>
+
+<h2 id="Narrowing-the-Scope-in-Advance"><a href="#Narrowing-the-Scope-in-Advance" class="headerlink" title="Narrowing the Scope in Advance"></a>Narrowing the Scope in Advance</h2><p>Let’s take a look at the following partially optimized example (main table in the left join acts as a primary query condition):</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>    a.<span class="operator">*</span>,</span><br><span class="line">          c.allocated</span><br><span class="line"><span class="keyword">FROM</span>      (</span><br><span class="line">              <span class="keyword">SELECT</span>   resourceid</span><br><span class="line">              <span class="keyword">FROM</span>     my_distribute d</span><br><span class="line">                   <span class="keyword">WHERE</span>    isdelete <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">                   <span class="keyword">AND</span>      cusmanagercode <span class="operator">=</span> <span class="string">&#x27;1234567&#x27;</span></span><br><span class="line">                   <span class="keyword">ORDER</span> <span class="keyword">BY</span> salecode limit <span class="number">20</span>) a</span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span></span><br><span class="line">          (</span><br><span class="line">              <span class="keyword">SELECT</span>   resourcesid， <span class="built_in">sum</span>(ifnull(allocation, <span class="number">0</span>) <span class="operator">*</span> <span class="number">12345</span>) allocated</span><br><span class="line">              <span class="keyword">FROM</span>     my_resources</span><br><span class="line">                   <span class="keyword">GROUP</span> <span class="keyword">BY</span> resourcesid) c</span><br><span class="line"><span class="keyword">ON</span>        a.resourceid <span class="operator">=</span> c.resourcesid;</span><br></pre></td></tr></table></figure>
+
+<p>Does this statement still have other issues? It is clear that subquery c is an aggregate query on the entire table, which can cause performance degradation when dealing with a large number of tables.</p>
+<p>In fact, for subquery c, the left join result set only cares about the data that can be matched with the primary table’s <code>resourceid</code>. Therefore, we can rewrite the statement as follows, reducing the execution time from 2 seconds to 2 milliseconds:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>    a.<span class="operator">*</span>,</span><br><span class="line">          c.allocated</span><br><span class="line"><span class="keyword">FROM</span>      (</span><br><span class="line">                   <span class="keyword">SELECT</span>   resourceid</span><br><span class="line">                   <span class="keyword">FROM</span>     my_distribute d</span><br><span class="line">                   <span class="keyword">WHERE</span>    isdelete <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">                   <span class="keyword">AND</span>      cusmanagercode <span class="operator">=</span> <span class="string">&#x27;1234567&#x27;</span></span><br><span class="line">                   <span class="keyword">ORDER</span> <span class="keyword">BY</span> salecode limit <span class="number">20</span>) a</span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span></span><br><span class="line">          (</span><br><span class="line">                   <span class="keyword">SELECT</span>   resourcesid， <span class="built_in">sum</span>(ifnull(allocation, <span class="number">0</span>) <span class="operator">*</span> <span class="number">12345</span>) allocated</span><br><span class="line">                   <span class="keyword">FROM</span>     my_resources r,</span><br><span class="line">                            (</span><br><span class="line">                                     <span class="keyword">SELECT</span>   resourceid</span><br><span class="line">                                     <span class="keyword">FROM</span>     my_distribute d</span><br><span class="line">                                     <span class="keyword">WHERE</span>    isdelete <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">                                     <span class="keyword">AND</span>      cusmanagercode <span class="operator">=</span> <span class="string">&#x27;1234567&#x27;</span></span><br><span class="line">                                     <span class="keyword">ORDER</span> <span class="keyword">BY</span> salecode limit <span class="number">20</span>) a</span><br><span class="line">                   <span class="keyword">WHERE</span>    r.resourcesid <span class="operator">=</span> a.resourcesid</span><br><span class="line">                   <span class="keyword">GROUP</span> <span class="keyword">BY</span> resourcesid) c</span><br><span class="line"><span class="keyword">ON</span>        a.resourceid <span class="operator">=</span> c.resourcesid;</span><br></pre></td></tr></table></figure>
+
+<p>However, the subquery <code>a</code> appears multiple times in our SQL statement. This approach not only incurs additional costs but also makes the statement more complex. We can simplify it using the WITH statement:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">WITH</span> a <span class="keyword">AS</span></span><br><span class="line">(</span><br><span class="line">         <span class="keyword">SELECT</span>   resourceid</span><br><span class="line">         <span class="keyword">FROM</span>     my_distribute d</span><br><span class="line">         <span class="keyword">WHERE</span>    isdelete <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">         <span class="keyword">AND</span>      cusmanagercode <span class="operator">=</span> <span class="string">&#x27;1234567&#x27;</span></span><br><span class="line">         <span class="keyword">ORDER</span> <span class="keyword">BY</span> salecode limit <span class="number">20</span>)</span><br><span class="line"><span class="keyword">SELECT</span>    a.<span class="operator">*</span>,</span><br><span class="line">          c.allocated</span><br><span class="line"><span class="keyword">FROM</span>      a</span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span></span><br><span class="line">          (</span><br><span class="line">                   <span class="keyword">SELECT</span>   resourcesid， <span class="built_in">sum</span>(ifnull(allocation, <span class="number">0</span>) <span class="operator">*</span> <span class="number">12345</span>) allocated</span><br><span class="line">                   <span class="keyword">FROM</span>     my_resources r,</span><br><span class="line">                            a</span><br><span class="line">                   <span class="keyword">WHERE</span>    r.resourcesid <span class="operator">=</span> a.resourcesid</span><br><span class="line">                   <span class="keyword">GROUP</span> <span class="keyword">BY</span> resourcesid) c</span><br><span class="line"><span class="keyword">ON</span>        a.resourceid <span class="operator">=</span> c.resourcesid;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>The database compiler generates execution plans that determine how SQL statements are actually executed. However, compilers can only do their best to serve, and no database compiler is perfect. The scenarios mentioned above also exist in other databases. Understanding the characteristics of the database compiler allows us to work around its limitations and write high-performance SQL statements.</p>
+<p>When designing data models and writing SQL statements, it is important to bring algorithmic thinking or awareness into the process. Developing the habit of using the WITH statement when writing complex SQL statements can simplify them and reduce the burden on the database.</p>
+<p>Finally, here is the execution order of SQL statements:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span></span><br><span class="line"><span class="operator">&lt;</span>left_table<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">ON</span></span><br><span class="line"><span class="operator">&lt;</span>join_condition<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="operator">&lt;</span>join_type<span class="operator">&gt;</span></span><br><span class="line"> <span class="keyword">JOIN</span></span><br><span class="line"><span class="operator">&lt;</span>right_table<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">WHERE</span></span><br><span class="line"><span class="operator">&lt;</span>where_condition<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span></span><br><span class="line"><span class="operator">&lt;</span>group_by_list<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">HAVING</span></span><br><span class="line"><span class="operator">&lt;</span>having_condition<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">DISTINCT</span></span><br><span class="line"><span class="operator">&lt;</span>select_list<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span></span><br><span class="line"><span class="operator">&lt;</span>order_by_condition<span class="operator">&gt;</span></span><br><span class="line"></span><br><span class="line">LIMIT</span><br><span class="line"><span class="operator">&lt;</span>limit_number<span class="operator">&gt;</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/05/08/8%20Ways%20to%20Sql%20That%20Can%20Decrease%20Performance%20by%20100%20Times./" rel="prev" title="">
+                  <i class="fa fa-angle-left"></i> 
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">87k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">5:18</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
