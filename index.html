@@ -153,7 +153,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-count">78</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -189,6 +189,161 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/10/%E6%9C%AA%E5%91%BD%E5%90%8D%201/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2024/05/10/%E6%9C%AA%E5%91%BD%E5%90%8D%201/" class="post-title-link" itemprop="url">Untitled</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2024-05-10 14:55:13 / Modified: 15:03:30" itemprop="dateCreated datePublished" datetime="2024-05-10T14:55:13+08:00">2024-05-10</time>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>1.5k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>5 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Smart Go compiler:  Elimination And</p>
+<h2 id="Title-Understanding-Dead-Code-Elimination-and-Executable-File-Size-in-Go"><a href="#Title-Understanding-Dead-Code-Elimination-and-Executable-File-Size-in-Go" class="headerlink" title="Title: Understanding Dead Code Elimination and Executable File Size in Go"></a>Title: Understanding Dead Code Elimination and Executable File Size in Go</h2><h3 id="1-Experiment-Which-Functions-are-Included-in-the-Final-Executable"><a href="#1-Experiment-Which-Functions-are-Included-in-the-Final-Executable" class="headerlink" title="1. Experiment: Which Functions are Included in the Final Executable?"></a>1. Experiment: Which Functions are Included in the Final Executable?</h3><p>Let’s conduct an experiment to determine which functions are included in the final executable! We’ll create a demo1 with the following directory structure and code snippets:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo1</span></span><br><span class="line">$ tree -F .</span><br><span class="line">.</span><br><span class="line">├── <span class="keyword">go</span>.mod</span><br><span class="line">├── main.<span class="keyword">go</span></span><br><span class="line">└── pkga/</span><br><span class="line">    └── pkga.<span class="keyword">go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;demo/pkga&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    result := pkga.Foo()</span><br><span class="line">    fmt.Println(result)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// pkga/pkga.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> pkga</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Foo</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Bar</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Bar.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The example is very simple! The main function calls the exported function Foo from the pkga package, which also contains the Bar function (although it is not called by any other function). Now let’s compile this module and examine the functions from the pkga package included in the compiled executable file! (This article uses Go version 1.22.0)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ go build</span><br><span class="line">$ go tool nm demo | grep demo</span><br></pre></td></tr></table></figure>
+
+<p>Surprisingly, we didn’t find any symbol information related to pkga in the output of the executable file. This might be due to Go’s optimization. Let’s disable the optimization of the Go compiler and try again:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ go build -gcflags &#x27;-l -N&#x27;</span><br><span class="line">$ go tool nm demo | grep demo</span><br><span class="line"> 108ca80 T demo/pkga.Foo</span><br></pre></td></tr></table></figure>
+
+<p>After disabling inlining optimization, we can see that pkga.Foo appears in the final executable file demo, but the unused Bar function is not included.</p>
+<p>Now let’s look at an example with indirect dependencies:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// dead-code-elimination/demo2</span><br><span class="line">$ tree .</span><br><span class="line">.</span><br><span class="line">├── go.mod</span><br><span class="line">├── main.go</span><br><span class="line">├── pkga</span><br><span class="line">│   └── pkga.go</span><br><span class="line">└── pkgb</span><br><span class="line">    └── pkgb.go</span><br><span class="line"></span><br><span class="line">// pkga/pkga.go</span><br><span class="line">package pkga</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">    &quot;demo/pkgb&quot;</span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func Foo() string &#123;</span><br><span class="line">    pkgb.Zoo()</span><br><span class="line">    return &quot;Hello from Foo!&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func Bar() &#123;</span><br><span class="line">    fmt.Println(&quot;This is Bar.&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In this example, we call a new function Zoo from the pkgb package within the pkga.Foo function. Let’s compile this new example and see which functions are included in the final executable:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ go build -gcflags=&#x27;-l -N&#x27;</span><br><span class="line">$ go tool nm demo | grep demo</span><br><span class="line"> 1093b40 T demo/pkga.Foo</span><br><span class="line"> 1093aa0 T demo/pkgb.Zoo</span><br></pre></td></tr></table></figure>
+
+<p>We can observe that only the functions reachable through the program execution path are included in the final executable!</p>
+<p>In more complex examples, we can use the <code>go build -ldflags=&#39;-dumpdep&#39;</code> command to view the call dependency relationship (using demo2 as an example):</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="keyword">go</span> build -ldflags=<span class="string">&#x27;-dumpdep&#x27;</span> -gcflags=<span class="string">&#x27;-l -N&#x27;</span> &gt; deps.txt <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br><span class="line"></span><br><span class="line">$ grep demo deps.txt</span><br><span class="line"># demo</span><br><span class="line">main.main -&gt; demo/pkga.Foo</span><br><span class="line">demo/pkga.Foo -&gt; demo/pkgb.Zoo</span><br><span class="line">demo/pkga.Foo -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">demo/pkgb.Zoo -&gt; math/rand.Int31n</span><br><span class="line">demo/pkgb.Zoo -&gt; demo/pkgb..stmp_0</span><br><span class="line">demo/pkgb..stmp_0 -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Zoo in pkgb&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>From this, we can conclude that Go ensures that only the code that is actually used enters the final executable file, even if some code (such as pkga.Bar) and the code that is actually used (such as pkga.Foo) are in the same package. This mechanism also ensures that the final executable file size remains within a manageable range.</p>
+<p>Next, let’s explore this mechanism in Go.</p>
+<h3 id="2-Dead-Code-Elimination"><a href="#2-Dead-Code-Elimination" class="headerlink" title="2. Dead Code Elimination"></a>2. Dead Code Elimination</h3><p>Let’s review the build process of <code>go build</code>. The following steps outline the <code>go build</code> command:</p>
+<ol>
+<li>Read go.mod and go.sum: If the current directory contains a go.mod file, <code>go build</code> reads it to determine the project’s dependencies. It also verifies the integrity of the dependencies based on checksums in the go.sum file.</li>
+<li>Calculate the package dependency graph: <code>go build</code> analyzes the import statements in the packages being built and their dependencies to construct a dependency graph. This graph represents the relationships between packages, enabling the compiler to determine the build order of packages.</li>
+<li>Determine the packages to build: Based on the build cache and the dependency graph, <code>go build</code> determines which packages need to be built. It checks the build cache to see if the compiled packages are up to date. If any package or its dependencies have changed since the last build, <code>go build</code> will rebuild those packages.</li>
+<li>Invoke the compiler (go tool compile): For each package that needs to be built, <code>go build</code> invokes the Go compiler (go tool compile). The compiler converts the Go source code into machine code specific to the target platform and generates object files (.o files).</li>
+<li>Invoke the linker (go tool link): After compiling all the necessary packages, <code>go build</code> invokes the Go linker (go tool link). The linker merges the object files generated by the compiler into an executable binary file or a package archive file. It resolves symbols and references between packages, performs necessary relocations, and generates the final output.</li>
+</ol>
+<p>The entire build process can be represented by the following diagram:</p>
+<p><img src="https://tonybai.com/wp-content/uploads/dead-code-elimination-and-executable-file-slimming-in-go-2.png" alt="Build Process"></p>
+<p>During the build process, <code>go build</code> performs various optimizations, such as dead code elimination and inlining, to improve the performance and reduce the size of the generated binary files. Dead code elimination is an important mechanism that ensures the controllable size of the final executable file in Go.</p>
+<p>The implementation of the dead code detection algorithm can be found in the <code>$GOROOT/src/cmd/link/internal/ld/deadcode.go</code> file. The algorithm operates by traversing the graph and follows these steps:</p>
+<ol>
+<li>Start from the entry point of the system and mark all symbols reachable through relocations. Relocation represents the dependency relationship between two symbols.</li>
+<li>By traversing the relocation relationships, the algorithm marks all symbols that can be accessed from the entry point. For example, if the function pkga.Foo is called in the main function main.main, there will be a relocation entry for this function in main.main.</li>
+<li>After marking is complete, the algorithm marks all unmarked symbols as unreachable and dead code. These unmarked symbols represent the code that cannot be accessed by the entry point or any other reachable symbols.</li>
+</ol>
+<p>However, there is a special syntax element to note, which is types with methods. Whether the methods of a type are included in the final executable depends on different scenarios. In deadcode.go, the function implementation for marking reachable symbols distinguishes three cases of method invocation for reachable types:</p>
+<ol>
+<li>Direct invocation</li>
+<li>Invocation through reachable interface types</li>
+<li>Invocation through reflection: reflect.Value.Method (or MethodByName) or reflect.Type.Method (or MethodByName)</li>
+</ol>
+<p>In the first case, the invoked method is marked as reachable. In the second case, all reachable interface types are decomposed into method signatures. Each encountered method is compared with the interface method signatures, and if there is a match, it is marked as reachable. This method is conservative but simple and correct.</p>
+<p>In the third case, the algorithm handles methods by looking for functions marked as REFLECTMETHOD by the compiler. The presence of REFLECTMETHOD on a function F means that F uses reflection for method lookup, but the compiler cannot determine the method name during static analysis. Therefore, all functions that call reflect.Value.Method or reflect.Type.Method are marked as REFLECTMETHOD. Functions that call reflect.Value.MethodByName or reflect.Type.MethodByName with non-constant arguments are also considered REFLECTMETHOD. If a REFLECTMETHOD is found, static analysis is abandoned, and all exported methods of reachable types are marked as reachable.</p>
+<p>Here is an example from the reference material:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo3/main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> X <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> Y <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> One()   &#123; fmt.Println(<span class="string">&quot;hello 1&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Two()   &#123; fmt.Println(<span class="string">&quot;hello 2&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Three() &#123; fmt.Println(<span class="string">&quot;hello 3&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Four()  &#123; fmt.Println(<span class="string">&quot;hello 4&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Five()  &#123; fmt.Println(<span class="string">&quot;hello 5&quot;</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> name <span class="type">string</span></span><br><span class="line">    fmt.Scanf(<span class="string">&quot;%s&quot;</span>, &amp;name)</span><br><span class="line">    reflect.ValueOf(&amp;X&#123;&#125;).MethodByName(name).Call(<span class="literal">nil</span>)</span><br><span class="line">    <span class="keyword">var</span> y Y</span><br><span class="line">    y.Five()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>In this example, type *X has three methods, and type *Y has two methods. In the main function, we call the methods of an X instance through reflection and directly call a method of a Y instance. Let’s see which methods of X and Y are included in the final executable:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags=<span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm ./demo | grep main</span></span><br><span class="line"> 11d59c0 D go:main.inittasks</span><br><span class="line"> 10d4500 T main.(*X).One</span><br><span class="line"> 10d4640 T main.(*X).Three</span><br><span class="line"> 10d45a0 T main.(*X).Two</span><br><span class="line"> 10d46e0 T main.(*Y).Five</span><br><span class="line"> 10d4780 T main.main</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure>
+
+<p>We can observe that only the directly called method Five of the reachable type Y is included in the final executable, while all methods of the reachable type X through reflection are present! This aligns with the third case mentioned earlier.</p>
+<h3 id="3-Summary"><a href="#3-Summary" class="headerlink" title="3. Summary"></a>3. Summary</h3><p>This article introduced the dead code elimination and executable file size reduction mechanisms in the Go language. Through experiments, we verified that only the functions called on the program execution path are included in the final executable, and unused functions are eliminated.</p>
+<p>The article explained the Go build process, including package dependency graph calculation, compilation, and linking steps, and highlighted dead code elimination as an important optimization strategy. The specific dead code elimination algorithm is implemented through graph traversal, where reachable symbols are marked and unmarked symbols are considered unused. The article also mentioned the handling of type methods.</p>
+<p>With this dead code elimination mechanism, Go controls the size of the final executable file, achieving executable file size reduction.</p>
+<p>The source code mentioned in this article can be downloaded <a target="_blank" rel="noopener" href="https://github.com/bigwhite/experiments/tree/master/dead-code-elimination">here</a>.</p>
+<h3 id="4-References"><a href="#4-References" class="headerlink" title="4. References"></a>4. References</h3><ul>
+<li><a target="_blank" rel="noopener" href="https://golab.io/talks/getting-the-most-out-of-dead-code-elimination">Getting the most out of Dead Code elimination</a> </li>
+<li><a target="_blank" rel="noopener" href="https://github.com/golang/go/issues/6853">all: binaries too big and growing</a> </li>
+<li><a target="_blank" rel="noopener" href="https://github.com/aarzilli/whydeadcode">aarzilli&#x2F;whydeadcode</a></li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1291,114 +1446,6 @@
 
 
 
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/23/Go%20program%20pattern%2005%20Decorations/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="huizhou92">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="huizhou92">
-      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | huizhou92">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/23/Go%20program%20pattern%2005%20Decorations/" class="post-title-link" itemprop="url">Go program pattern 05: Decorations</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2024-04-23 14:33:00 / Modified: 15:33:58" itemprop="dateCreated datePublished" datetime="2024-04-23T14:33:00+08:00">2024-04-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Go/" itemprop="url" rel="index"><span itemprop="name">Go</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-item" title="Views">
-      <span class="post-meta-item-icon">
-        <i class="far fa-eye"></i>
-      </span>
-      <span class="post-meta-item-text">Views: </span>
-      <span class="firestore-visitors-count"></span>
-    </span>
-    <span class="post-meta-break"></span>
-    <span class="post-meta-item" title="Word count in article">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">Word count in article: </span>
-      <span>817</span>
-    </span>
-    <span class="post-meta-item" title="Reading time">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">Reading time &asymp;</span>
-      <span>3 mins.</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Go is a statically typed compiled language designed to be concise and efficient. While Go is not a purely object-oriented language, we can still use design patterns to improve code readability and maintainability. Today, I will introduce a common design pattern: the Decorator pattern.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/04/23/Go%20program%20pattern%2005%20Decorations/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
   <nav class="pagination">
     <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" title="Next page" aria-label="Next page" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
@@ -1422,13 +1469,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">88k</span>
+    <span title="Word count total">90k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">5:20</span>
+    <span title="Reading time total">5:26</span>
   </span>
 </div>
 
