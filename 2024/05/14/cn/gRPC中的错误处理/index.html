@@ -23,30 +23,30 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
      crossorigin="anonymous"></script>
 
-    <meta name="description" content="深入理解 go defer">
+    <meta name="description" content="gRPC 一般不在 message 中定义错误。毕竟每个 gRPC 服务本身就带一个 error 的返回值，这是用来传输错误的专用通道。gRPC 中所有的错误返回都应该是 nil 或者 由 status.Status 产生的一个error。这样error可以直接被调用方Client识别。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Go解密: defer 的优雅陷阱">
-<meta property="og:url" content="https://hxzhouh.com/2024/04/02/cn/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/index.html">
+<meta property="og:title" content="gRPC中的错误处理">
+<meta property="og:url" content="https://hxzhouh.com/2024/05/14/cn/gRPC%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/index.html">
 <meta property="og:site_name" content="huizhou92">
-<meta property="og:description" content="深入理解 go defer">
+<meta property="og:description" content="gRPC 一般不在 message 中定义错误。毕竟每个 gRPC 服务本身就带一个 error 的返回值，这是用来传输错误的专用通道。gRPC 中所有的错误返回都应该是 nil 或者 由 status.Status 产生的一个error。这样error可以直接被调用方Client识别。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png">
-<meta property="article:published_time" content="2024-04-02T08:19:00.000Z">
-<meta property="article:modified_time" content="2024-04-18T08:31:19.209Z">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/28177eb7de8b02e73d9b3b0484e91e5a.png">
+<meta property="article:published_time" content="2024-05-14T08:10:00.000Z">
+<meta property="article:modified_time" content="2024-05-14T08:10:59.407Z">
 <meta property="article:author" content="huizhou92">
-<meta property="article:tag" content="go">
+<meta property="article:tag" content="Golang, Self Improvement,Read,Wirte, Computer Science, Cloud Computing, Data Storage, Efficiency Tools, Backend Engineer, huizhou92">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/05/28177eb7de8b02e73d9b3b0484e91e5a.png">
 
 
-<link rel="canonical" href="https://hxzhouh.com/2024/04/02/cn/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/">
+<link rel="canonical" href="https://hxzhouh.com/2024/05/14/cn/gRPC%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/04/02/cn/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/","path":"2024/04/02/cn/Go 解密： defer 的优雅陷阱/","title":"Go解密: defer 的优雅陷阱"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/05/14/cn/gRPC%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/","path":"2024/05/14/cn/gRPC中的错误处理/","title":"gRPC中的错误处理"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Go解密: defer 的优雅陷阱 | huizhou92</title>
+<title>gRPC中的错误处理 | huizhou92</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
   <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
@@ -145,7 +145,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#defer-%E7%9A%84%E5%87%A0%E4%B8%AA%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">defer 的几个使用场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#defer-%E5%B8%A6%E6%9D%A5%E7%9A%84%E6%80%A7%E8%83%BD%E6%8D%9F%E8%80%97"><span class="nav-number">2.</span> <span class="nav-text">defer 带来的性能损耗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%B8%B8%E8%A7%84%E7%94%A8%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">1. 常规用法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%BF%9B%E9%98%B6%E7%94%A8%E6%B3%95"><span class="nav-number"></span> <span class="nav-text">2. 进阶用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%A4%BA%E4%BE%8B%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%A4%BA%E4%BE%8B"><span class="nav-number">0.1.</span> <span class="nav-text">服务端示例服务端示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E7%A4%BA%E4%BE%8B"><span class="nav-number">0.2.</span> <span class="nav-text">客户端的示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-number">1.1.</span> <span class="nav-text">注意</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -204,7 +204,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/04/02/cn/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9A%20defer%20%E7%9A%84%E4%BC%98%E9%9B%85%E9%99%B7%E9%98%B1/">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/14/cn/gRPC%E4%B8%AD%E7%9A%84%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -217,12 +217,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="Go解密: defer 的优雅陷阱 | huizhou92">
-      <meta itemprop="description" content="深入理解 go defer">
+      <meta itemprop="name" content="gRPC中的错误处理 | huizhou92">
+      <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Go解密: defer 的优雅陷阱
+          gRPC中的错误处理
         </h1>
 
         <div class="post-meta-container">
@@ -232,15 +232,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
+      
 
-      <time title="Created: 2024-04-02 16:19:00" itemprop="dateCreated datePublished" datetime="2024-04-02T16:19:00+08:00">2024-04-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2024-04-18 16:31:19" itemprop="dateModified" datetime="2024-04-18T16:31:19+08:00">2024-04-18</time>
+      <time title="Created: 2024-05-14 16:10:00 / Modified: 16:10:59" itemprop="dateCreated datePublished" datetime="2024-05-14T16:10:00+08:00">2024-05-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -248,7 +242,7 @@
       </span>
       <span class="post-meta-item-text">In</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+          <a href="/categories/blog/" itemprop="url" rel="index"><span itemprop="name">blog</span></a>
         </span>
     </span>
 
@@ -266,7 +260,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>625</span>
+      <span>638</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -277,30 +271,37 @@
     </span>
 </div>
 
-            <div class="post-description">深入理解 go defer</div>
         </div>
       </header>
 
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>在<a target="_blank" rel="noopener" href="https://medium.com/gitconnected/decrypt-go-panic-and-recover-5304d0d436c4">上一篇</a>文章中，我们使用的defer 来recover panic，在gopher的实际工作中，defer 就像一个忠诚可靠的队友一样，总是再背后默默的帮我们处理收尾的工作。  比如</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">wg.Add(goroutines)  </span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;  </span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">       <span class="keyword">defer</span> wg.Done()  </span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;  </span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)  </span><br><span class="line">       &#125;  </span><br><span class="line">    &#125;()  </span><br><span class="line">&#125;  </span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p>释放锁，或者其他任何资源。</p>
-<blockquote>
-<p>在Go中，只有在函数和方法内部才能使用defer；defer关键字后面只能接函数或方法，这些函数被称为deferred函数。<br>defer将它们注册到其所在goroutine用于存放deferred函数的栈数据结构中，这些deferred函数将在执行defer的函数退出前被按后进先出（LIFO）的顺序调度执行</p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"><br>无论是执行到函数体尾部返回，还是在某个错误处理分支显式调用return返回，抑或出现panic，已经存储到deferred函数栈中的函数都会被调度执行。因此，deferred函数是一个在任何情况下都可以为函数进行收尾工作的好场合。</p>
-<h1 id="defer-的几个使用场景"><a href="#defer-的几个使用场景" class="headerlink" title="defer 的几个使用场景"></a>defer 的几个使用场景</h1><ul>
-<li>panic 捕获,因为deferred 再任意场景下都会被执行，所以我们可以再defer中处理异常。（不建议这么做，如果是一般错误，不建议panic，如果必须panic ，就不要捕获）</li>
-<li>释放资源</li>
-<li>延迟执行，记录函数执行的时间比如<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">		fmt.Println(time.Now().Sub(s))</span><br><span class="line">	&#125;(time.Now())</span><br></pre></td></tr></table></figure></li>
-</ul>
-<h1 id="defer-带来的性能损耗"><a href="#defer-带来的性能损耗" class="headerlink" title="defer 带来的性能损耗"></a>defer 带来的性能损耗</h1><p>defer让进行资源释放（如文件描述符、锁）的过程变得优雅很多，也不易出错。但在性能敏感的程序中，defer带来的性能负担也是Gopher必须知晓和权衡的。<br><a target="_blank" rel="noopener" href="https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303">https://gist.github.com/hxzhouh/a07dd587ba52a8afdb07d5655c8ca303</a></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+    <div class="post-body" itemprop="articleBody"><p>gRPC 一般不在 message 中定义错误。<br>毕竟每个 gRPC 服务本身就带一个 error 的返回值，这是用来传输错误的专用通道。<br>gRPC 中所有的错误返回都应该是 nil 或者 <strong>由 status.Status 产生的一个error</strong>。这样error可以直接被调用方Client识别。</p>
+<span id="more"></span> 
 
-<p>在 go1.12 版本中相同的测试代码，非 defer 版本 要比defer 版本快7倍，经过1.13 1.14 两个大版本的优化，defer 的性能已经显著提高了，在我的电脑上，非defer 版本还是有着50%左右的性能领先。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在多数情况下，我们的程序对性能并不太敏感，我建议尽量使用defer，同时我们需要了解defer 运行的原理，以及几个要避免的地方。</p>
+<h2 id="1-常规用法"><a href="#1-常规用法" class="headerlink" title="1. 常规用法"></a>1. 常规用法</h2><p>当遇到一个go错误的时候，直接返回是无法被下游client识别的。<br>恰当的做法是：</p>
+<ul>
+<li>调用 status.New 方法，并传入一个适当的错误码，生成一个 status.Status 对象</li>
+<li>调用该 status.Err 方法生成一个能被调用方识别的error，然后返回<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> st := status.New(codes.NotFound, <span class="string">&quot;some description&quot;</span>)  </span><br><span class="line"> err := st.Err()</span><br></pre></td></tr></table></figure>
+传入的错误码是 codes.Code 类型。<br>此外还有更便捷的办法：使用 status.Error。它避免了手动转换的操作。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"> err := status.Error(codes.NotFound, <span class="string">&quot;some description&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="2-进阶用法"><a href="#2-进阶用法" class="headerlink" title="2. 进阶用法"></a>2. 进阶用法</h1><p>上面的错误有个问题，就是 code.Code 定义的错误码只有固定的几种，<strong>无法详尽地表达业务中遇到的错误场景</strong>。<br>gRPC 提供了在错误中补充信息的机制：status.WithDetails 方法<br>Client 通过将 error 重新转换位 status.Status ，就可以通过 status.Details 方法直接获取其中的内容。<br>status.Details 返回的是个slice， 是interface{}的slice，然而go已经自动做了类型转换，可以通过断言直接使用。</p>
+<h3 id="服务端示例服务端示例"><a href="#服务端示例服务端示例" class="headerlink" title="服务端示例服务端示例"></a>服务端示例服务端示例</h3><ul>
+<li>生成一个 status.Status 对象</li>
+<li>填充错误的补充信息</li>
+</ul>
+<p> &#x2F;&#x2F; 生成一个 status.Status   </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ErrorWithDetails</span><span class="params">()</span></span> <span class="type">error</span> &#123;  </span><br><span class="line">    st := status.Newf(codes.Internal, fmt.Sprintf(<span class="string">&quot;something went wrong: %v&quot;</span>, <span class="string">&quot;api.Getter&quot;</span>))  </span><br><span class="line">    v := &amp;errdetails.PreconditionFailure_Violation&#123; <span class="comment">//errDetails  </span></span><br><span class="line">       Type:        <span class="string">&quot;test&quot;</span>,  </span><br><span class="line">       Subject:     <span class="string">&quot;12&quot;</span>,  </span><br><span class="line">       Description: <span class="string">&quot;32&quot;</span>,  </span><br><span class="line">    &#125;  </span><br><span class="line">    br := &amp;errdetails.PreconditionFailure&#123;&#125;  </span><br><span class="line">    br.Violations = <span class="built_in">append</span>(br.Violations, v)  </span><br><span class="line">    st, _ = st.WithDetails(br)  </span><br><span class="line">    <span class="keyword">return</span> st.Err()  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="客户端的示例"><a href="#客户端的示例" class="headerlink" title="客户端的示例"></a>客户端的示例</h3><ul>
+<li>调用RPC错误后，解析错误信息</li>
+<li>通过断言直接获取错误详情<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"> resp, err := odinApp.CreatePlan(cli.StaffId.AssetId, gentRatePlanMeta(cli.StaffId))  </span><br><span class="line"> ​  </span><br><span class="line">   <span class="keyword">if</span> status.Code(err) != codes.InvalidArgument &#123;  </span><br><span class="line">     logger.Error(<span class="string">&quot;create plan error:%v&quot;</span>, err)  </span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">     <span class="keyword">for</span> _, d := <span class="keyword">range</span> status.Convert(err).Details() &#123;  </span><br><span class="line">       <span class="comment">//   </span></span><br><span class="line">       <span class="keyword">switch</span> info := d.(<span class="keyword">type</span>) &#123;  </span><br><span class="line">       <span class="keyword">case</span> *errdetails.QuotaFailure:  </span><br><span class="line">         logger.Info(<span class="string">&quot;Quota failure: %s&quot;</span>, info)  </span><br><span class="line">       <span class="keyword">case</span> *errdetails.PreconditionFailure:  </span><br><span class="line">         detail := d.(*errdetails.PreconditionFailure).Violations  </span><br><span class="line">         <span class="keyword">for</span> _, v1 := <span class="keyword">range</span> detail &#123;  </span><br><span class="line">           logger.Info(fmt.Sprintf(<span class="string">&quot;details: %+v&quot;</span>, v1))  </span><br><span class="line">         &#125;  </span><br><span class="line">       <span class="keyword">case</span> *errdetails.ResourceInfo:  </span><br><span class="line">         logger.Info(<span class="string">&quot;ResourceInfo: %s&quot;</span>, info)  </span><br><span class="line"> ​  </span><br><span class="line">       <span class="keyword">case</span> *errdetails.BadRequest:  </span><br><span class="line">         logger.Info(<span class="string">&quot;ResourceInfo: %s&quot;</span>, info)  </span><br><span class="line"> ​  </span><br><span class="line">       <span class="keyword">default</span>:  </span><br><span class="line">         logger.Info(<span class="string">&quot;Unexpected type: %s&quot;</span>, info)  </span><br><span class="line">       &#125;  </span><br><span class="line">     &#125;  </span><br><span class="line">   &#125;  </span><br><span class="line">   logger.Infof(<span class="string">&quot;create plan success,resp=%v&quot;</span>, resp)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>这个错误是如何传递给调用方Client的呢？<br>是放到 metadata中的，而metadata是放到HTTP的header中的。<br>metadata是key：value格式的数据。错误的传递中，key是个固定值：grpc-status-details-bin。<br>而value，是被proto编码过的，是二进制安全的。<br>目前大多数语言都实现了这个机制。<br><img src="https://images.hxzhouh.com/blog-images/2024/05/28177eb7de8b02e73d9b3b0484e91e5a.png" alt="Pasted image 20240511155439"></p>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>gRPC对响应头做了限制，上限为8K，所以错误不能太大。</p>
+<p>参考资料<br><a target="_blank" rel="noopener" href="https://protobuf.dev/getting-started/gotutorial/">https://protobuf.dev/getting-started/gotutorial/</a><br><a target="_blank" rel="noopener" href="https://pkg.go.dev/google.golang.org/genproto/googleapis/rpc/errdetails">https://pkg.go.dev/google.golang.org/genproto/googleapis/rpc/errdetails</a></p>
+<hr>
 
     </div>
 
@@ -309,22 +310,16 @@
     
 
     <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/go/" rel="tag"># go</a>
-          </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2024/03/27/cn/Go%20iota,%20%E4%B8%8D%E6%98%AF%E6%9E%9A%E4%B8%BE/" rel="prev" title="Go iota, 不是枚举">
-                  <i class="fa fa-angle-left"></i> Go iota, 不是枚举
+                <a href="/2024/05/13/golang%20action%20grpc%20san/" rel="prev" title="Secure Communication with gRPC: From SSL/TLS Certification to SAN Certification">
+                  <i class="fa fa-angle-left"></i> Secure Communication with gRPC: From SSL/TLS Certification to SAN Certification
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/04/02/cn/Go%20%E8%A7%A3%E5%AF%86%EF%BC%9Apanic%20%E5%87%BA%E7%8E%B0%E7%9A%84%E4%B8%89%E7%A7%8D%E5%8E%9F%E5%9B%A0/" rel="next" title="Go解密：panic 出现的三种原因">
-                  Go解密：panic 出现的三种原因 <i class="fa fa-angle-right"></i>
-                </a>
             </div>
           </div>
     </footer>
