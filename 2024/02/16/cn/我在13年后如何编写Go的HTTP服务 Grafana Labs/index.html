@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.18.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9000447749076746"
+     crossorigin="anonymous"></script>
+
+    <meta name="description" content="将近六年前，我写了一篇博客文章，概述了我如何编写Go的HTTP服务，现在，我再次告诉你，我如何编写HTTP服务。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我在13年后如何编写Go的HTTP服务|Grafana Labs">
+<meta property="og:url" content="https://hxzhouh.com/2024/02/16/cn/%E6%88%91%E5%9C%A813%E5%B9%B4%E5%90%8E%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99Go%E7%9A%84HTTP%E6%9C%8D%E5%8A%A1%20Grafana%20Labs/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="将近六年前，我写了一篇博客文章，概述了我如何编写Go的HTTP服务，现在，我再次告诉你，我如何编写HTTP服务。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-02-16T09:15:24.992Z">
+<meta property="article:modified_time" content="2024-03-26T01:08:38.694Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="GO">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/02/16/cn/%E6%88%91%E5%9C%A813%E5%B9%B4%E5%90%8E%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99Go%E7%9A%84HTTP%E6%9C%8D%E5%8A%A1%20Grafana%20Labs/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/02/16/cn/%E6%88%91%E5%9C%A813%E5%B9%B4%E5%90%8E%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99Go%E7%9A%84HTTP%E6%9C%8D%E5%8A%A1%20Grafana%20Labs/","path":"2024/02/16/cn/我在13年后如何编写Go的HTTP服务 Grafana Labs/","title":"我在13年后如何编写Go的HTTP服务|Grafana Labs"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>我在13年后如何编写Go的HTTP服务|Grafana Labs | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E7%AF%87%E6%96%87%E7%AB%A0%E9%80%82%E5%90%88%E8%B0%81%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">这篇文章适合谁？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NewServer%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">NewServer构造函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%BF%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8"><span class="nav-number">2.1.</span> <span class="nav-text">长参数列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8routes-go%E4%B8%AD%E6%98%A0%E5%B0%84%E6%95%B4%E4%B8%AAAPI%E6%8E%A5%E5%8F%A3"><span class="nav-number">3.</span> <span class="nav-text">在routes.go中映射整个API接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#func-main-%E5%8F%AA%E8%B0%83%E7%94%A8run"><span class="nav-number">4.</span> <span class="nav-text">func main()只调用run()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E9%9B%85%E5%85%B3%E9%97%AD"><span class="nav-number">4.1.</span> <span class="nav-text">优雅关闭</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A7%E5%88%B6%E7%8E%AF%E5%A2%83"><span class="nav-number">4.2.</span> <span class="nav-text">控制环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Maker%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-number">5.</span> <span class="nav-text">使用Maker函数返回处理程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%B8%80%E4%B8%AA%E5%9C%B0%E6%96%B9%E5%A4%84%E7%90%86%E8%A7%A3%E7%A0%81-%E7%BC%96%E7%A0%81"><span class="nav-number">6.</span> <span class="nav-text">在一个地方处理解码&#x2F;编码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E6%95%B0%E6%8D%AE"><span class="nav-number">7.</span> <span class="nav-text">验证数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F%E7%94%A8%E4%BA%8E%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">8.</span> <span class="nav-text">适配器模式用于中间件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%89%E6%97%B6%E8%BF%94%E5%9B%9E%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="nav-number">9.</span> <span class="nav-text">有时返回中间件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%90%E8%97%8F%E8%AF%B7%E6%B1%82-%E5%93%8D%E5%BA%94%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9C%BA%E4%BC%9A"><span class="nav-number">9.1.</span> <span class="nav-text">隐藏请求&#x2F;响应类型的机会</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E6%B5%8B%E8%AF%95%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%86%85%E8%81%94%E8%AF%B7%E6%B1%82-%E5%93%8D%E5%BA%94%E7%B1%BB%E5%9E%8B%E8%BF%9B%E8%A1%8C%E9%A2%9D%E5%A4%96%E7%9A%84%E6%95%85%E4%BA%8B%E5%8F%99%E8%BF%B0"><span class="nav-number">10.</span> <span class="nav-text">在测试中使用内联请求&#x2F;响应类型进行额外的故事叙述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8sync-Once%E5%BB%B6%E8%BF%9F%E8%AE%BE%E7%BD%AE"><span class="nav-number">11.</span> <span class="nav-text">使用sync.Once延迟设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%8F%AF%E6%B5%8B%E8%AF%95%E6%80%A7%E8%AE%BE%E8%AE%A1"><span class="nav-number">12.</span> <span class="nav-text">为可测试性设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E7%9A%84%E5%8D%95%E5%85%83%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">12.1.</span> <span class="nav-text">单元测试的单元是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8run%E5%87%BD%E6%95%B0%E8%BF%9B%E8%A1%8C%E6%B5%8B%E8%AF%95"><span class="nav-number">12.2.</span> <span class="nav-text">使用run函数进行测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E5%B0%B1%E7%BB%AA%E7%8A%B6%E6%80%81"><span class="nav-number">12.3.</span> <span class="nav-text">等待就绪状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%86%E6%89%80%E6%9C%89%E8%BF%99%E4%BA%9B%E4%BB%98%E8%AF%B8%E5%AE%9E%E8%B7%B5"><span class="nav-number">13.</span> <span class="nav-text">将所有这些付诸实践</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">79</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">54</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/02/16/cn/%E6%88%91%E5%9C%A813%E5%B9%B4%E5%90%8E%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99Go%E7%9A%84HTTP%E6%9C%8D%E5%8A%A1%20Grafana%20Labs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="我在13年后如何编写Go的HTTP服务|Grafana Labs | huizhou92">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          我在13年后如何编写Go的HTTP服务|Grafana Labs
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2024-02-16 17:15:24" itemprop="dateCreated datePublished" datetime="2024-02-16T17:15:24+08:00">2024-02-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-03-26 09:08:38" itemprop="dateModified" datetime="2024-03-26T09:08:38+08:00">2024-03-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>7.4k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>27 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>将近六年前，我写了一篇博客文章，概述了<a target="_blank" rel="noopener" href="https://pace.dev/blog/2018/05/09/how-I-write-http-services-after-eight-years.html">我如何编写Go的HTTP服务</a>，现在，我再次告诉你，我如何编写HTTP服务。</p>
+<span id="more"></span>
+
+<hr>
+<blockquote>
+<p>Grafana Labs的首席工程师、Go Time播客的主持人Mat Ryer分享了他在编写Go的HTTP服务方面超过十几年的经验。<br>原文链接：<a target="_blank" rel="noopener" href="https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-years/">https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-years/</a></p>
+</blockquote>
+<p>那篇原始的博文引发了一些热议，对我现在的编码方式产生了一些影响。经过多年主持<a target="_blank" rel="noopener" href="https://changelog.com/gotime">Go Time播客</a>、在<a target="_blank" rel="noopener" href="https://twitter.com/matryer">Twitter</a>上讨论Go、以及在维护这样的代码方面积累了更多的经验后，我觉得是时候进行一次更新了。</p>
+<p>（对于那些注意到Go并不完全有13年历史的学究们，我开始在Go <a target="_blank" rel="noopener" href="https://go.dev/doc/devel/pre_go1#r59">版本 .r59</a>中编写HTTP服务。）<br>本文涵盖了与使用Go构建服务相关的各种主题，包括：</p>
+<ul>
+<li>为了最大限度地提高可维护性而构建服务器和处理程序的结构</li>
+<li>优化快速启动和优雅关闭的技巧和窍门</li>
+<li>如何处理适用于多种类型请求的常见工作</li>
+<li>深入探讨如何正确测试您的服务</li>
+</ul>
+<p>从小型项目到大型项目，这些实践对我来说经受住了时间的考验，我希望它们对你也同样有效。</p>
+<h2 id="这篇文章适合谁？"><a href="#这篇文章适合谁？" class="headerlink" title="这篇文章适合谁？"></a>这篇文章适合谁？</h2><p>这篇文章适合你。它适用于计划使用Go编写某种类型的HTTP服务的每个人。如果你正在学习Go，你可能会发现这个有用，因为很多示例都遵循了良好的实践。有经验的Go开发者也可能会学到一些不错的模式。</p>
+<p>要使这篇文章对你最有用，你需要了解Go的基础知识。如果你觉得自己还没有掌握，我强烈推荐阅读Chris James的<a target="_blank" rel="noopener" href="https://quii.gitbook.io/learn-go-with-tests/">《通过测试学习Go》</a>。如果你想听更多关于Chris的内容，你可以看看我们在Go Time上与Ben Johnson一起讨论的<a target="_blank" rel="noopener" href="https://changelog.com/gotime/278">《Go项目的文件和文件夹》</a>的那一集。</p>
+<p>如果你熟悉之前版本的这篇文章，本节将对现在的不同之处进行了快速总结。如果你想从头开始阅读，可以跳到下一节。</p>
+<ol>
+<li>我的处理程序过去是作为服务器结构的方法存在的，但现在我不再这样做了。如果处理程序函数需要某个依赖项，它可以直接作为参数传递。当你只是想测试单个处理程序时，不再会出现意外的依赖项。</li>
+<li>我过去更喜欢使用<code>http.HandlerFunc</code>而不是<code>http.Handler</code>，但现在大多数第三方库都优先考虑<code>http.Handler</code>，所以采用它是有道理的。<code>http.HandlerFunc</code>仍然非常有用，但现在大多数东西都表示为接口类型。无论选择哪种方式，都没有太大区别。</li>
+<li>我增加了更多关于测试的内容，包括一些“意见”。</li>
+<li>我增加了更多的章节，所以建议每个人都进行全面阅读。</li>
+</ol>
+<h2 id="NewServer构造函数"><a href="#NewServer构造函数" class="headerlink" title="NewServer构造函数"></a><code>NewServer</code>构造函数</h2><p>让我们首先看一下任何Go服务的核心部分：服务器。<code>NewServer</code>函数创建主要的<code>http.Handler</code>。通常我每个服务只有一个<code>NewServer</code>，并且我依赖HTTP路由将流量导向每个服务中的正确处理程序，原因如下：</p>
+<ul>
+<li><code>NewServer</code>是一个大型的构造函数，它将所有依赖项作为参数传入</li>
+<li>如果可能的话，它返回一个<code>http.Handler</code>，对于更复杂的情况可以是一个专用类型</li>
+<li>它通常会配置自己的muxer并调用<code>routes.go</code></li>
+</ul>
+<p>例如，你的代码可能类似于以下示例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewServer</span><span class="params">(logger *Logger, config *Config, commentStore *commentStore, anotherStore *anotherStore)</span></span> http.Handler &#123;</span><br><span class="line">    mux := http.NewServeMux()</span><br><span class="line">    addRoutes(mux, logger, config, commentStore, anotherStore)</span><br><span class="line">    <span class="keyword">var</span> handler http.Handler = mux</span><br><span class="line">    handler = someMiddleware(handler)</span><br><span class="line">    handler = someMiddleware2(handler)</span><br><span class="line">    handler = someMiddleware3(handler)</span><br><span class="line">    <span class="keyword">return</span> handler</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在不需要所有依赖项的测试用例中，我将<code>nil</code>作为信号传入，表示不会使用它们。</p>
+<p><code>NewServer</code>构造函数负责适用于所有端点的顶层HTTP内容，例如CORS、身份验证中间件和日志记录：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> handler http.Handler = mux</span><br><span class="line">handler = logging.NewLoggingMiddleware(logger, handler)</span><br><span class="line">handler = logging.NewGoogleTraceIDMiddleware(logger, handler)</span><br><span class="line">handler = checkAuthHeaders(handler)</span><br><span class="line"><span class="keyword">return</span> handler</span><br></pre></td></tr></table></figure>
+
+<p>通常，通过使用Go的内置<code>http</code>包将服务器设置起来是一个简单的过程：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">srv := NewServer(logger, config, tenantsStore, slackLinkStore, msteamsLinkStore, proxy)</span><br><span class="line">httpServer := &amp;http.Server&#123;</span><br><span class="line">    Addr:    net.JoinHostPort(config.Host, config.Port),</span><br><span class="line">    Handler: srv,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    log.Printf(<span class="string">&quot;listening on %s\n&quot;</span>, httpServer.Addr)</span><br><span class="line">    <span class="keyword">if</span> err := httpServer.ListenAndServe(); err != <span class="literal">nil</span> &amp;&amp; err != http.ErrServerClosed &#123;</span><br><span class="line">        fmt.Fprintf(os.Stderr, <span class="string">&quot;error listening and serving: %s\n&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> wg.Done()</span><br><span class="line">    &lt;-ctx.Done() <span class="comment">// make a new context for the Shutdown (thanks Alessandro Rosetti)</span></span><br><span class="line">    shutdownCtx := context.Background()</span><br><span class="line">    shutdownCtx, cancel := context.WithTimeout(ctx, <span class="number">10</span>*time.Second)</span><br><span class="line">    <span class="keyword">defer</span> cancel()</span><br><span class="line">    <span class="keyword">if</span> err := httpServer.Shutdown(shutdownCtx); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Fprintf(os.Stderr, <span class="string">&quot;error shutting down http server: %s\n&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;()</span><br><span class="line">wg.Wait()</span><br><span class="line"><span class="keyword">return</span> <span class="literal">nil</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="长参数列表"><a href="#长参数列表" class="headerlink" title="长参数列表"></a>长参数列表</h3><p>在某个点上，可能会达到不适合继续添加依赖项的限制，但大多数情况下，我乐意将依赖项列表作为参数添加进去。虽然有时参数列表可能会变得很长，但我发现这样做仍然是值得的。</p>
+<p>是的，这样做可以避免创建一个结构体，但真正的好处是，通过参数，我可以获得稍微更多的类型安全性。我可以创建一个跳过我不喜欢的任何字段的结构体，但函数会强制我必须查找字段，才能知道如何在结构体中设置它们，否则无法调用函数。</p>
+<p>如果将其格式化为垂直列表，就不会那么糟糕，就像我在现代前端代码中看到的那样：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">srv := NewServer(</span><br><span class="line">    logger,</span><br><span class="line">    config,</span><br><span class="line">    tenantsStore,</span><br><span class="line">    commentsStore,</span><br><span class="line">    conversationService,</span><br><span class="line">    chatGPTService,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="在routes-go中映射整个API接口"><a href="#在routes-go中映射整个API接口" class="headerlink" title="在routes.go中映射整个API接口"></a>在<code>routes.go</code>中映射整个API接口</h2><p>这个文件是服务中列出所有路由的地方。</p>
+<p>有时你可能无法避免将它们分散在不同地方，但能够在每个项目的一个文件中查看其API接口是非常有帮助的。</p>
+<p>由于<code>NewServer</code>构造函数中有大型的依赖参数列表，您通常会在路由函数中看到相同的列表。但同样，这并不是很糟糕。而且，由于Go的类型检查功能，如果您忘记了某些内容或者顺序不正确，您很快就会发现。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addRoutes</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    mux *http.ServeMux,</span></span></span><br><span class="line"><span class="params"><span class="function">    logger *logging.Logger,</span></span></span><br><span class="line"><span class="params"><span class="function">    config Config,</span></span></span><br><span class="line"><span class="params"><span class="function">    tenantsStore *TenantsStore,</span></span></span><br><span class="line"><span class="params"><span class="function">    commentsStore *CommentsStore,</span></span></span><br><span class="line"><span class="params"><span class="function">    conversationService *ConversationService,</span></span></span><br><span class="line"><span class="params"><span class="function">    chatGPTService *ChatGPTService,</span></span></span><br><span class="line"><span class="params"><span class="function">    authProxy *authProxy,</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> &#123;</span><br><span class="line">    mux.Handle(<span class="string">&quot;/api/v1/&quot;</span>, handleTenantsGet(logger, tenantsStore))</span><br><span class="line">    mux.Handle(<span class="string">&quot;/oauth2/&quot;</span>, handleOAuth2Proxy(logger, authProxy))</span><br><span class="line">    mux.HandleFunc(<span class="string">&quot;/healthz&quot;</span>, handleHealthzPlease(logger))</span><br><span class="line">    mux.Handle(<span class="string">&quot;/&quot;</span>, http.NotFoundHandler())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在我的示例中，<code>addRoutes</code>不返回错误。任何可能引发错误的内容都被移到了<code>run</code>函数中，在到达这一点之前进行了处理，从而使该函数保持简单和扁平。当然，如果任何处理程序由于某种原因返回错误，那么这个函数也可以返回错误。</p>
+<h2 id="func-main-只调用run"><a href="#func-main-只调用run" class="headerlink" title="func main()只调用run()"></a><code>func main()</code>只调用<code>run()</code></h2><p><code>run</code>函数类似于<code>main</code>函数，只是它接受操作系统的基本功能作为参数，并返回错误。</p>
+<p>我希望<code>func main()</code>是<code>func main() error</code>。或者像在C语言中一样，可以返回退出代码：<code>func main() int</code>。通过拥有一个非常简单的<code>main</code>函数，你也可以实现自己的梦想：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">run</span><span class="params">(ctx context.Context, w io.Writer, args []<span class="type">string</span>)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)</span><br><span class="line">    <span class="keyword">defer</span> cancel()</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    ctx := context.Background()</span><br><span class="line">    <span class="keyword">if</span> err := run(ctx, os.Stdout, os.Args); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Fprintf(os.Stderr, <span class="string">&quot;%s\n&quot;</span>, err)</span><br><span class="line">        os.Exit(<span class="number">1</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>编辑：我过去在<code>main</code>函数中执行了<code>signal.NotifyContext</code>的部分，但是Dave Henderson（和其他几个人）指出<code>cancel</code>函数不会被调用，所以我将其移到了<code>run</code>函数中。</p>
+</blockquote>
+<p>上面的代码直接调用了<code>run</code>函数，它会创建一个上下文，并在接收到<code>Ctrl+C</code>或等效信号时取消。如果<code>run</code>函数返回<code>nil</code>，则函数会正常退出。如果返回错误，则将其写入<code>stderr</code>并以非零代码退出。如果我正在编写一个需要考虑退出代码的命令行工具，我还可以返回一个整数，这样我就可以编写测试来断言返回的正确代码。</p>
+<p>操作系统的基本功能作为参数传递给<code>run</code>。例如，如果它支持标志，则可以传入<code>os.Args</code>，甚至可以传入<code>os.Stdin</code>、<code>os.Stdout</code>和<code>os.Stderr</code>等依赖项。这样，你的程序在测试时会更容易，因为测试代码可以调用<code>run</code>来执行你的程序，通过传递不同的参数来控制参数和所有流。</p>
+<p>下表显示了运行函数的输入参数示例：</p>
+<table>
+<thead>
+<tr>
+<th><strong>值</strong></th>
+<th><strong>类型</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>os.Args</code></td>
+<td><code>[]string</code></td>
+<td>在执行程序时传入的参数。也用于解析标志。</td>
+</tr>
+<tr>
+<td><code>os.Stdin</code></td>
+<td><code>io.Reader</code></td>
+<td>用于读取输入</td>
+</tr>
+<tr>
+<td><code>os.Stdout</code></td>
+<td><code>io.Writer</code></td>
+<td>用于写入输出</td>
+</tr>
+<tr>
+<td><code>os.Stderr</code></td>
+<td><code>io.Writer</code></td>
+<td>用于写入错误日志</td>
+</tr>
+<tr>
+<td><code>os.Getenv</code></td>
+<td><code>func(string) string</code></td>
+<td>用于读取环境变量</td>
+</tr>
+<tr>
+<td><code>os.Getwd</code></td>
+<td><code>func() (string, error)</code></td>
+<td>获取工作目录</td>
+</tr>
+</tbody></table>
+<p>如果避免使用全局作用域数据，通常可以在更多地方使用<code>t.Parallel()</code>，以加快测试套件的速度。一切都是自包含的，因此对<code>run</code>的多次调用不会相互干扰。</p>
+<p>通常，我最终会得到以下<code>run</code>函数的签名：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">run</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    ctx context.Context,</span></span></span><br><span class="line"><span class="params"><span class="function">    args []<span class="type">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">    getenv <span class="keyword">func</span>(<span class="type">string</span>)</span></span> <span class="type">string</span>,</span><br><span class="line">    stdin io.Reader,</span><br><span class="line">    stdout, stderr io.Writer,</span><br><span class="line">) <span class="type">error</span></span><br></pre></td></tr></table></figure>
+
+<p>现在我们进入了<code>run</code>函数，可以回到正常的Go代码编写，可以像没有人在乎一样返回错误。我们gopher们喜欢返回错误，我们越早承认这一点，那些在互联网上的人就越早能赢得胜利并消失。</p>
+<h3 id="优雅关闭"><a href="#优雅关闭" class="headerlink" title="优雅关闭"></a>优雅关闭</h3><p>如果你运行大量的测试，当每个测试完成时，让你的程序停止是很重要的。（或者你可能决定保持一个实例运行所有的测试，但这取决于你。）</p>
+<p>上下文被传递。如果终止信号进入程序，它将被取消，因此在每个级别都尊重它是很重要的。至少，将其传递给你的依赖项。最好，检查任何长时间运行或循环代码中的<code>Err()</code>方法，如果返回错误，则停止正在进行的操作并将其返回。这将有助于服务器优雅地关闭。如果你启动了其他的goroutine，你也可以使用上下文来决定是否停止它们。</p>
+<h3 id="控制环境"><a href="#控制环境" class="headerlink" title="控制环境"></a>控制环境</h3><p><code>args</code>和<code>getenv</code>参数为我们提供了一些控制程序行为的方法，通过标志和环境变量。标志使用args进行处理（只要你不使用全局空间版本的flags，并在<code>run</code>内部使用<code>flags.NewFlagSet</code>），因此我们可以使用不同的值调用run：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">args := []<span class="type">string</span>&#123;</span><br><span class="line">    <span class="string">&quot;myapp&quot;</span>,</span><br><span class="line">    <span class="string">&quot;--out&quot;</span>, outFile,</span><br><span class="line">    <span class="string">&quot;--fmt&quot;</span>, <span class="string">&quot;markdown&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> run(ctx, args, etc.)</span><br></pre></td></tr></table></figure>
+
+<p>如果你的程序使用环境变量而不是标志（甚至两者都使用），那么<code>getenv</code>函数允许你插入不同的值，而不需要更改实际的环境。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">getenv := <span class="function"><span class="keyword">func</span><span class="params">(key <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> key &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;MYAPP_FORMAT&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;markdown&quot;</span></span><br><span class="line">    <span class="keyword">case</span> <span class="string">&quot;MYAPP_TIMEOUT&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;5s&quot;</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">go</span> run(ctx, args, getenv)</span><br></pre></td></tr></table></figure>
+
+<p>对我来说，使用这种<code>getenv</code>技术比使用<code>t.SetEnv</code>控制环境变量更好，因为你可以通过调用<code>t.Parallel()</code>继续并行运行测试，而<code>t.SetEnv</code>不允许这样做。</p>
+<p>当然，当你在编写命令行工具时，这种技术更加有用，因为你经常希望以不同的设置运行程序，以测试其所有行为。</p>
+<p>在<code>main</code>函数中，我们可以传入真正的东西：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    ctx := context.Background()</span><br><span class="line">    <span class="keyword">if</span> err := run(ctx, os.Getenv, os.Stderr); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Fprintf(os.Stderr, <span class="string">&quot;%s\n&quot;</span>, err)</span><br><span class="line">        os.Exit(<span class="number">1</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用Maker函数返回处理程序"><a href="#使用Maker函数返回处理程序" class="headerlink" title="使用Maker函数返回处理程序"></a>使用Maker函数返回处理程序</h2><p>我的处理程序函数不直接实现<code>http.Handler</code>或<code>http.HandlerFunc</code>，它们返回它们。具体来说，它们返回<code>http.Handler</code>类型。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// handleSomething处理那些你经常听到的网络请求。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleSomething</span><span class="params">(logger *Logger)</span></span> http.Handler &#123;</span><br><span class="line">    thing := prepareThing()</span><br><span class="line">    <span class="keyword">return</span> http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        <span class="comment">// 使用thing处理请求</span></span><br><span class="line">        logger.Info(r.Context(), <span class="string">&quot;msg&quot;</span>, <span class="string">&quot;handleSomething&quot;</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种模式为每个处理程序提供了独立的闭包环境。你可以在这个空间中进行初始化工作，并且当调用处理程序时，数据将可用。</p>
+<p>确保只读取共享数据。如果处理程序修改任何内容，你将需要一个互斥锁或其他东西来保护它。</p>
+<p>通常情况下，不建议在这里存储程序状态。在大多数云环境中，你不能保证代码会持续运行很长时间。根据你的生产环境，服务器通常会关闭以节省资源，或者仅仅因为其他原因崩溃。你的服务可能会以不可预测的方式在许多实例之间负载均衡。在这种情况下，每个实例只能访问自己的本地数据。因此，在真实项目中最好使用数据库或其他存储API来持久化数据。</p>
+<h2 id="在一个地方处理解码-编码"><a href="#在一个地方处理解码-编码" class="headerlink" title="在一个地方处理解码&#x2F;编码"></a>在一个地方处理解码&#x2F;编码</h2><p>每个服务都需要解码请求体和编码响应体。这是一个经得起时间考验的合理抽象。</p>
+<p>我通常会有一对辅助函数叫做encode和decode。使用泛型的示例版本向您展示，实际上您只是在包装几行基本代码，我通常不会这样做，但当您需要为所有API进行更改时，这将变得非常有用。（例如，假设您的新老板还停留在上世纪90年代，并且他们想要添加XML支持。）</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">encode</span>[<span class="title">T</span> <span class="title">any</span>]<span class="params">(w http.ResponseWriter, r *http.Request, status <span class="type">int</span>, v T)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    w.Header().Set(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)</span><br><span class="line">    w.WriteHeader(status)</span><br><span class="line">    <span class="keyword">if</span> err := json.NewEncoder(w).Encode(v); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;encode json: %w&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">decode</span>[<span class="title">T</span> <span class="title">any</span>]<span class="params">(r *http.Request)</span></span> (T, <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> v T</span><br><span class="line">    <span class="keyword">if</span> err := json.NewDecoder(r.Body).Decode(&amp;v); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> v, fmt.Errorf(<span class="string">&quot;decode json: %w&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> v, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有趣的是，编译器能够从参数中推断出类型，因此在调用encode时不需要传递类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">err := encode(w, r, http.StatusOK, obj)</span><br></pre></td></tr></table></figure>
+
+<p>但由于decode中的返回参数，您需要指定您期望的类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">decoded, err := decode[CreateSomethingRequest](r)</span><br></pre></td></tr></table></figure>
+
+<p>我尽量不过度使用这些函数，但过去我对一个简单的验证接口非常满意，它很好地适应了decode函数。</p>
+<h2 id="验证数据"><a href="#验证数据" class="headerlink" title="验证数据"></a>验证数据</h2><p>我喜欢简单的接口。实际上，我非常喜欢它们。单方法接口很容易实现。所以当涉及到验证对象时，我喜欢这样做：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Validator是一个可以进行验证的对象。</span></span><br><span class="line"><span class="keyword">type</span> Validator <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Valid检查对象并返回任何问题。</span></span><br><span class="line">    <span class="comment">// 如果len(problems) == 0，则对象有效。</span></span><br><span class="line">    Valid(ctx context.Context) (problems <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Valid</code>方法接受一个上下文（这是可选的，但在过去对我很有用），并返回一个映射。如果字段有问题，它的名称将用作键，并将问题的人类可读解释设置为值。</p>
+<p>该方法可以执行任何需要验证结构体字段的操作。例如，它可以检查以下内容：</p>
+<ul>
+<li>必填字段不能为空</li>
+<li>具有特定格式（如电子邮件）的字符串是否正确</li>
+<li>数字是否在可接受范围内</li>
+</ul>
+<p>如果您需要执行更复杂的操作，比如在数据库中检查字段，那么应该在其他地方进行；它可能太重要，以至于不能被视为快速验证检查的一部分，并且您不会期望在这样的函数中找到这种类型的内容，因此它可能很容易被隐藏起来。</p>
+<p>然后，我使用类型断言来判断对象是否实现了该接口。或者，在泛型世界中，我可能选择更明确地说明正在发生的事情，通过更改decode方法来坚持要求实现该接口。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">decodeValid</span>[<span class="title">T</span> <span class="title">Validator</span>]<span class="params">(r *http.Request)</span></span> (T, <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>, <span class="type">error</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> v T</span><br><span class="line">    <span class="keyword">if</span> err := json.NewDecoder(r.Body).Decode(&amp;v); err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> v, <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;decode json: %w&quot;</span>, err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> problems := v.Valid(r.Context()); <span class="built_in">len</span>(problems) &gt; <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> v, problems, fmt.Errorf(<span class="string">&quot;invalid %T: %d problems&quot;</span>, v, <span class="built_in">len</span>(problems))</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> v, <span class="literal">nil</span>, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在此代码中，<code>T</code>必须实现<code>Validator</code>接口，并且<code>Valid</code>方法必须返回零个问题，以便将对象视为成功解码。</p>
+<p>对于问题，返回<code>nil</code>是安全的，因为我们将检查<code>len(problems)</code>，对于<code>nil</code>映射，它将为<code>0</code>，但不会引发恐慌。</p>
+<h2 id="适配器模式用于中间件"><a href="#适配器模式用于中间件" class="headerlink" title="适配器模式用于中间件"></a>适配器模式用于中间件</h2><p>中间件函数接受一个<code>http.Handler</code>并返回一个新的<code>http.Handler</code>，可以在调用原始处理程序之前和&#x2F;或之后运行代码，或者甚至可以决定根本不调用原始处理程序。</p>
+<p>一个示例是检查用户是否为管理员：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">adminOnly</span><span class="params">(h http.Handler)</span></span> http.Handler &#123;</span><br><span class="line">    <span class="keyword">return</span> http.HandlerFunc(<span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> !currentUser(r).IsAdmin &#123;</span><br><span class="line">            http.NotFound(w, r)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        h(w, r)</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理程序内部的逻辑可以选择是否调用原始处理程序。在上面的示例中，如果<code>IsAdmin</code>为false，则处理程序将返回<code>HTTP 404 Not Found</code>并返回（或中止）；请注意，不调用<code>h</code>处理程序。如果<code>IsAdmin</code>为true，则允许用户访问路由，因此将执行传递给<code>h</code>处理程序。</p>
+<p>通常，我将中间件列在<code>routes.go</code>文件中：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> app</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addRoutes</span><span class="params">(mux *http.ServeMux)</span></span> &#123;</span><br><span class="line">    mux.HandleFunc(<span class="string">&quot;/api/&quot;</span>, handleAPI())</span><br><span class="line">    mux.HandleFunc(<span class="string">&quot;/about&quot;</span>, handleAbout())</span><br><span class="line">    mux.HandleFunc(<span class="string">&quot;/&quot;</span>, handleIndex())</span><br><span class="line">    mux.HandleFunc(<span class="string">&quot;/admin&quot;</span>, adminOnly(handleAdminIndex()))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过查看端点映射，这使得非常清晰，可以知道应用了哪些中间件。如果列表开始变得更长，请尝试将它们分成多行 - 我知道，我知道，但您会习惯的。</p>
+<h2 id="有时返回中间件"><a href="#有时返回中间件" class="headerlink" title="有时返回中间件"></a>有时返回中间件</h2><p>上述方法对于简单情况非常好，但如果中间件需要许多依赖项（一个记录器，一个数据库，一些API客户端，一个包含“Never Gonna Give You Up”数据的字节数组，供以后的恶作剧使用），那么我可能会编写一个返回中间件函数的函数。</p>
+<p>问题是，您最终会得到这样的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mux.Handle(<span class="string">&quot;/route1&quot;</span>, middleware(logger, db, slackClient, rroll []<span class="type">byte</span>, handleSomething(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route2&quot;</span>, middleware(logger, db, slackClient, rroll []<span class="type">byte</span>, handleSomething2(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route3&quot;</span>, middleware(logger, db, slackClient, rroll []<span class="type">byte</span>, handleSomething3(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route4&quot;</span>, middleware(logger, db, slackClient, rroll []<span class="type">byte</span>, handleSomething4(handlerSpecificDeps))</span><br></pre></td></tr></table></figure>
+
+<p>这样会使代码膨胀，并且实际上并没有提供任何有用的东西。相反，我会让中间件函数接受依赖项，但返回一个只接受下一个处理程序的函数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newMiddleware</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    logger Logger,</span></span></span><br><span class="line"><span class="params"><span class="function">    db *DB,</span></span></span><br><span class="line"><span class="params"><span class="function">    slackClient *slack.Client,</span></span></span><br><span class="line"><span class="params"><span class="function">    rroll []<span class="type">byte</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> <span class="function"><span class="keyword">func</span><span class="params">(h http.Handler)</span></span> http.Handler</span><br></pre></td></tr></table></figure>
+
+<p>返回类型<code>func(h http.Handler) http.Handler</code>是我们在设置路由时将调用的函数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">middleware := newMiddleware(logger, db, slackClient, rroll)</span><br><span class="line">mux.Handle(<span class="string">&quot;/route1&quot;</span>, middleware(handleSomething(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route2&quot;</span>, middleware(handleSomething2(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route3&quot;</span>, middleware(handleSomething3(handlerSpecificDeps))</span><br><span class="line">mux.Handle(<span class="string">&quot;/route4&quot;</span>, middleware(handleSomething4(handlerSpecificDeps))</span><br></pre></td></tr></table></figure>
+
+<p>有些人喜欢（但我不喜欢）以这种方式正式化函数类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// middleware是一个包装http.Handlers的函数</span></span><br><span class="line"><span class="comment">// 在执行h处理程序之前和之后提供功能</span></span><br><span class="line"><span class="keyword">type</span> middleware <span class="function"><span class="keyword">func</span><span class="params">(h http.Handler)</span></span> http.Handler</span><br></pre></td></tr></table></figure>
+
+<p>这样也可以。如果您喜欢，请这样做。我不会在您的工作周围等待，然后在您身边走来走去，用一种令人生畏的方式搂着您的肩膀，问您是否对自己感到满意。</p>
+<p>我不这样做的原因是因为它增加了额外的间接性。当您查看上面的<code>newMiddleware</code>函数的签名时，很明显正在发生什么。如果返回类型是<code>middleware</code>，则需要额外的工作。实际上，我优化的是阅读代码，而不是编写代码。</p>
+<h3 id="隐藏请求-响应类型的机会"><a href="#隐藏请求-响应类型的机会" class="headerlink" title="隐藏请求&#x2F;响应类型的机会"></a>隐藏请求&#x2F;响应类型的机会</h3><p>如果一个端点有自己的请求和响应类型，通常它们只对该特定处理程序有用。</p>
+<p>如果是这样的情况，您可以在函数内部定义它们。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleSomething</span><span class="params">()</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">type</span> request <span class="keyword">struct</span> &#123;</span><br><span class="line">        Name <span class="type">string</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">type</span> response <span class="keyword">struct</span> &#123;</span><br><span class="line">        Greeting <span class="type">string</span> <span class="string">`json:&quot;greeting&quot;`</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样可以使全局空间保持清晰，并防止其他处理程序依赖于您可能不认为是稳定的数据。</p>
+<p>当您的测试代码需要使用相同的类型时，有时会遇到这种方法的摩擦。公平地说，这是一个将它们拆分出来的好理由，如果您想这样做的话。</p>
+<h2 id="在测试中使用内联请求-响应类型进行额外的故事叙述"><a href="#在测试中使用内联请求-响应类型进行额外的故事叙述" class="headerlink" title="在测试中使用内联请求&#x2F;响应类型进行额外的故事叙述"></a>在测试中使用内联请求&#x2F;响应类型进行额外的故事叙述</h2><p>如果您的请求&#x2F;响应类型在处理程序内部隐藏，您可以在测试代码中声明新类型。</p>
+<p>这是一个机会，可以向未来需要理解您的代码的人讲述一些故事。</p>
+<p>例如，假设我们的代码中有一个<code>Person</code>类型，并且我们在许多端点上重复使用它。如果我们有一个<code>/greet</code>端点，我们可能只关心他们的姓名，所以我们可以在测试代码中表达这一点：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestGreet</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    is := is.New(t)</span><br><span class="line"></span><br><span class="line">    person := <span class="keyword">struct</span> &#123;</span><br><span class="line">        Name <span class="type">string</span> <span class="string">`json:&quot;name&quot;`</span></span><br><span class="line">    &#125;&#123;</span><br><span class="line">        Name: <span class="string">&quot;Mat Ryer&quot;</span>,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> buf bytes.Buffer</span><br><span class="line">    err := json.NewEncoder(&amp;buf).Encode(person)</span><br><span class="line">    is.NoErr(err)</span><br><span class="line"></span><br><span class="line">    req, err := http.NewRequest(http.MethodPost, <span class="string">&quot;/greet&quot;</span>, &amp;buf)</span><br><span class="line">    is.NoErr(err)</span><br><span class="line"></span><br><span class="line">    <span class="comment">//... more test code here</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这个测试中可以明确看出，我们只关心<code>Name</code>字段。</p>
+<h2 id="使用sync-Once延迟设置"><a href="#使用sync-Once延迟设置" class="headerlink" title="使用sync.Once延迟设置"></a>使用<code>sync.Once</code>延迟设置</h2><p>如果在准备处理程序时需要执行任何昂贵的操作，我会将其推迟到首次调用该处理程序时。</p>
+<p>这提高了应用程序的启动时间。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleTemplate</span><span class="params">(files <span class="type">string</span>...)</span></span> http.HandlerFunc &#123;</span><br><span class="line">    <span class="keyword">var</span> (</span><br><span class="line">        init   sync.Once</span><br><span class="line">        tpl    *template.Template</span><br><span class="line">        tplerr <span class="type">error</span></span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">        init.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            tpl, tplerr = template.ParseFiles(files...)</span><br><span class="line">        &#125;)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> tplerr != <span class="literal">nil</span> &#123;</span><br><span class="line">            http.Error(w, tplerr.Error(), http.StatusInternalServerError)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// use tpl</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>sync.Once</code>确保代码只执行一次，并且其他调用（其他人发起相同请求）将阻塞，直到完成。</p>
+<ul>
+<li>错误检查位于<code>init</code>函数之外，因此如果出现问题，我们仍然会显示错误，并且不会在日志中丢失它。</li>
+<li>如果不调用处理程序，则不会执行昂贵的工作 - 这可能在很大程度上有益，这取决于代码的部署方式。</li>
+</ul>
+<p>请记住，通过这样做，您将初始化时间从启动时移动到运行时（首次访问端点时）。我经常使用Google App Engine，所以对我来说这是有意义的，但您的情况可能不同，因此值得考虑何时何地以这种方式使用<code>sync.Once</code>。</p>
+<h2 id="为可测试性设计"><a href="#为可测试性设计" class="headerlink" title="为可测试性设计"></a>为可测试性设计</h2><p>这些模式的发展部分是因为它们在测试代码中非常容易测试代码。<code>run</code>函数是从测试代码中直接运行程序的简单方法。</p>
+<p>在Go中，有很多测试选项，它们不是关于对与错的问题，而是关于：</p>
+<ul>
+<li>查看测试代码是否可以轻松理解您的程序在做什么？</li>
+<li>您是否可以轻松更改代码而不必担心破坏其他部分？</li>
+<li>如果所有测试都通过，您是否可以推送到生产环境，还是还需要涵盖更多内容？</li>
+</ul>
+<h3 id="单元测试的单元是什么？"><a href="#单元测试的单元是什么？" class="headerlink" title="单元测试的单元是什么？"></a>单元测试的单元是什么？</h3><p>遵循这些模式，处理程序本身也是可以独立测试的，但我通常不这样做，我将在下面解释为什么。您必须考虑对于您的项目来说什么是最佳方法。</p>
+<p>要仅测试处理程序，您可以：</p>
+<ol>
+<li>调用函数以获取<code>http.Handler</code> - 您必须传递所有所需的依赖项（这是一项功能）。</li>
+<li>使用真实的<code>http.Request</code>和来自<code>httptest</code>包的<code>ResponseRecorder</code>调用<code>ServeHTTP</code>方法（请参阅<a target="_blank" rel="noopener" href="https://pkg.go.dev/net/http/httptest#ResponseRecorder">https://pkg.go.dev/net/http/httptest#ResponseRecorder</a>）。</li>
+<li>对响应进行断言（检查状态码，解码主体并确保正确，检查任何重要的标头等）。</li>
+</ol>
+<p>如果这样做，您将跳过任何像身份验证这样的中间件，直接进入处理程序代码。如果有特定的复杂性需要构建一些测试支持，这是很好的。然而，当您的测试代码像真实用户一样调用API时，会有一个优势。在这个层面上，我更倾向于端到端测试，而不是单元测试所有内部部件。</p>
+<p>我宁愿调用<code>run</code>函数以尽可能接近它在生产环境中运行的方式运行整个程序。这将解析任何参数，连接到任何依赖项，迁移数据库，无论它在野外做什么，最终启动服务器。然后，当我从测试代码中访问API时，我会穿过所有层，并与真实数据库交互。我还会同时测试<code>routes.go</code>。</p>
+<p>我发现，通过这种方法，我能够更早地发现更多的问题，并且可以避免特定地测试样板代码。它还减少了测试中的重复。如果我勤奋地测试每一层，我可能会以稍微不同的方式多次说相同的事情。您必须维护所有这些内容，因此如果您想要更改某些内容，更新一个函数和三个测试并不感觉非常有效率。通过端到端测试，您只需一个主要测试集，描述用户与系统之间的交互。</p>
+<p>在其中适当的情况下，我仍然在其中使用单元测试。如果我使用TDD（我经常这样做），那么我通常已经完成了很多测试，我很乐意维护它们。但是，如果这些测试在重复与端到端测试中相同的内容，我将返回并删除它们。</p>
+<p>这个决定将取决于很多因素，从周围人的意见到项目的复杂性，因此像本文中的所有建议一样，如果这对您来说行不通，不要强求。</p>
+<h3 id="使用run函数进行测试"><a href="#使用run函数进行测试" class="headerlink" title="使用run函数进行测试"></a>使用<code>run</code>函数进行测试</h3><p>我喜欢在每个测试中调用<code>run</code>函数。每个测试都会获得一个独立的程序实例。对于每个测试，我可以传递不同的参数、标志值、标准输入和输出管道，甚至环境变量。</p>
+<p>由于<code>run</code>函数接受一个<code>context.Context</code>，而且我们的所有代码都遵守上下文（对吧，大家都遵守上下文，对吧？），我们可以通过调用<code>context.WithCancel</code>来获得一个取消函数。通过延迟执行<code>cancel</code>函数，当测试函数返回时（即测试运行结束时），上下文将被取消，程序将优雅地关闭。在Go 1.14中，他们添加了<code>t.Cleanup</code>方法，它是对使用<code>defer</code>关键字的替代方法，如果你想了解更多关于为什么要这样做的原因，请查看这个问题：<a target="_blank" rel="noopener" href="https://github.com/golang/go/issues/37333">https://github.com/golang/go/issues/37333</a>。</p>
+<p>这一切只需要很少的代码就能实现。当然，你还必须一直检查<code>ctx.Err</code>或<code>ctx.Done</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Test</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    ctx := context.Background()</span><br><span class="line">    ctx, cancel := context.WithCancel(ctx)</span><br><span class="line">    t.Cleanup(cancel)</span><br><span class="line">    <span class="keyword">go</span> run(ctx) <span class="comment">// 测试代码放在这里</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="等待就绪状态"><a href="#等待就绪状态" class="headerlink" title="等待就绪状态"></a>等待就绪状态</h3><p>由于<code>run</code>函数在一个goroutine中执行，我们不知道它何时准备就绪。如果我们要像真正的用户一样开始使用API，我们需要知道何时它准备就绪。</p>
+<p>我们可以设置一种信号就绪的方式，比如一个通道之类的东西，但我更喜欢在服务器上运行一个<code>/healthz</code>或<code>/readyz</code>端点。正如我年迈的祖母常说的那样，布丁的真正好坏在于实际的HTTP请求（她当时就很先进）。</p>
+<p>这是一个例子，我们努力使代码更具可测试性，也让我们了解到用户的需求。他们可能也想知道服务是否已经就绪，那为什么不提供一种官方的方式来获取这个信息呢？</p>
+<p>要等待服务就绪，你可以编写一个循环：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// waitForReady调用指定的端点，直到收到200响应，或者上下文被取消，或者超时达到。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">waitForReady</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    ctx context.Context,</span></span></span><br><span class="line"><span class="params"><span class="function">    timeout time.Duration,</span></span></span><br><span class="line"><span class="params"><span class="function">    endpoint <span class="type">string</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">    client := http.Client&#123;&#125;</span><br><span class="line">    startTime := time.Now()</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        req, err := http.NewRequestWithContext(</span><br><span class="line">            ctx,</span><br><span class="line">            http.MethodGet,</span><br><span class="line">            endpoint,</span><br><span class="line">            <span class="literal">nil</span>,</span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;failed to create request: %w&quot;</span>, err)</span><br><span class="line">        &#125;</span><br><span class="line">        resp, err := client.Do(req)</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Printf(<span class="string">&quot;Error making request: %s\n&quot;</span>, err.Error())</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> resp.StatusCode == http.StatusOK &#123;</span><br><span class="line">            fmt.Println(<span class="string">&quot;Endpoint is ready!&quot;</span>)</span><br><span class="line">            resp.Body.Close()</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">        &#125;</span><br><span class="line">        resp.Body.Close()</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">            <span class="keyword">return</span> ctx.Err()</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">if</span> time.Since(startTime) &gt;= timeout &#123;</span><br><span class="line">                <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;timeout reached while waiting for endpoint&quot;</span>)</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 每次检查之间等待一小段时间</span></span><br><span class="line">            time.Sleep(<span class="number">250</span> * time.Millisecond)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="将所有这些付诸实践"><a href="#将所有这些付诸实践" class="headerlink" title="将所有这些付诸实践"></a>将所有这些付诸实践</h2><p>使用这些技术来构建简单的API仍然是我最喜欢的方法。它符合我追求的目标，即通过易于阅读、易于通过复制模式扩展、易于新人使用、易于修改而无需担心、明确地不使用任何魔法来实现可维护性的卓越代码。即使在我使用像我们自己的<a target="_blank" rel="noopener" href="https://github.com/pacedotdev/oto">Oto包</a>这样的代码生成框架来根据我自定义的模板为我编写样板代码的情况下，这一点仍然成立。</p>
+<p>在更大的项目或较大的组织中，特别是像Grafana Labs这样的组织，你经常会遇到影响这些决策的特定技术选择。gRPC就是一个很好的例子。在已经形成了一些模式和经验、或者其他广泛使用的工具或抽象存在的情况下，你经常会发现自己做出实用主义的选择，跟随潮流，尽管我怀疑（或者说希望？）这篇文章对你仍然有一些有用的东西。</p>
+<p>我的日常工作是与Grafana Labs内部的一组才华横溢的人员一起构建新的<a target="_blank" rel="noopener" href="https://grafana.com/products/cloud/irm/">Grafana IRM</a>套件。本文讨论的模式帮助我们交付可靠的工具。听到你在屏幕前大喊“告诉我更多关于这些伟大的工具的事情！”。</p>
+<p>大多数人使用Grafana来可视化他们的系统运行情况，并且通过Grafana Alerting在指标超出可接受范围时收到通知。有了Grafana OnCall，你的计划和升级规则将自动化处理出现问题时与正确人员联系的过程。</p>
+<p>Grafana Incident让你管理那些不可避免的全员参与时刻，这对我们大多数人来说都太熟悉了。它为你创建Zoom会议室，一个专用的Slack频道，并跟踪事件的时间线，让你专注于解决问题。在Slack中，你在频道中以机器人表情符号作为反应标记的任何内容都将添加到时间线中。这样，在进行总结或事后审查讨论时，很容易收集关键事件。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/GO/" rel="tag"># GO</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/16/cn/%E5%A6%82%E4%BD%95%E7%94%A8%E6%B1%87%E7%BC%96%E5%88%86%E6%9E%90Go%E4%BB%A3%E7%A0%81/" rel="prev" title="如何用汇编分析Go代码">
+                  <i class="fa fa-angle-left"></i> 如何用汇编分析Go代码
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/02/16/cn/%E4%B8%BA%E4%BB%80%E4%B9%88TCP%E6%96%AD%E5%BC%80%E7%9A%84%E6%97%B6%E5%80%99%E9%9C%80%E8%A6%81%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/" rel="next" title="为什么TCP断开的时候需要四次挥手">
+                  为什么TCP断开的时候需要四次挥手 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">91k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">5:30</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/hxzhouh" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch-lite.umd.js" integrity="sha256-DABVk+hYj0mdUzo+7ViJC6cwLahQIejFvC+my2M/wfM=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/instantsearch.js/4.57.0/instantsearch.production.min.js" integrity="sha256-foJtB+Wd0wvvK+VU3KO0/H6CjwSwJfB1RnWlgx0Ov9U=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-app-compat.js" integrity="sha256-kv9gfd+UUnUqqJ2d478LEHzOijuUbZOVdEkuXSMm4qM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.4.0/firebase-firestore-compat.js" integrity="sha256-sS/hkEB7nn47hhc//PNKfXiRX2YMEe4rBqUIqEhMYA8=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2D664FV9XT');
+</script>
+</body>
+</html>
