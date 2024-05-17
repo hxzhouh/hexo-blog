@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI…">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Set Up ChatGPT-4 Service Using GitHub Copilot">
+<meta property="og:url" content="https://hxzhouh.com/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI…">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png">
+<meta property="og:image" content="https://cdn-images-1.medium.com/max/800/0*CKQlLPEw2yVoNGNp.png">
+<meta property="og:image" content="https://cdn-images-1.medium.com/max/800/0*K537j_O1-TsDgmJl.png">
+<meta property="article:published_time" content="2024-01-12T12:16:03.000Z">
+<meta property="article:modified_time" content="2024-05-17T12:18:41.684Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="chatgpt">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/","path":"2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/","title":"How to Set Up ChatGPT-4 Service Using GitHub Copilot"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>How to Set Up ChatGPT-4 Service Using GitHub Copilot | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fab fa-algolia fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Open-Source-Components"><span class="nav-number">1.</span> <span class="nav-text">Open-Source Components</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Obtaining-the-GitHub-Copilot-Token"><span class="nav-number">2.</span> <span class="nav-text">Obtaining the GitHub Copilot Token</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Running-the-copilot-gpt4-service"><span class="nav-number">3.</span> <span class="nav-text">Running the copilot-gpt4-service</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><span class="nav-number">4.</span> <span class="nav-text">Deploying the ChatGPT-Next-Web Service on Vercel</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Testing"><span class="nav-number">5.</span> <span class="nav-text">Testing</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          Links
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="http://programmerscareer.com/" title="http:&#x2F;&#x2F;programmerscareer.com&#x2F;" rel="noopener" target="_blank">Tfrain</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="How to Set Up ChatGPT-4 Service Using GitHub Copilot | huizhou92">
+      <meta itemprop="description" content="GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI…">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          How to Set Up ChatGPT-4 Service Using GitHub Copilot
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2024-01-12 20:16:03" itemprop="dateCreated datePublished" datetime="2024-01-12T20:16:03+08:00">2024-01-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-05-17 20:18:41" itemprop="dateModified" datetime="2024-05-17T20:18:41+08:00">2024-05-17</time>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>443</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>2 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI…</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img src="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png"></p>
+<blockquote>
+<p>This article has expired, please do not use it</p>
+</blockquote>
+<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
+<span id="more"></span>
+
+<h1 id="Open-Source-Components"><a href="#Open-Source-Components" class="headerlink" title="Open-Source Components"></a>Open-Source Components</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></li>
+<li>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</li>
+<li>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</li>
+<li>Cloudflare: A free CDN service used for domain name resolution.</li>
+</ul>
+<h1 id="Obtaining-the-GitHub-Copilot-Token"><a href="#Obtaining-the-GitHub-Copilot-Token" class="headerlink" title="Obtaining the GitHub Copilot Token"></a>Obtaining the GitHub Copilot Token</h1><p>Please refer to this document, <a target="_blank" rel="noopener" href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/0*CKQlLPEw2yVoNGNp.png"></p>
+<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
+<h1 id="Running-the-copilot-gpt4-service"><a href="#Running-the-copilot-gpt4-service" class="headerlink" title="Running the copilot-gpt4-service"></a>Running the copilot-gpt4-service</h1><ol>
+<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a target="_blank" rel="noopener" href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.</li>
+</ol>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*K537j_O1-TsDgmJl.png"></p>
+<ol>
+<li>Add a server block in NGINX:</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name chat.example.com;</span><br><span class="line"> ​</span><br><span class="line">     ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">     ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"> ​</span><br><span class="line">     location / &#123;</span><br><span class="line">         proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">         rewrite ^/(.*)$ /$1 break;</span><br><span class="line">         proxy_redirect off;</span><br><span class="line">         proxy_set_header Host $host;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">         proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">         proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Don’t forget to reload the NGINX configuration file.</p>
+<ol>
+<li>Add a domain name resolution for “chat.example.com” on Cloudflare, pointing to the IP address of your NGINX server.</li>
+</ol>
+<h1 id="Deploying-the-ChatGPT-Next-Web-Service-on-Vercel"><a href="#Deploying-the-ChatGPT-Next-Web-Service-on-Vercel" class="headerlink" title="Deploying the ChatGPT-Next-Web Service on Vercel"></a>Deploying the ChatGPT-Next-Web Service on Vercel</h1><p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
+<p>Once the deployment on <code>Vercel</code> is complete, you can add a custom domain name, such as “chatnext.example.com”.</p>
+<h1 id="Testing"><a href="#Testing" class="headerlink" title="Testing"></a>Testing</h1><p>Open your browser and enter “chatnext.example.com”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter “ <a target="_blank" rel="noopener" href="https://chat.example.com/">https://chat.example.com</a>“ as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/chatgpt/" rel="tag"># chatgpt</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/09/arts/ARTS-2024-02/" rel="prev" title="ARTS-2024-02">
+                  <i class="fa fa-angle-left"></i> ARTS-2024-02
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/01/13/2024-01-13_Go1-22-add-frist-v2-lib--math-rand-v2-more-fast-and-more-Standard-27137c212612/" rel="next" title="Go1.22 add frist v2 lib, math/rand/v2 more fast and more Standard">
+                  Go1.22 add frist v2 lib, math/rand/v2 more fast and more Standard <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2023 – 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">41k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">2:30</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.23.3/algoliasearch-lite.umd.js" integrity="sha256-1QNshz86RqXe/qsCBldsUu13eAX6n/O98uubKQs87UI=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+  <script class="next-config" data-name="mermaid" type="application/json">{"enable":true,"theme":{"light":"default","dark":"dark"},"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js","integrity":"sha256-stuqcu2FrjYCXDOytWFA5SoUE/r3nkp6gTglzNSlavU="}}</script>
+  <script src="/js/third-party/tags/mermaid.js"></script>
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-app-compat.js" integrity="sha256-GNS0PNk7BKL3ESum0TEubZtkybvbBMfkV3uZr7137Mk=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-firestore-compat.js" integrity="sha256-e8eevSHRq9ExY9rGvp5MoYeiGniYwJq0djypMLEqCjs=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+</body>
+</html>

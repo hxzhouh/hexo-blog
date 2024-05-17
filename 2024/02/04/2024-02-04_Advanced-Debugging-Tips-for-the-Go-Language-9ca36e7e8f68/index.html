@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Learning to debug makes you a better programmer.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Advanced Debugging Tips for the Go Language">
+<meta property="og:url" content="https://hxzhouh.com/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="Learning to debug makes you a better programmer.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b">
+<meta property="article:published_time" content="2024-02-04T05:54:42.000Z">
+<meta property="article:modified_time" content="2024-05-17T13:55:59.241Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/","path":"2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/","title":"Advanced Debugging Tips for the Go Language"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Advanced Debugging Tips for the Go Language | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fab fa-algolia fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Golang-tools"><span class="nav-number">1.</span> <span class="nav-text">Golang tools</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#nm"><span class="nav-number">1.1.</span> <span class="nav-text">nm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#compile"><span class="nav-number">1.2.</span> <span class="nav-text">compile</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#objdump"><span class="nav-number">1.3.</span> <span class="nav-text">objdump</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pprof"><span class="nav-number">1.4.</span> <span class="nav-text">pprof</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#trace"><span class="nav-number">1.5.</span> <span class="nav-text">trace</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Unit-Testing"><span class="nav-number">2.</span> <span class="nav-text">Unit Testing</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Running-Unit-Tests"><span class="nav-number">2.1.</span> <span class="nav-text">Running Unit Tests</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Running-go-test"><span class="nav-number">2.2.</span> <span class="nav-text">Running go test</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Compilation-and-Execution"><span class="nav-number">2.3.</span> <span class="nav-text">Compilation and Execution</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Code-Coverage-Analysis"><span class="nav-number">3.</span> <span class="nav-text">Code Coverage Analysis</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Program-Debugging"><span class="nav-number">4.</span> <span class="nav-text">Program Debugging</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#dlv-Debugging"><span class="nav-number">4.1.</span> <span class="nav-text">dlv Debugging</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Debugging-Binaries"><span class="nav-number">4.1.0.1.</span> <span class="nav-text">Debugging Binaries</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Debugging-Processes"><span class="nav-number">4.2.</span> <span class="nav-text">Debugging Processes</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Debugging-Core-Files"><span class="nav-number">4.2.0.1.</span> <span class="nav-text">Debugging Core Files</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Common-Debugging-Syntax"><span class="nav-number">5.</span> <span class="nav-text">Common Debugging Syntax</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#System-Summary"><span class="nav-number">5.1.</span> <span class="nav-text">System Summary</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Breakpoint-related"><span class="nav-number">5.2.</span> <span class="nav-text">Breakpoint-related</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Information-Printing"><span class="nav-number">5.3.</span> <span class="nav-text">Information Printing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Goroutine-related"><span class="nav-number">5.4.</span> <span class="nav-text">Goroutine-related</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Stack-related"><span class="nav-number">5.5.</span> <span class="nav-text">Stack-related</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Other-Commands"><span class="nav-number">5.6.</span> <span class="nav-text">Other Commands</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#gdb-Debugging"><span class="nav-number">5.6.1.</span> <span class="nav-text">gdb Debugging</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#dlv-Debugging-Example"><span class="nav-number">5.6.1.1.</span> <span class="nav-text">dlv Debugging Example</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#gdb-Debugging-Example"><span class="nav-number">5.6.1.2.</span> <span class="nav-text">gdb Debugging Example</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tips-and-Tricks"><span class="nav-number">5.6.2.</span> <span class="nav-text">Tips and Tricks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Don%E2%80%99t-know-how-to-set-breakpoints-in-functions"><span class="nav-number">5.6.3.</span> <span class="nav-text">Don’t know how to set breakpoints in functions?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Don%E2%80%99t-know-the-calling-context"><span class="nav-number">5.6.4.</span> <span class="nav-text">Don’t know the calling context?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Don%E2%80%99t-know-how-to-enable-pprof"><span class="nav-number">5.6.5.</span> <span class="nav-text">Don’t know how to enable pprof?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging"><span class="nav-number">5.6.6.</span> <span class="nav-text">Why does the code sometimes execute unexpectedly during single-step debugging?</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusion"><span class="nav-number">6.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          Links
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="http://programmerscareer.com/" title="http:&#x2F;&#x2F;programmerscareer.com&#x2F;" rel="noopener" target="_blank">Tfrain</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Advanced Debugging Tips for the Go Language | huizhou92">
+      <meta itemprop="description" content="Learning to debug makes you a better programmer.">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Advanced Debugging Tips for the Go Language
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2024-02-04 13:54:42" itemprop="dateCreated datePublished" datetime="2024-02-04T13:54:42+08:00">2024-02-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-05-17 21:55:59" itemprop="dateModified" datetime="2024-05-17T21:55:59+08:00">2024-05-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>2.1k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>8 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">Learning to debug makes you a better programmer.</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Last time we shared the method of <a target="_blank" rel="noopener" href="https://medium.com/@hxzhouh/how-to-analyze-go-code-in-assembly-81cada6d4f0a">debugging Go code using assembly language</a>. Assembly language allows us to easily trace low-level knowledge of the Go runtime and other underlying details. In this article, we will introduce the powerful debugging tool called “go tool”, which, when mastered, can elevate your development skills to the next level.</p>
+<span id="more"></span>
+
+<p><img src="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b"></p>
+<p>This article focuses on practical techniques for debugging in Golang and the effective usage of related tools, so you no longer need to worry about how to debug Golang code. Golang, as a modern language, comes with built-in debugging capabilities from the very beginning:</p>
+<ul>
+<li>Golang tools are directly integrated into the language tools, supporting memory analysis, CPU analysis, and blocking lock analysis, among others.</li>
+<li>Delve and GDB are the most commonly used debug tools, allowing you to dive deeper into program debugging.</li>
+<li>Delve is currently the most user-friendly Golang debugging program, and IDE debugging is essentially calling dlv, such as in Goland.</li>
+<li>Unit testing is deeply integrated into the language design, making it very convenient to execute unit tests and generate code coverage.</li>
+</ul>
+<h1 id="Golang-tools"><a href="#Golang-tools" class="headerlink" title="Golang tools"></a>Golang tools</h1><p>Golang integrates a variety of useful tools at the language level, which are the essence of the experience accumulated by Robert Griesemer, Rob Pike, Ken Thompson, and other experts. After installing Golang, you can see all the built-in tools by executing <code>go tool</code>.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~&gt; go tool</span><br><span class="line"> addr2line</span><br><span class="line"> asm</span><br><span class="line"> buildid</span><br><span class="line"> cgo</span><br><span class="line"> compile</span><br><span class="line"> covdata</span><br><span class="line"> cover</span><br><span class="line"> dist</span><br><span class="line"> distpack</span><br><span class="line"> doc</span><br><span class="line"> fix</span><br><span class="line"> link</span><br><span class="line"> nm</span><br><span class="line"> objdump</span><br><span class="line"> pack</span><br><span class="line"> pprof</span><br><span class="line"> test2json</span><br><span class="line"> trace</span><br><span class="line"> vet</span><br></pre></td></tr></table></figure>
+
+<p>Here, I will focus on selecting several commonly used debug tools:</p>
+<ul>
+<li><code>nm</code>: view the symbol table (equivalent to the system <code>nm</code> command).</li>
+<li><code>objdump</code>: disassembly tool, used to analyze binary files (equivalent to the system <code>objdump</code> command).</li>
+<li><code>pprof</code>: metric and performance analysis tool.</li>
+<li><code>cover</code>: code coverage generation.</li>
+<li><code>trace</code>: sampling over a period of time, metric tracking and analysis tool.</li>
+<li><code>compile</code>: code assembly.</li>
+</ul>
+<p>Now, I will demonstrate the usage of these tools with an example.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">import</span> (</span><br><span class="line">     <span class="string">&quot;log&quot;</span></span><br><span class="line">     <span class="string">&quot;net&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">var</span> helloCount <span class="type">int</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">     listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:50050&quot;</span>)</span><br><span class="line">     <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">         log.Fatal(err)</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">defer</span> listener.Close()</span><br><span class="line"> ​</span><br><span class="line">     <span class="keyword">for</span> &#123;</span><br><span class="line">         conn, err := listener.Accept()</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Fatal(err)</span><br><span class="line">         &#125;</span><br><span class="line">         tcpConn := conn.(*net.TCPConn)</span><br><span class="line">         err = tcpConn.SetNoDelay(<span class="literal">true</span>)</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Println(err)</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">go</span> handleConnection(conn)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">     <span class="keyword">defer</span> conn.Close()</span><br><span class="line">     helloCount++</span><br><span class="line">     resp := []<span class="type">byte</span>(<span class="string">&quot;Hello count: &quot;</span>)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, []<span class="type">byte</span>(<span class="type">string</span>(<span class="type">rune</span>(helloCount)))...)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">     conn.Write(resp)</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// go build main.go</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="nm"><a href="#nm" class="headerlink" title="nm"></a>nm</h2><p>The <code>nm</code> command is used to view the symbol table, which is equivalent to the system <code>nm</code> command and is very useful. When setting breakpoints, if you don’t know the function symbol of the breakpoint, you can use this command to find out (this command operates on binary program files).</p>
+<h2 id="compile"><a href="#compile" class="headerlink" title="compile"></a>compile</h2><p>Assemble a specific file:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go tool compile -N -l -S main.go</span><br></pre></td></tr></table></figure>
+
+<p>You will be able to see the assembly code corresponding to your Go code (please note that this command operates on Go code text), which is cool.</p>
+<h2 id="objdump"><a href="#objdump" class="headerlink" title="objdump"></a>objdump</h2><p>The objdump tool is used to disassemble binaries, equivalent to the system <code>objdump</code> (please note that this command parses binary program files).</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go tool objdump main.o</span><br><span class="line">go tool objdump -s DoFunc main.o  // Disassembling specific functions</span><br></pre></td></tr></table></figure>
+
+<p>Assembly code may not be needed in 90% of scenarios, but if you have experience working with C programs, in certain special situations, inferring application behavior by disassembling a piece of logic may be your only way out. This is because the code running in production usually has optimization enabled, which can cause your code to not match. Furthermore, you cannot attach to processes at will in production environments. Many times, you only have a core file to troubleshoot.</p>
+<h2 id="pprof"><a href="#pprof" class="headerlink" title="pprof"></a>pprof</h2><p>pprof supports four types of analysis:</p>
+<ul>
+<li><code>CPU</code>: CPU analysis, sampling calls that consume CPU resources, which is generally used to locate and troubleshoot areas of high computational resource consumption in programs.</li>
+<li><code>Memory</code>: Memory analysis, which is generally used to troubleshoot memory usage, memory leaks, and other issues.</li>
+<li><code>Block</code>: Blocking analysis, which samples the blocking calls in the program.</li>
+<li><code>Mutex</code>: Mutex analysis, which samples the competition for mutex locks.</li>
+</ul>
+<p>For more information about pprof, you can refer to this article.</p>
+<h2 id="trace"><a href="#trace" class="headerlink" title="trace"></a>trace</h2><p>Program trace debugging:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go tool trace -http=&quot;:6060&quot; ./ssd_336959_20190704_105540_trace</span><br></pre></td></tr></table></figure>
+
+<p>The trace command allows you to trace and collect information over a period of time, then dump it to a file, and finally analyze the dump file using <code>go tool trace</code> and open it in a web format.</p>
+<h1 id="Unit-Testing"><a href="#Unit-Testing" class="headerlink" title="Unit Testing"></a>Unit Testing</h1><p>The importance of unit testing is self-evident. In Golang, files ending with <code>_test.go</code> are considered test files. As a modern language, Golang supports unit testing at the language tool level.</p>
+<h2 id="Running-Unit-Tests"><a href="#Running-Unit-Tests" class="headerlink" title="Running Unit Tests"></a>Running Unit Tests</h2><p>There are two ways to execute unit tests:</p>
+<ul>
+<li>Run <code>go test</code> directly, which is the simplest method.</li>
+<li>Compile the test files first, then run them. This method provides more flexibility.</li>
+</ul>
+<h2 id="Running-go-test"><a href="#Running-go-test" class="headerlink" title="Running go test"></a>Running <code>go test</code></h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// Run go test directly in your project directory.</span><br><span class="line"> go test .</span><br><span class="line"> // Specify the running function.</span><br><span class="line"> go test -run=TestPutAndGetKeyValue</span><br><span class="line"> // Print details.</span><br><span class="line"> go test -v</span><br></pre></td></tr></table></figure>
+
+<h2 id="Compilation-and-Execution"><a href="#Compilation-and-Execution" class="headerlink" title="Compilation and Execution"></a>Compilation and Execution</h2><p>Essentially, running Golang unit tests involves compiling <code>*_test.go</code> files into binaries and then running these binaries. When you execute <code>go test</code>, the tool handles these actions for you, but you can also perform them separately.</p>
+<p>Compile the test files to generate the test executable:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// Compile the .test file first.</span><br><span class="line">go test -c -coverpkg=. -covermode=atomic -o 1TestSwapInt32_in_sync_atomic.test sync/atomic</span><br><span class="line"> // Specify running a file.</span><br><span class="line">./1TestSwapInt32_in_sync_atomic.test -test.timeout=10m0s -test.v=true -test.run=TestSwapInt32</span><br></pre></td></tr></table></figure>
+
+<p>This method is usually used in the following scenarios:</p>
+<ol>
+<li>Compile on one machine and run tests on another.</li>
+<li>Debugging test programs.</li>
+</ol>
+<h1 id="Code-Coverage-Analysis"><a href="#Code-Coverage-Analysis" class="headerlink" title="Code Coverage Analysis"></a>Code Coverage Analysis</h1><p>Golang’s code coverage is based on unit tests, which serve as the starting point for measuring code coverage of your business code. The operation is simple:</p>
+<ol>
+<li>Add the <code>-coverprofile</code> parameter when running tests to record code coverage.</li>
+<li>Use the <code>go tool cover</code> command to analyze and generate coverage reports.</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go test -coverprofile=coverage.out</span><br><span class="line">go tool cover -func=coverage.out</span><br></pre></td></tr></table></figure>
+
+<p>The output will be similar to the following:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~/w/g/s/sync&gt; go tool cover -func=coverage.out                                                                                                                heads/go1.21.4?</span><br><span class="line">sync/cond.go:47:        NewCond                         100.0%</span><br><span class="line">sync/cond.go:66:        Wait                            100.0%</span><br><span class="line">sync/cond.go:81:        Signal                          100.0%</span><br><span class="line">sync/cond.go:90:        Broadcast                       100.0%</span><br><span class="line">sync/cond.go:98:        check                           100.0%</span><br><span class="line">sync/cond.go:116:       Lock                            0.0%</span><br><span class="line">sync/cond.go:117:       Unlock                          0.0%</span><br><span class="line">sync/map.go:104:        newEntry                        100.0%</span><br><span class="line">sync/map.go:110:        loadReadOnly                    100.0%</span><br><span class="line">sync/map.go:120:        Load                            100.0%</span><br><span class="line">sync/map.go:145:        load                            100.0%</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+
+<p>This way, you can see the code coverage for each function.</p>
+<h1 id="Program-Debugging"><a href="#Program-Debugging" class="headerlink" title="Program Debugging"></a>Program Debugging</h1><p>Program debugging mainly relies on two tools:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. dlv</span><br><span class="line">2. gdb</span><br></pre></td></tr></table></figure>
+<p>Here, I recommend dlv because GDB’s functionality is limited. GDB does not understand Golang’s specific types such as channels, maps, and slices. GDB’s native support for goroutines is limited since it only understands threads. However, GDB has one irreplaceable feature, which is the <code>gcore</code> command.</p>
+<h2 id="dlv-Debugging"><a href="#dlv-Debugging" class="headerlink" title="dlv Debugging"></a>dlv Debugging</h2><h4 id="Debugging-Binaries"><a href="#Debugging-Binaries" class="headerlink" title="Debugging Binaries"></a>Debugging Binaries</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv exec &lt;path/to/binary&gt; [flags]</span><br></pre></td></tr></table></figure>
+
+<p>For example:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+
+<p>Debugging binaries with dlv and passing arguments:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv exec ./main -- --audit=./d</span><br></pre></td></tr></table></figure>
+
+<h2 id="Debugging-Processes"><a href="#Debugging-Processes" class="headerlink" title="Debugging Processes"></a>Debugging Processes</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv attach $&#123;pid&#125; [executable] [flags]</span><br></pre></td></tr></table></figure>
+
+<p>The process ID is mandatory. For example:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+
+<h4 id="Debugging-Core-Files"><a href="#Debugging-Core-Files" class="headerlink" title="Debugging Core Files"></a>Debugging Core Files</h4><p>Debugging core files with dlv and redirecting standard output to a file:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv core &lt;executable&gt; &lt;core&gt; [flags]</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+
+<h1 id="Common-Debugging-Syntax"><a href="#Common-Debugging-Syntax" class="headerlink" title="Common Debugging Syntax"></a>Common Debugging Syntax</h1><h2 id="System-Summary"><a href="#System-Summary" class="headerlink" title="System Summary"></a>System Summary</h2><p><strong>Program Execution</strong></p>
+<ol>
+<li>call: call a function (note that this will cause the entire program to run).</li>
+<li>continue: resume execution.</li>
+<li>next: step over.</li>
+<li>restart: restart.</li>
+<li>step: step into a function.</li>
+<li>step-instruction: step into a specific assembly instruction.</li>
+<li>stepout: step out of the current function.</li>
+</ol>
+<h2 id="Breakpoint-related"><a href="#Breakpoint-related" class="headerlink" title="Breakpoint-related"></a><strong>Breakpoint-related</strong></h2><ol>
+<li>break (alias: b): set a breakpoint.</li>
+<li>breakpoints (alias: bp): print all breakpoint information.</li>
+<li>clear: clear a breakpoint.</li>
+<li>clearall: clear all breakpoints.</li>
+<li>condition (alias: cond): set a conditional breakpoint.</li>
+<li>on: set a command to be executed when a breakpoint is hit.</li>
+<li>trace (alias: t): set a tracepoint, which is also a breakpoint but does not stop the program when hit; it only prints a line of information. This command is useful in certain scenarios where stopping the program affects logic (e.g., business timeouts), and you only want to print a specific variable.</li>
+</ol>
+<h2 id="Information-Printing"><a href="#Information-Printing" class="headerlink" title="Information Printing"></a><strong>Information Printing</strong></h2><ul>
+<li>args: print function arguments.</li>
+<li>examinemem (alias: x): a powerful command for examining memory, similar to gdb’s <code>x</code> command.</li>
+<li>locals: print local variables.</li>
+<li>print (alias: p): print an expression or variable.</li>
+<li>regs: print register information.</li>
+<li>set: set variable value.</li>
+<li>vars: print global variables (package variables).</li>
+<li>whatis: print type information.</li>
+</ul>
+<h2 id="Goroutine-related"><a href="#Goroutine-related" class="headerlink" title="Goroutine-related"></a><strong>Goroutine-related</strong></h2><ul>
+<li>goroutine (alias: gr): print information of a specific goroutine.</li>
+<li>goroutines (alias: grs): list all goroutines.</li>
+<li>thread (alias: tr): switch to a specific thread.</li>
+<li>threads: print information of all threads.</li>
+</ul>
+<h2 id="Stack-related"><a href="#Stack-related" class="headerlink" title="Stack-related"></a><strong>Stack-related</strong></h2><ul>
+<li>deferred: execute commands in the context of a defer function.</li>
+<li>down: move up the stack.</li>
+<li>frame: jump to a specific stack frame.</li>
+<li>stack (alias: bt): print stack information.</li>
+<li>up: move down the stack.</li>
+</ul>
+<h2 id="Other-Commands"><a href="#Other-Commands" class="headerlink" title="Other Commands"></a><strong>Other Commands</strong></h2><ul>
+<li>config: modify configurations.</li>
+<li>disassemble (alias: disass): disassemble.</li>
+<li>edit (alias: ed): omitted.</li>
+<li>exit (alias: quit | q): omitted.</li>
+<li>funcs: print all function symbols.</li>
+<li>libraries: print all loaded dynamic libraries.</li>
+<li>list (alias: ls | l): display source code.</li>
+<li>source: load commands.</li>
+<li>sources: print source code.</li>
+<li>types: print all type information.</li>
+</ul>
+<p>The above commands cover the complete set of commands supported by dlv, which meet our debugging needs (some commands are only applicable during development and debugging, as it is not possible to single-step debug on production code in most cases).</p>
+<p>Application Examples</p>
+<p><strong>Print Global Variables</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(dlv) vars</span><br></pre></td></tr></table></figure>
+
+<p>This is very useful for inspecting global variables.</p>
+<p><strong>Conditional Breakpoints</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set a breakpoint first.</span></span><br><span class="line">(dlv) b</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Check breakpoint information.</span></span><br><span class="line">(dlv) bp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Customize the condition.</span></span><br><span class="line">(dlv) condition 2 i==2 &amp;&amp; j==7 &amp;&amp; z==32</span><br></pre></td></tr></table></figure>
+
+<p><strong>Inspecting the Stack</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Show all stacks.</span></span><br><span class="line">(dlv) goroutines</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Expand all stacks.</span></span><br><span class="line">(dlv) goroutines -t</span><br></pre></td></tr></table></figure>
+
+<p><strong>Examining Memory</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(dlv) x -fmt hex -len 20 0xc00008af38</span><br></pre></td></tr></table></figure>
+
+<p>The <code>x</code> command is the same as gdb’s <code>x</code> command.</p>
+<h3 id="gdb-Debugging"><a href="#gdb-Debugging" class="headerlink" title="gdb Debugging"></a>gdb Debugging</h3><p>GDB’s support for Golang debugging is achieved through a Python script called <code>src/runtime/runtime-gdb.py</code>, so its functionality is limited. GDB can only perform basic variable printing and cannot understand some of Golang’s specific types such as channels, maps, and slices. GDB cannot directly debug goroutines because it only understands threads. However, GDB has one feature that cannot be replaced, which is the <code>gcore</code> command.</p>
+<h4 id="dlv-Debugging-Example"><a href="#dlv-Debugging-Example" class="headerlink" title="dlv Debugging Example"></a>dlv Debugging Example</h4><p>Debugging a Binary</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+
+<p>Debugging a Process</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+
+<p>Debugging a Core File</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+
+<h4 id="gdb-Debugging-Example"><a href="#gdb-Debugging-Example" class="headerlink" title="gdb Debugging Example"></a>gdb Debugging Example</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb ./main</span><br></pre></td></tr></table></figure>
+
+<p>Print Global Variables (note the single quotation marks)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p &#x27;runtime.firstmoduledata&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>Due to GDB’s limited understanding of Golang’s type system, sometimes it may not be able to print variables, so please pay attention to this.</p>
+<p>Print Array Length</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p $len(xxx)</span><br></pre></td></tr></table></figure>
+
+<p>Therefore, I usually only use GDB to generate core files.</p>
+<h3 id="Tips-and-Tricks"><a href="#Tips-and-Tricks" class="headerlink" title="Tips and Tricks"></a>Tips and Tricks</h3><h3 id="Don’t-know-how-to-set-breakpoints-in-functions"><a href="#Don’t-know-how-to-set-breakpoints-in-functions" class="headerlink" title="Don’t know how to set breakpoints in functions?"></a>Don’t know how to set breakpoints in functions?</h3><p>Sometimes you don’t know how to set breakpoints in a function. You can use <code>nm</code> to query the function and then set a breakpoint, which will ensure that you hit the breakpoint.</p>
+<h3 id="Don’t-know-the-calling-context"><a href="#Don’t-know-the-calling-context" class="headerlink" title="Don’t know the calling context?"></a>Don’t know the calling context?</h3><p>Add the following line in your code:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">debug.PrintStack()</span><br></pre></td></tr></table></figure>
+
+<p>This will print the stack trace at the current code position, allowing you to understand the calling path of the function.</p>
+<h3 id="Don’t-know-how-to-enable-pprof"><a href="#Don’t-know-how-to-enable-pprof" class="headerlink" title="Don’t know how to enable pprof?"></a>Don’t know how to enable pprof?</h3><p>There are two ways to enable pprof, corresponding to two packages:</p>
+<ul>
+<li>net&#x2F;http&#x2F;pprof: used in web server scenarios.</li>
+<li>runtime&#x2F;pprof: used in non-server applications.</li>
+</ul>
+<p>These two packages are essentially the same, with <code>net/http/pprof</code> being a web wrapper on top of <code>runtime/pprof</code>.</p>
+<p><strong>Using</strong> <code>net/http/pprof</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Using</strong> <code>runtime/pprof</code></p>
+<p>This method is usually used for performance optimization. When running a program that is not a server application, you want to find bottlenecks, so you typically use this method.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CPU pprof file path</span></span><br><span class="line">    f, err := os.Create(<span class="string">&quot;cpufile.pprof&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Start CPU pprof</span></span><br><span class="line">    pprof.StartCPUProfile(f)</span><br><span class="line">    <span class="keyword">defer</span> pprof.StopCPUProfile()</span><br></pre></td></tr></table></figure>
+
+<h3 id="Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging"><a href="#Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging" class="headerlink" title="Why does the code sometimes execute unexpectedly during single-step debugging?"></a>Why does the code sometimes execute unexpectedly during single-step debugging?</h3><p>This situation is usually caused by compiler optimization, such as function inlining and removal of redundant logic and parameters from the compiled binary. This can cause unexpected execution during dlv single-step debugging or prevent the printing of certain variables. The solution to this problem is to disable compiler optimization.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -gcflags &quot;-N -l&quot;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>This article provides a systematic overview of the techniques and usage of Golang program debugging:</p>
+<ol>
+<li>The language tool package provides built-in tools that support assembly, disassembly, pprof analysis, symbol table queries, and other practical functions.</li>
+<li>The language tool package integrates unit testing, and code coverage relies on triggering unit tests.</li>
+<li>The powerful dlv&#x2F;gdb tools serve as the main debugging tools, supporting the analysis of binaries, processes, and core files.</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/02/02/2024-02-02_Performance-Profiling-with-PProf--A-Powerful-Tool-in-Golang-c0b0fbce4bdb/" rel="prev" title="Performance Profiling with PProf">
+                  <i class="fa fa-angle-left"></i> Performance Profiling with PProf
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/02/04/2024-02-04_Read-the-paper--A-Study-of-Concurrency-Bugs-in-Real-World-Go/" rel="next" title="A Study of Concurrency Bugs In Real-World">
+                  A Study of Concurrency Bugs In Real-World <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2023 – 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">41k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">2:30</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.23.3/algoliasearch-lite.umd.js" integrity="sha256-1QNshz86RqXe/qsCBldsUu13eAX6n/O98uubKQs87UI=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+  <script class="next-config" data-name="mermaid" type="application/json">{"enable":true,"theme":{"light":"default","dark":"dark"},"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js","integrity":"sha256-stuqcu2FrjYCXDOytWFA5SoUE/r3nkp6gTglzNSlavU="}}</script>
+  <script src="/js/third-party/tags/mermaid.js"></script>
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-app-compat.js" integrity="sha256-GNS0PNk7BKL3ESum0TEubZtkybvbBMfkV3uZr7137Mk=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-firestore-compat.js" integrity="sha256-e8eevSHRq9ExY9rGvp5MoYeiGniYwJq0djypMLEqCjs=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+</body>
+</html>
