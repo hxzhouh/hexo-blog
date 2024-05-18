@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/head.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/head.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha256-XOqroi11tY4EFQMR9ZYwZWKj5ZXiftSx36RRuC3anlA=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Learn essential techniques to identify and mitigate potential security breaches in Linux.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="11 Tips for Detecting and Responding to Intrusions on Linux">
+<meta property="og:url" content="https://hxzhouh.com/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/index.html">
+<meta property="og:site_name" content="huizhou92">
+<meta property="og:description" content="Learn essential techniques to identify and mitigate potential security breaches in Linux.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/db9ed8c90e3341c2adf625afbd5ea8b0.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/eb6d7948e20ca2e5613deee40d505bf2.jpg">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/57d96bc4dfd26646223553f567be86c9.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/206a5a3babe2a2a64d0e1f4b47120320.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/b512fa0d6737c035aa1780287177c6f7.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/6fcc7bd1b96fab1bb6d5dbd6c9a0459a.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/d8a528e67c28f0004f066a9feb63c8ed.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/e0f5f25546b30c12dec7cfc59dc30776.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/90f84dd4a382230d881ce8bd5ce8d073.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/6a68a473ba76f9f22683e650be207c17.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/19288c7a155ac9235834ab971109166c.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/00558f66ae2e3ee693c28e6d3a6e6447.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/b9730ac8afdb1f047558fd360adb1c6c.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/7cb26d0bb8b0ebe300d7bcf1a8204eb9.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/5c781e5701b7da6564de1599c479cb13.png">
+<meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/05/529dd47d9993282b0fa10af537742b91.png">
+<meta property="article:published_time" content="2024-05-09T17:00:00.000Z">
+<meta property="article:modified_time" content="2024-05-17T15:45:35.353Z">
+<meta property="article:author" content="huizhou92">
+<meta property="article:tag" content="safe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.hxzhouh.com/blog-images/2024/05/db9ed8c90e3341c2adf625afbd5ea8b0.png">
+
+
+<link rel="canonical" href="https://hxzhouh.com/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://hxzhouh.com/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/","path":"2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/","title":"11 Tips for Detecting and Responding to Intrusions on Linux"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>11 Tips for Detecting and Responding to Intrusions on Linux | huizhou92</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2D664FV9XT"></script>
+  <script class="next-config" data-name="google_analytics" type="application/json">{"tracking_id":"G-2D664FV9XT","only_pageview":false}</script>
+  <script src="/js/third-party/analytics/google-analytics.js"></script>
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="huizhou92" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huizhou92</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="Searching..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fab fa-algolia fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Intruders-May-Delete-Machine-Logs"><span class="nav-number">1.</span> <span class="nav-text">1. Intruders May Delete Machine Logs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Intruders-May-Create-a-New-File-for-Storing-Usernames-and-Passwords"><span class="nav-number">2.</span> <span class="nav-text">2. Intruders May Create a New File for Storing Usernames and Passwords</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Intruders-May-Modify-Usernames-and-Passwords"><span class="nav-number">3.</span> <span class="nav-text">3. Intruders May Modify Usernames and Passwords</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Check-Recent-Successful-and-Last-Unsuccessful-Login-Events-on-the-Machine"><span class="nav-number">4.</span> <span class="nav-text">4. Check Recent Successful and Last Unsuccessful Login Events on the Machine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Use-who-to-View-All-Currently-Logged-in-Users-on-the-Machine"><span class="nav-number">5.</span> <span class="nav-text">5. Use who to View All Currently Logged-in Users on the Machine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Use-last-To-view-Users-Logged-in-Since-Machine-Creation"><span class="nav-number">6.</span> <span class="nav-text">6. Use last To view Users Logged in Since Machine Creation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-Use-ac-to-View-Connection-Time-in-Hours-for-All-Users-on-the-Machine"><span class="nav-number">7.</span> <span class="nav-text">7. Use ac to View Connection Time (in Hours) for All Users on the Machine</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-If-Abnormal-Traffic-is-Detected"><span class="nav-number">8.</span> <span class="nav-text">8. If Abnormal Traffic is Detected</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-Review-the-var-log-secure-Log-File"><span class="nav-number">9.</span> <span class="nav-text">9. Review the &#x2F;var&#x2F;log&#x2F;secure Log File</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-Identify-Scripts-Executed-by-Abnormal-Processes"><span class="nav-number">10.</span> <span class="nav-text">10. Identify Scripts Executed by Abnormal Processes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11-File-Recovery-After-Confirming-Intrusion-and-Deletion-of-Important-Files"><span class="nav-number">11.</span> <span class="nav-text">11. File Recovery After Confirming Intrusion and Deletion of Important Files</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">huizhou92</p>
+  <div class="site-description" itemprop="description">Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">56</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/hxzhouh" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;hxzhouh" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/@piaopiaopig" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;@piaopiaopig" rel="noopener me" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="sidebar-inner sidebar-blogroll">
+      <div class="links-of-blogroll animated">
+        <div class="links-of-blogroll-title"><i class="fa fa-globe fa-fw"></i>
+          Links
+        </div>
+        <ul class="links-of-blogroll-list">
+            <li class="links-of-blogroll-item">
+              <a href="http://programmerscareer.com/" title="http:&#x2F;&#x2F;programmerscareer.com&#x2F;" rel="noopener" target="_blank">Tfrain</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://hxzhouh.com/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="huizhou92">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huizhou92">
+      <meta itemprop="description" content="Backend engineer with a focus on Golang, cloud computing, data storage, and efficiency tools. Lifelong learner.">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="11 Tips for Detecting and Responding to Intrusions on Linux | huizhou92">
+      <meta itemprop="description" content="Learn essential techniques to identify and mitigate potential security breaches in Linux.">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          11 Tips for Detecting and Responding to Intrusions on Linux
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2024-05-10 01:00:00" itemprop="dateCreated datePublished" datetime="2024-05-10T01:00:00+08:00">2024-05-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2024-05-17 23:45:35" itemprop="dateModified" datetime="2024-05-17T23:45:35+08:00">2024-05-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/compute/" itemprop="url" rel="index"><span itemprop="name">compute</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="firestore-visitors-count"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Word count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Word count in article: </span>
+      <span>594</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>2 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">Learn essential techniques to identify and mitigate potential security breaches in Linux.</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/05/db9ed8c90e3341c2adf625afbd5ea8b0.png" alt="Generate By DELLA-3">Generate By DELLA-3</p>
+<p>With the increasing popularity of open-source products, a backend engineer must be able to clearly identify whether an abnormal machine has been compromised. Based on my personal work experience, I have compiled several common scenarios of machines being hacked for reference.</p>
+<blockquote>
+<p><strong><em>Background</em></strong> <em>: The following scenarios are observed on CentOS systems and are similar for other Linux distributions.</em></p>
+</blockquote>
+<span id="more"></span>
+<h3 id="1-Intruders-May-Delete-Machine-Logs">1. Intruders May Delete Machine Logs</h3>
+<p>Check if log information still exists or has been cleared using the following commands:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/eb6d7948e20ca2e5613deee40d505bf2.jpg" alt="t5rdb"></p>
+<h3 id="2-Intruders-May-Create-a-New-File-for-Storing-Usernames-and-Passwords">2. Intruders May Create a New File for Storing Usernames and Passwords</h3>
+<p>Check <code>/etc/passwd</code> and <code>/etc/shadow</code> files for any alterations using the following commands:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/57d96bc4dfd26646223553f567be86c9.png" alt="zutpn"></p>
+<h3 id="3-Intruders-May-Modify-Usernames-and-Passwords">3. Intruders May Modify Usernames and Passwords</h3>
+<p>Examine the contents of <code>/etc/passwd</code> and <code>/etc/shadow</code> files for any changes using the following commands:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/206a5a3babe2a2a64d0e1f4b47120320.png" alt="4j407"></p>
+<h3 id="4-Check-Recent-Successful-and-Last-Unsuccessful-Login-Events-on-the-Machine">4. Check Recent Successful and Last Unsuccessful Login Events on the Machine</h3>
+<p>Refer to the log “/var/log/lastlog” using the following commands:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/b512fa0d6737c035aa1780287177c6f7.png" alt="v9cf6"></p>
+<h3 id="5-Use-who-to-View-All-Currently-Logged-in-Users-on-the-Machine">5. Use <code>who</code> to View All Currently Logged-in Users on the Machine</h3>
+<p>Refer to the log file “/var/run/utmp”:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/6fcc7bd1b96fab1bb6d5dbd6c9a0459a.png" alt="bpi14"></p>
+<h3 id="6-Use-last-To-view-Users-Logged-in-Since-Machine-Creation">6. Use <code>last</code> To view Users Logged in Since Machine Creation</h3>
+<p>Refer to the log file “/var/log/wtmp”:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/d8a528e67c28f0004f066a9feb63c8ed.png" alt="m1m69"></p>
+<h3 id="7-Use-ac-to-View-Connection-Time-in-Hours-for-All-Users-on-the-Machine">7. Use <code>ac</code> to View Connection Time (in Hours) for All Users on the Machine</h3>
+<p>Refer to the log file “/var/log/wtmp”:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/e0f5f25546b30c12dec7cfc59dc30776.png" alt="aa7k0"></p>
+<h3 id="8-If-Abnormal-Traffic-is-Detected">8. If Abnormal Traffic is Detected</h3>
+<p>Use <code>tcpdump</code> to capture network packets or <code>iperf</code> to check traffic.</p>
+<h3 id="9-Review-the-var-log-secure-Log-File">9. Review the <code>/var/log/secure</code> Log File</h3>
+<p>Attempt to identify information about intruders using the following commands:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/90f84dd4a382230d881ce8bd5ce8d073.png" alt="bv4nh"></p>
+<h3 id="10-Identify-Scripts-Executed-by-Abnormal-Processes">10. Identify Scripts Executed by Abnormal Processes</h3>
+<ol>
+<li>1. Use the <code>top</code> command to view the PID of abnormal processes:</li>
+</ol>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/6a68a473ba76f9f22683e650be207c17.png" alt="4aiu7"></p>
+<ol>
+<li>1. Search for the executable file of the process in the virtual file system directory:</li>
+</ol>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/19288c7a155ac9235834ab971109166c.png" alt="2f0vv"></p>
+<h3 id="11-File-Recovery-After-Confirming-Intrusion-and-Deletion-of-Important-Files">11. File Recovery After Confirming Intrusion and Deletion of Important Files</h3>
+<ol>
+<li>When a process opens a file, even if it’s deleted, it remains on the disk as long as the process keeps it open. To recover such files, use <code>lsof</code> the <code>/proc</code> directory.</li>
+<li>Most <code>lsof</code> information is stored in directories named after the process’s PID, such as <code>/proc/1234</code>, containing information for PID 1234. Each process directory contains various files providing insight into the process’s memory space, file descriptor list, symbolic links to files on disk, and other system information. <code>lsof</code> uses this and other kernel internal state information to generate its output.</li>
+</ol>
+<p>Using the information above, you can retrieve the data by examining <code>/proc/&lt;PID&gt;/fd/&lt;descriptor&gt;</code>.</p>
+<p>For example, to recover <code>/var/log/secure</code>, follow these steps:</p>
+<p>a. Check <code>/var/log/secure</code>, confirming its absence:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/00558f66ae2e3ee693c28e6d3a6e6447.png" alt="z02gs"></p>
+<p>b. Use <code>lsof</code> to check if any process is currently accessing <code>/var/log/secure</code>:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/b9730ac8afdb1f047558fd360adb1c6c.png" alt="mtose"></p>
+<p>c. From the information above, PID 1264 (rsyslogd) has opened the file with a file descriptor of 4. It’s marked as deleted. Therefore, you can check the corresponding information in <code>/proc/1264/fd/4</code>:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/7cb26d0bb8b0ebe300d7bcf1a8204eb9.png" alt="6u6kh"></p>
+<p>d. You can recover the data by redirecting it to a file using I/O redirection:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5c781e5701b7da6564de1599c479cb13.png" alt="nsspr"></p>
+<p>e. Confirm the existence of <code>/var/log/secure</code> it again. This method is particularly useful for many applications, especially log files and databases.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/529dd47d9993282b0fa10af537742b91.png" alt="40eal"></p>
+<p>The above is the method I summarized for dealing with Linux intrusion. It can generally handle most problems. If you encounter an unresolved issue, it is best to seek advice from a professional IT operations and maintenance engineer.</p>
+<p>I may not have written it completely correctly, so if you have different opinions, please leave a comment and let me know.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/safe/" rel="tag"># safe</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/" rel="prev" title="Crafting Your Second Brain Lessons Learned from My Note-Taking Journey">
+                  <i class="fa fa-angle-left"></i> Crafting Your Second Brain Lessons Learned from My Note-Taking Journey
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/05/10/11%20Tips%20for%20Detecting%20and%20Responding%20to%20Intrusions%20on%20Linux/" rel="next" title="11 Tips for Detecting and Responding to Intrusions on Linux">
+                  11 Tips for Detecting and Responding to Intrusions on Linux <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments"><div id="twikoo-comments"></div></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 2023 – 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">huizhou92</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Word count total">45k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">2:42</span>
+  </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.23.3/algoliasearch-lite.umd.js" integrity="sha256-1QNshz86RqXe/qsCBldsUu13eAX6n/O98uubKQs87UI=" crossorigin="anonymous"></script><script src="/js/third-party/search/algolia-search.js"></script>
+
+
+  <script class="next-config" data-name="mermaid" type="application/json">{"enable":true,"theme":{"light":"default","dark":"dark"},"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js","integrity":"sha256-stuqcu2FrjYCXDOytWFA5SoUE/r3nkp6gTglzNSlavU="}}</script>
+  <script src="/js/third-party/tags/mermaid.js"></script>
+
+
+
+
+
+  
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-app-compat.js" integrity="sha256-GNS0PNk7BKL3ESum0TEubZtkybvbBMfkV3uZr7137Mk=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.11.1/firebase-firestore-compat.js" integrity="sha256-e8eevSHRq9ExY9rGvp5MoYeiGniYwJq0djypMLEqCjs=" crossorigin="anonymous"></script>
+  <script class="next-config" data-name="firestore" type="application/json">{"enable":true,"collection":"articles","apiKey":"AIzaSyBhf1ZiBUIQypQR6JV1MPzZsJkUQHsNK4o","projectId":"blog-views-3d7a8"}</script>
+  <script src="/js/third-party/statistics/firestore.js"></script>
+
+
+
+<script class="next-config" data-name="twikoo" type="application/json">{"enable":true,"visitor":false,"envId":"https://twikoo.yixiao9206.cn/","el":"#twikoo-comments"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.twikoo.el)
+    .then(() => NexT.utils.getScript(
+      CONFIG.twikoo.jsUrl || 'https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js',
+      { condition: window.twikoo }
+    ))
+    .then(() => {
+      twikoo.init(CONFIG.twikoo);
+    });
+});
+</script>
+<style>
+.post-block, .comments {
+  overflow: visible;
+}
+.tk-owo-emotion {
+  display: inline-block;
+}
+</style>
+
+</body>
+</html>

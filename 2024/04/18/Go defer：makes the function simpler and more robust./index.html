@@ -95,7 +95,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
         </a>
@@ -146,7 +146,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Several-Use-Cases-for-defer"><span class="nav-number">1.</span> <span class="nav-text">Several Use Cases for defer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Performance-Overhead-of-defer"><span class="nav-number">2.</span> <span class="nav-text">Performance Overhead of defer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusion"><span class="nav-number">3.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Several Use Cases for defer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Performance Overhead of defer</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -159,18 +159,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -301,28 +301,29 @@
 </blockquote>
 <p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
 <span id="more"></span> 
-
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-
 <p><code>defer</code> is used to release locks or any other resources.</p>
 <blockquote>
-<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions. </p>
+<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
+The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
 </blockquote>
 <p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
 <p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
 <p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
-<h1 id="Several-Use-Cases-for-defer"><a href="#Several-Use-Cases-for-defer" class="headerlink" title="Several Use Cases for defer"></a>Several Use Cases for <code>defer</code></h1><ul>
+<h1>Several Use Cases for <code>defer</code></h1>
+<ul>
 <li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
 <li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
 <li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
 </ul>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
-<h1 id="Performance-Overhead-of-defer"><a href="#Performance-Overhead-of-defer" class="headerlink" title="Performance Overhead of defer"></a>Performance Overhead of <code>defer</code></h1><p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
+<h1>Performance Overhead of <code>defer</code></h1>
+<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
 <p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-
 <p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
-<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
+<h1>Conclusion</h1>
+<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
 
     </div>
 
@@ -395,13 +396,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">41k</span>
+    <span title="Word count total">45k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">2:30</span>
+    <span title="Reading time total">2:42</span>
   </span>
 </div>
 

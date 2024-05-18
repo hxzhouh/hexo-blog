@@ -96,7 +96,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
         </a>
@@ -147,7 +147,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Research-Method"><span class="nav-number">1.</span> <span class="nav-text">Research Method</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Blocking-Bugs"><span class="nav-number">2.</span> <span class="nav-text">Blocking Bugs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Non-blocking-Bugs"><span class="nav-number">3.</span> <span class="nav-text">Non-blocking Bugs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusions-and-Reflections"><span class="nav-number">4.</span> <span class="nav-text">Conclusions and Reflections</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Research Method</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Blocking Bugs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Non-blocking Bugs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">Conclusions and Reflections</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -160,18 +160,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -300,31 +300,32 @@
     
     <div class="post-body" itemprop="articleBody"><p>Today I read a paper about real-world go concurrency error bugs, and here’s a transcript of what I read as a start to learning about go concurrency programming.</p>
 <blockquote>
-<p> <a target="_blank" rel="noopener" href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
+<p><a target="_blank" rel="noopener" href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
 </blockquote>
 <p><img src="https://images.hxzhouh.com/blog-images/2024/05/3f9b7292094086961ecb0d8658528cbe.png" alt="Pasted image 20240517213857"></p>
 <p>Recently, I came across a paper in one of the newsletters I subscribe to. The paper, from the University of Pennsylvania, presents the first systematic study of concurrency-related bugs in several major open-source Golang software projects. The researchers examined the commit histories of the following software: Docker, Kubernetes, etcd, gRPC, CockroachDB, and BoltDB, and drew several interesting conclusions.</p>
-<h1 id="Research-Method"><a href="#Research-Method" class="headerlink" title="Research Method"></a>Research Method</h1><p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
+<h1>Research Method</h1>
+<p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
 <p><img src="https://images.hxzhouh.com/blog-images/2024/05/52b66c9567ff341e8ff5a0a85387a417.png" alt="Pasted image 20240517214102"></p>
 <p>Number and types of bugs in different projects</p>
-<h1 id="Blocking-Bugs"><a href="#Blocking-Bugs" class="headerlink" title="Blocking Bugs"></a>Blocking Bugs</h1><p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
+<h1>Blocking Bugs</h1>
+<p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// goroutine 1</span></span><br><span class="line">  <span class="function"><span class="keyword">func</span> <span class="title">goroutine1</span><span class="params">()</span></span> &#123;</span><br><span class="line">      m.Lock()</span><br><span class="line">-     ch &lt;- request <span class="comment">// blocks</span></span><br><span class="line">+     <span class="keyword">select</span> &#123;</span><br><span class="line">+         <span class="keyword">case</span> ch &lt;- request</span><br><span class="line">+         <span class="keyword">default</span>:</span><br><span class="line">+     &#125;</span><br><span class="line">      m.Unlock()</span><br><span class="line">  &#125;<span class="comment">// goroutine 1 func goroutine1() &#123; m.Lock() - ch &lt;- request // blocks + select &#123; + case ch &lt;- request + default: + &#125; m.Unlock() goroutine 2 func goroutine2() &#123; for &#123; m.Lock() // blocks m.Unlock() request &lt;- ch &#125;</span></span><br></pre></td></tr></table></figure>
-
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// goroutine 2</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutine2</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        m.Lock()   <span class="comment">// blocks</span></span><br><span class="line">        m.Unlock()</span><br><span class="line">        request &lt;- ch</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>In the author’s study, it was found that the proportion of bugs caused by message passing was even higher than those caused by traditional mutexes. Furthermore, there are currently no mature detection methods for such bugs.</p>
 <blockquote>
 <p><em>Overall, we found that there are around 42% blocking bugs caused by errors in protecting shared memory, and 58% are caused by errors in message passing. Considering that shared memory primitives are used more frequently than message passing ones (Section 3.2), message passing operations are even more likely to cause blocking bugs.</em></p>
 </blockquote>
 <p>Personal opinion: The reasons for these issues may include the unfamiliarity with new channel synchronization primitives or the overreliance on channels, leading to a relaxed attitude towards bugs. In summary, channels are powerful, but they are not a panacea for solving all synchronization problems.</p>
-<h1 id="Non-blocking-Bugs"><a href="#Non-blocking-Bugs" class="headerlink" title="Non-blocking Bugs"></a>Non-blocking Bugs</h1><p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
+<h1>Non-blocking Bugs</h1>
+<p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
 <p>Here’s an example where the original code uses select-case, resulting in the default case being unintentionally executed multiple times. The fix completely replaces the original code with Once:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// when multiple goroutines execute the following code, default // can execute multiple times, closing the channel more than once, // which leads to panic in Go runtime - select &#123; - case &lt;- c.closed: // do something - default: + Once.Do(func() &#123; close(c.closed) + &#125;) - &#125;// when multiple goroutines execute the following code, default</span><br><span class="line">// can execute multiple times, closing the channel more than once,</span><br><span class="line">// which leads to panic in Go runtime</span><br><span class="line"></span><br><span class="line">- select &#123;</span><br><span class="line">-     case &lt;- c.closed:</span><br><span class="line">          // do something</span><br><span class="line">-     default:</span><br><span class="line">+         Once.Do(func() &#123;</span><br><span class="line">              close(c.closed)</span><br><span class="line">+         &#125;)</span><br><span class="line">- &#125;</span><br></pre></td></tr></table></figure>
-
 <p>Additionally, the paper explores different methods for modifying different types of bugs and provides recommendations for the development of future bug detection tools.</p>
-<h1 id="Conclusions-and-Reflections"><a href="#Conclusions-and-Reflections" class="headerlink" title="Conclusions and Reflections"></a>Conclusions and Reflections</h1><ul>
+<h1>Conclusions and Reflections</h1>
+<ul>
 <li>Go channels provide powerful concurrency patterns, but they are not a panacea. The study found that message passing can cause a higher proportion of blocking bugs. Currently, there are no well-established detection methods. Concurrency issues are inherently complex, and while language features may reduce complexity, they cannot effortlessly solve all problems through casual analysis.</li>
-<li>In Go programs, synchronization of shared memory (e.g., classic lock&#x2F;unlock) still accounts for a higher proportion.</li>
+<li>In Go programs, synchronization of shared memory (e.g., classic lock/unlock) still accounts for a higher proportion.</li>
 <li>Furthermore, misuse of channels can lead to performance issues ( <a target="_blank" rel="noopener" href="https://syslog.ravelin.com/so-just-how-fast-are-channels-anyway-4c156a407e45">see this article</a>).</li>
 <li>The author observes that many Go bugs exhibit similar patterns, which suggests the possibility of developing more static analysis tools dedicated to analyzing specific types of problems.</li>
 <li>Personal opinion: When writing Go code, whether using synchronization locks or channels, it is advisable to keep the synchronized code concise, clear, and easy to verify and inspect in order to reduce bugs.</li>
@@ -404,13 +405,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">41k</span>
+    <span title="Word count total">45k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">2:30</span>
+    <span title="Reading time total">2:42</span>
   </span>
 </div>
 

@@ -20,12 +20,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"hxzhouh.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.20.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"algolia":{"appID":"ZISROINTK6","apiKey":"970a441f5df78225c1ec616cceb70271","indexName":"hxzhouh-blog","hits":{"per_page":10,"labels":null,"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="Note: Non-members can read the full story in this link.  IntroductionIn the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was appro">
+    <meta name="description" content="Note: Non-members can read the full story in this link.  Introduction In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approx">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Performance analysis of goroutine switching">
 <meta property="og:url" content="https://hxzhouh.com/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/index.html">
 <meta property="og:site_name" content="huizhou92">
-<meta property="og:description" content="Note: Non-members can read the full story in this link.  IntroductionIn the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was appro">
+<meta property="og:description" content="Note: Non-members can read the full story in this link.  Introduction In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approx">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png">
 <meta property="article:published_time" content="2024-03-20T08:32:00.000Z">
@@ -95,7 +95,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
         </a>
@@ -146,7 +146,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Coroutine-Overhead-Test"><span class="nav-number">1.1.</span> <span class="nav-text">Coroutine Overhead Test</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Conclusion"><span class="nav-number">2.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Coroutine-Overhead-Test"><span class="nav-number">1.1.</span> <span class="nav-text">Coroutine Overhead Test</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Conclusion</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -159,18 +159,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -296,40 +296,52 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037">  </p>
+    <div class="post-body" itemprop="articleBody"><p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
 <blockquote>
-<p>Note: Non-members can read the full story in this <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
+<p>Note: Non-members can read the full story in this <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&amp;sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
 </blockquote>
-<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
+<h1>Introduction</h1>
+<p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
 <ul>
 <li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
 <li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
-<li>High network I&#x2F;O: Often requires network I&#x2F;O from other machines, such as Redis, MySQL, etc.</li>
-<li>Low computation: General CPU-intensive operations are not frequent.<span id="more"></span>
-Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</li>
+<li>High network I/O: Often requires network I/O from other machines, such as Redis, MySQL, etc.</li>
+<li>Low computation: General CPU-intensive operations are not frequent.</li>
 </ul>
+<span id="more"></span>
+<p>Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</p>
 <p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
-<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process&#x2F;thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process&#x2F;thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
+<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process/thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process/thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
 <p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
-<h2 id="Coroutine-Overhead-Test"><a href="#Coroutine-Overhead-Test" class="headerlink" title="Coroutine Overhead Test"></a>Coroutine Overhead Test</h2><blockquote>
+<h2 id="Coroutine-Overhead-Test">Coroutine Overhead Test</h2>
+<blockquote>
 <p>This article is based on go 1.22.1.</p>
 </blockquote>
 <ul>
-<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>  The test process involves continuously yielding the CPU between coroutines. The core code is as follows.<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>
+The test process involves continuously yielding the CPU between coroutines. The core code is as follows.</li>
 </ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>Compilation and execution</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>The average overhead of each coroutine switch is 54ns, which is approximately 1&#x2F;70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
-<p><strong>Coroutine Memory Overhead</strong><br>In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
+<p>The average overhead of each coroutine switch is 54ns, which is approximately 1/70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
+<p><strong>Coroutine Memory Overhead</strong><br>
+In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
-
-<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
+<h1>Conclusion</h1>
+<p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
 <p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
 <p>Coroutines ultimately execute attached to operating system threads.</p>
-<p>A question we need to consider is:<br>Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>Therefore:<br>Using threads &#x3D; thread switch overhead (low)<br>Using coroutines &#x3D; thread switch overhead (high) + coroutine switch overhead  </p>
-<p>Then CPU overhead:<br>Instruction cycles of threads &#x3D; interrupt detection + instruction execution (including fetch, decode, and execute)<br>Instruction cycles of coroutines &#x3D; interrupt detection + instruction execution + interrupt detection + coroutine signal detection  </p>
-<p>So, I have the following conclusion:<br>In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
+<p>A question we need to consider is:<br>
+Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>
+Therefore:<br>
+Using threads = thread switch overhead (low)<br>
+Using coroutines = thread switch overhead (high) + coroutine switch overhead</p>
+<p>Then CPU overhead:<br>
+Instruction cycles of threads = interrupt detection + instruction execution (including fetch, decode, and execute)<br>
+Instruction cycles of coroutines = interrupt detection + instruction execution + interrupt detection + coroutine signal detection</p>
+<p>So, I have the following conclusion:<br>
+In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
 <p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
 <p>If you like my articles, consider to :</p>
 <ol>
@@ -410,13 +422,13 @@ Even with a context switch overhead of 3-5 microseconds, it can still appear som
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">41k</span>
+    <span title="Word count total">45k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">2:30</span>
+    <span title="Reading time total">2:42</span>
   </span>
 </div>
 

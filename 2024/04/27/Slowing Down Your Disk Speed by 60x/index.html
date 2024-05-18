@@ -93,7 +93,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
         </a>
@@ -157,18 +157,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -296,37 +296,29 @@
     
     <div class="post-body" itemprop="articleBody"><p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
 <span id="more"></span>
-
 <blockquote>
 <p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
 </blockquote>
-<h2 id="Using-dmc"><a href="#Using-dmc" class="headerlink" title="Using dmc"></a>Using <code>dmc</code></h2><p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
+<h2 id="Using-dmc">Using <code>dmc</code></h2>
+<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
-
 <p>It offers various disk profiles to choose from:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
-
 <p>Each profile corresponds to different speed modes, such as:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
-
 <p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
-
 <p>Then, to verify the status:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
-
-<h2 id="Verification"><a href="#Verification" class="headerlink" title="Verification"></a>Verification</h2><p>We can validate using the <code>fio</code> tool:</p>
+<h2 id="Verification">Verification</h2>
+<p>We can validate using the <code>fio</code> tool:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-
-<p>Writing a 1GB file sequentially yields a speed of only 95.4MB&#x2F;s, with IOPS at 91:</p>
+<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
-
 <p>Now, with <code>dmc</code> turned off and the same command:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-
-<p>The test results in 3211MB&#x2F;s and IOPS of 3061, which represents the true speed of the disk:</p>
+<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
-
 <p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
 
     </div>
@@ -366,8 +358,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/" rel="next" title="If Google No Longer supports Golang">
-                  If Google No Longer supports Golang <i class="fa fa-angle-right"></i>
+                <a href="/2024/05/05/2024-05-05_Analyzing-High-Performance-Network-Framework-nbio-in-Go-9c35f295b5ad/" rel="next" title="Analyzing High-Performance Network Framework nbio in Go">
+                  Analyzing High-Performance Network Framework nbio in Go <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
@@ -400,13 +392,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">41k</span>
+    <span title="Word count total">45k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">2:30</span>
+    <span title="Reading time total">2:42</span>
   </span>
 </div>
 

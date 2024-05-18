@@ -93,7 +93,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">29</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">10</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">53</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">30</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories<span class="badge">11</span></a></li><li class="menu-item menu-item-rss"><a href="/atom.xml" rel="section"><i class="fa fa-rss fa-fw"></i>RSS</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">56</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
         </a>
@@ -157,18 +157,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-count">56</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -296,34 +296,33 @@
     
     <div class="post-body" itemprop="articleBody"><p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
 <span id="more"></span>
-
 <blockquote>
 <p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a target="_blank" rel="noopener" href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
 </blockquote>
 <p>Strictly speaking, Go language is not an object-oriented programming language, at least not the best choice for object-oriented programming (Java is the most established one). However, we can simulate object-oriented programming based on some features provided by Go.</p>
 <p>To implement object-oriented programming, we must implement the three major features of object-oriented programming: encapsulation, inheritance, and polymorphism.</p>
-<h2 id="Inheritance"><a href="#Inheritance" class="headerlink" title="Inheritance"></a>Inheritance</h2><p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
+<h2 id="Inheritance">Inheritance</h2>
+<p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
 <p>In traditional object-oriented programming, explicitly defining inheritance relationships has two drawbacks: one is that it leads to increasingly complex class hierarchies, and the other is that it affects the extensibility of classes. Many software design patterns advocate using composition instead of inheritance to improve class extensibility.</p>
-<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>If we want to define a class representing <code>Label</code>, we can do it like this:</p>
+<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>
+If we want to define a class representing <code>Label</code>, we can do it like this:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Label <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>Here, <code>Label</code> inherits all the properties of <code>Widget</code> and adds a new property <code>text</code>. Similarly, we can define the <code>Button</code> and <code>ListBox</code> classes:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Button <span class="keyword">struct</span> &#123;</span><br><span class="line">    Label</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ListBox <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text  []<span class="type">string</span></span><br><span class="line">    index <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Polymorphism"><a href="#Polymorphism" class="headerlink" title="Polymorphism"></a>Polymorphism</h2><p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
+<h2 id="Polymorphism">Polymorphism</h2>
+<p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Painter <span class="keyword">interface</span> &#123;</span><br><span class="line">    Paint()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Clicker <span class="keyword">interface</span> &#123;</span><br><span class="line">    Click()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>Then, the components implement these interfaces:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(label Label)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display label</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;%p:Label.Paint(%q)\n&quot;</span>, &amp;label, label.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Paint(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Click() &#123;</span><br><span class="line">    <span class="comment">// click button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Click(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(listBox ListBox)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display listBox</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;ListBox.Paint(%q)\n&quot;</span>, listBox.text)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p><code>Label</code> implements <code>Painter</code>, and <code>Button</code> and <code>ListBox</code> implement both <code>Painter</code> and <code>Clicker</code>.</p>
 <p>At the application level, we can use these components like this:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">label := Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">10</span>&#125;, <span class="string">&quot;State:&quot;</span>&#125;</span><br><span class="line">button1 := Button&#123;Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">70</span>&#125;, <span class="string">&quot;OK&quot;</span>&#125;&#125;</span><br><span class="line">button2 := NewButton(<span class="number">50</span>, <span class="number">70</span>, <span class="string">&quot;Cancel&quot;</span>)</span><br><span class="line">listBox := ListBox&#123;Widget&#123;<span class="number">10</span>, <span class="number">40</span>&#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;AL&quot;</span>, <span class="string">&quot;AK&quot;</span>, <span class="string">&quot;AZ&quot;</span>, <span class="string">&quot;AR&quot;</span>&#125;, <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">for</span> _, painter := <span class="keyword">range</span> []Painter&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    painter.Paint()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, clicker := <span class="keyword">range</span> []Clicker&#123;listBox, button1, button2&#125; &#123;</span><br><span class="line">    clicker.Click()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, widget := <span class="keyword">range</span> []<span class="keyword">interface</span>&#123;&#125;&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    widget.(Painter).Paint()</span><br><span class="line">    <span class="keyword">if</span> clicker, ok := widget.(Clicker); ok &#123;</span><br><span class="line">        clicker.Click()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>Go language is different from object-oriented programming languages like Java and PHP in that it does not provide keywords specifically for referencing parent class instances (such as <code>super</code>, <code>parent</code>, etc.). In Go language, the design philosophy is simplicity, without any unnecessary keywords. All calls are straightforward.</p>
-<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
+<h2 id="Summary">Summary</h2>
+<p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
 <p>All methods associated with a data type collectively form the method set of that type. Like other object-oriented programming languages, methods within the same method set cannot have the same name. Additionally, if they belong to a structure type, their names cannot overlap with any field names in that type.</p>
-<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ul>
+<h2 id="References">References</h2>
+<ul>
 <li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/37011799/how-to-pass-a-child-struct-into-a-function-accepting-parent-struct">How to pass a ‘child’ struct into a function accepting ‘parent’ struct?</a></li>
 <li><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/61585699/check-if-a-struct-has-struct-embedding-at-run-time">Check if a struct has struct embedding at run time</a></li>
 <li><a target="_blank" rel="noopener" href="https://coolshell.cn/articles/21214.html">GO编程模式：委托和反转控制</a></li>
@@ -400,13 +399,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Word count total">41k</span>
+    <span title="Word count total">45k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">2:30</span>
+    <span title="Reading time total">2:42</span>
   </span>
 </div>
 
