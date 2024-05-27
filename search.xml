@@ -204,6 +204,51 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
+    <title>Aws ec2 switch to ipv6,Save $43 per year</title>
+    <url>/2024/01/19/2024-01-19_Aws-ec2-switch-to-ipv6-Save--43-per-year-6ade4eff710d/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*32WLSHGCAPKEBvI3" alt="">Photo by <a href="https://unsplash.com/@burntime?utm_source=medium&amp;utm_medium=referral">Alex Kulikov</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
+<p>IPv6 has been around for a long time, and I have dealt with many IPv6 tasks in my work. However, I never thought about switching my EC2 instance to IPv4. Yesterday, while going through my email trash, I came across a message stating that AWS will start charging for IPv4 addresses from February 1, 2024. This caught my attention, so I decided to switch my EC2 instance to IPv6 today. The process was a bit of a hassle. This article is not only applicable to EC2 instances but should also work for other Linux hosts.</p>
+<span id="more"></span>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*SHE5MfrCO4t2ckNL.png" alt=""></p>
+<h1>Adding an IPv6 Address to EC2</h1>
+<p>Since my EC2 instance’s DNS resolution is handled by Cloudflare, I mainly referred to this blog post: <a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon’s $2bn IPv4 Tax — and How to Avoid Paying It</a></p>
+<p>And also, the official AWS documentation on <a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">Migrating Your VPC from IPv4 to IPv6</a>.</p>
+<p>It’s worth noting that the demo in the “Migrating Your VPC from IPv4 to IPv6” documentation assumes that the VPC has both a public and a private subnet. If you, like me, only have a public subnet, you can skip that part.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*ESBOHJRAC3rtmcsk.png" alt=""></p>
+<p>I must say, AWS documentation is well-written, and there’s a lot to learn from it.</p>
+<p>The result after completing the setup should look like this, with both IPv4 and IPv6 addresses. Make sure to add the same rules for IPv6 in the security group.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*N95oY6RVuVkurxfn.png" alt=""></p>
+<h1>Application Support</h1>
+<p>On my EC2 instance, I only have Nginx and Docker running, and I usually log in via SSH. So, I need to add IPv6 support for Nginx and SSH.</p>
+<h1>Nginx</h1>
+<p>For your HTTP server block (the one listening on port 80), add the line <code>listen [::]:80;</code>. This allows Nginx to listen to both IPv4 and IPv6 HTTP traffic. Your modified server block should look like this:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 80;</span><br><span class="line">     listen [::]:80;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     return 301 https://$host$request_uri;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>For each HTTPS server block (those listening on port 443), add <code>listen [::]:443 ssl;</code> inside each block. This enables Nginx to listen for HTTPS traffic on IPv6. For example, for the first HTTPS server block, you need to make the following modification:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     # other configurations...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>Make these modifications for each HTTPS server block. Then, test the Nginx configuration with <code>Nginx -t</code>. If there are no issues, reload the Nginx configuration with <code>systemctl reload nginx</code>.</p>
+<h3 id="SSHD">SSHD</h3>
+<p>In the <code>sshd_config</code> file, uncomment the line <code>AddressFamily any</code> (i.e., remove the preceding <code>#</code>) to enable IPv6 listening for SSH and other applications.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config</span><br><span class="line"> ​</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">Port 22</span></span><br><span class="line"> AddressFamily any</span><br><span class="line"> AddressFamily inet</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
+<p>Then, restart SSHD with <code>sudo systemctl reload sshd</code>. Use the <code>netstat -tupln</code> command to check if SSH is successfully listening on IPv6. If you see the following output, it means SSH is listening on IPv6:</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*x564Ur3tmy5qQIOt.png" alt=""></p>
+<p>Now the application layer modifications are complete.</p>
+<h1>DNS Configuration</h1>
+<p>Finally, in Cloudflare, modify the DNS settings by changing the previous IPv4 A records to AAAA records for IPv6.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*Qpu-dV3-6obShvN4.png" alt=""></p>
+<h1>Test</h1>
+<p>Test everything to make sure it’s working fine, and then you can delete the IPv4 address to avoid being charged.</p>
+<p>Update: Running instances cannot have their IPv4 addresses removed, but you can rebuild them using an AMI. It’s a bit of a hassle, but at least AWS won’t send me any more emails. ✌️</p>
+<h1>References</h1>
+<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from EC2 instances before February 2024? (IPv6)</a></p>
+]]></content>
+      <categories>
+        <category>compute</category>
+      </categories>
+      <tags>
+        <tag>aws</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Overview of Changes in Go’s Concurrency Library in 2023</title>
     <url>/2024/01/19/2024-01-19_Overview-of-Changes-in-Go-s-Concurrency-Library-in-2023-144a65184715/</url>
     <content><![CDATA[<p>In 2023, there have been some changes to Go’s concurrency library, and this article provides an overview of these changes. Minor details such as typos and documentation changes will not be covered.</p>
@@ -278,51 +323,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       <categories>
         <category>blog</category>
       </categories>
-  </entry>
-  <entry>
-    <title>Aws ec2 switch to ipv6,Save $43 per year</title>
-    <url>/2024/01/19/2024-01-19_Aws-ec2-switch-to-ipv6-Save--43-per-year-6ade4eff710d/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*32WLSHGCAPKEBvI3" alt="">Photo by <a href="https://unsplash.com/@burntime?utm_source=medium&amp;utm_medium=referral">Alex Kulikov</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
-<p>IPv6 has been around for a long time, and I have dealt with many IPv6 tasks in my work. However, I never thought about switching my EC2 instance to IPv4. Yesterday, while going through my email trash, I came across a message stating that AWS will start charging for IPv4 addresses from February 1, 2024. This caught my attention, so I decided to switch my EC2 instance to IPv6 today. The process was a bit of a hassle. This article is not only applicable to EC2 instances but should also work for other Linux hosts.</p>
-<span id="more"></span>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*SHE5MfrCO4t2ckNL.png" alt=""></p>
-<h1>Adding an IPv6 Address to EC2</h1>
-<p>Since my EC2 instance’s DNS resolution is handled by Cloudflare, I mainly referred to this blog post: <a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon’s $2bn IPv4 Tax — and How to Avoid Paying It</a></p>
-<p>And also, the official AWS documentation on <a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">Migrating Your VPC from IPv4 to IPv6</a>.</p>
-<p>It’s worth noting that the demo in the “Migrating Your VPC from IPv4 to IPv6” documentation assumes that the VPC has both a public and a private subnet. If you, like me, only have a public subnet, you can skip that part.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*ESBOHJRAC3rtmcsk.png" alt=""></p>
-<p>I must say, AWS documentation is well-written, and there’s a lot to learn from it.</p>
-<p>The result after completing the setup should look like this, with both IPv4 and IPv6 addresses. Make sure to add the same rules for IPv6 in the security group.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*N95oY6RVuVkurxfn.png" alt=""></p>
-<h1>Application Support</h1>
-<p>On my EC2 instance, I only have Nginx and Docker running, and I usually log in via SSH. So, I need to add IPv6 support for Nginx and SSH.</p>
-<h1>Nginx</h1>
-<p>For your HTTP server block (the one listening on port 80), add the line <code>listen [::]:80;</code>. This allows Nginx to listen to both IPv4 and IPv6 HTTP traffic. Your modified server block should look like this:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 80;</span><br><span class="line">     listen [::]:80;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     return 301 https://$host$request_uri;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>For each HTTPS server block (those listening on port 443), add <code>listen [::]:443 ssl;</code> inside each block. This enables Nginx to listen for HTTPS traffic on IPv6. For example, for the first HTTPS server block, you need to make the following modification:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     # other configurations...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>Make these modifications for each HTTPS server block. Then, test the Nginx configuration with <code>Nginx -t</code>. If there are no issues, reload the Nginx configuration with <code>systemctl reload nginx</code>.</p>
-<h3 id="SSHD">SSHD</h3>
-<p>In the <code>sshd_config</code> file, uncomment the line <code>AddressFamily any</code> (i.e., remove the preceding <code>#</code>) to enable IPv6 listening for SSH and other applications.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config</span><br><span class="line"> ​</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">Port 22</span></span><br><span class="line"> AddressFamily any</span><br><span class="line"> AddressFamily inet</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
-<p>Then, restart SSHD with <code>sudo systemctl reload sshd</code>. Use the <code>netstat -tupln</code> command to check if SSH is successfully listening on IPv6. If you see the following output, it means SSH is listening on IPv6:</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*x564Ur3tmy5qQIOt.png" alt=""></p>
-<p>Now the application layer modifications are complete.</p>
-<h1>DNS Configuration</h1>
-<p>Finally, in Cloudflare, modify the DNS settings by changing the previous IPv4 A records to AAAA records for IPv6.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*Qpu-dV3-6obShvN4.png" alt=""></p>
-<h1>Test</h1>
-<p>Test everything to make sure it’s working fine, and then you can delete the IPv4 address to avoid being charged.</p>
-<p>Update: Running instances cannot have their IPv4 addresses removed, but you can rebuild them using an AMI. It’s a bit of a hassle, but at least AWS won’t send me any more emails. ✌️</p>
-<h1>References</h1>
-<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from EC2 instances before February 2024? (IPv6)</a></p>
-]]></content>
-      <categories>
-        <category>compute</category>
-      </categories>
-      <tags>
-        <tag>aws</tag>
-      </tags>
   </entry>
   <entry>
     <title>Why TCP requires three handshakes to establish a connection?</title>
@@ -932,6 +932,29 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
+    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
+    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
+<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
+<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
+<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
+<h1>Constantly Switching Note Formats</h1>
+<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
+<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
+<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
+<h1>Mixing Project Notes with Knowledge Notes</h1>
+<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
+<h1>Obsessive Note Organization</h1>
+<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
+]]></content>
+      <categories>
+        <category>self</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
       </tags>
   </entry>
   <entry>
@@ -1612,6 +1635,65 @@ If we want to define a class representing <code>Label</code>, we can do it like 
       </tags>
   </entry>
   <entry>
+    <title>Go1.22 a new math  lib</title>
+    <url>/2024/04/18/Go1.22%20a%20new%20math%20%20lib/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<h1>Go1.22 a new math lib</h1>
+<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
+<span id="more"></span> 
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/bb79ed583d1402f7ca9b2ff886f939e5.jpeg" alt="640"></p>
+<h2 id="Reasons">Reasons</h2>
+<ol>
+<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
+<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
+<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
+</ol>
+<h2 id="change-list">change list</h2>
+<ul>
+<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
+<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
+<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
+<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
+<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
+<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
+<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
+<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
+<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
+<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
+</ul>
+<h2 id="example">example</h2>
+<h3 id="Read-Seed">Read &amp; Seed</h3>
+<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
+ <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">import</span> (</span><br><span class="line"> <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line"> <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"> b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line"> _, err := rand.Read(b)</span><br><span class="line"> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">  <span class="built_in">panic</span>(err)</span><br><span class="line"> &#125;</span><br><span class="line"> fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>output：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
+<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
+<h3 id="internal">internal</h3>
+<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail:<a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
+<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
+<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
+<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
+<ul>
+<li><code>int</code></li>
+<li><code>int8</code></li>
+<li><code>int16</code></li>
+<li><code>int32</code></li>
+<li><code>int64</code></li>
+</ul>
+<h1>Summary:</h1>
+<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
+<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of<a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>How was my blog built</title>
     <url>/2024/04/18/How%20was%20my%20blog%20built/</url>
     <content><![CDATA[<p>Blogging, is the last and most important link in my knowledge circulatory system, which takes care of my output, as well as my personal brand. In this post, I describe how my <a href="https://hxzhouh.com">blog</a>, was built.</p>
@@ -1673,9 +1755,54 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
         <category>blog</category>
       </categories>
       <tags>
+        <tag>tools</tag>
         <tag>hexo</tag>
         <tag>blog</tag>
-        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
+    <url>/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png" alt=""></p>
+<blockquote>
+<p>This article has expired, please do not use it</p>
+</blockquote>
+<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
+<span id="more"></span>
+<h1>Open-Source Components</h1>
+<ul>
+<li><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</li>
+<li><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></li>
+<li>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</li>
+<li>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</li>
+<li>Cloudflare: A free CDN service used for domain name resolution.</li>
+</ul>
+<h1>Obtaining the GitHub Copilot Token</h1>
+<p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*CKQlLPEw2yVoNGNp.png" alt=""></p>
+<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
+<h1>Running the copilot-gpt4-service</h1>
+<ol>
+<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.</li>
+</ol>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*K537j_O1-TsDgmJl.png" alt=""></p>
+<ol>
+<li>Add a server block in NGINX:</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name chat.example.com;</span><br><span class="line"> ​</span><br><span class="line">     ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">     ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"> ​</span><br><span class="line">     location / &#123;</span><br><span class="line">         proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">         rewrite ^/(.*)$ /$1 break;</span><br><span class="line">         proxy_redirect off;</span><br><span class="line">         proxy_set_header Host $host;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">         proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">         proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>Don’t forget to reload the NGINX configuration file.</p>
+<ol>
+<li>Add a domain name resolution for “<a href="http://chat.example.com">chat.example.com</a>” on Cloudflare, pointing to the IP address of your NGINX server.</li>
+</ol>
+<h1>Deploying the ChatGPT-Next-Web Service on Vercel</h1>
+<p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
+<p>Once the deployment on <code>Vercel</code> is complete, you can add a custom domain name, such as “<a href="http://chatnext.example.com">chatnext.example.com</a>”.</p>
+<h1>Testing</h1>
+<p>Open your browser and enter “<a href="http://chatnext.example.com">chatnext.example.com</a>”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter &quot; <a href="https://chat.example.com">https://chat.example.com</a>&quot; as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
+]]></content>
+      <tags>
+        <tag>chatgpt</tag>
       </tags>
   </entry>
   <entry>
@@ -1719,65 +1846,6 @@ As a gopher, I pondered: will Google abandon Go? And if so, what would become of
       </categories>
       <tags>
         <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go1.22 a new math  lib</title>
-    <url>/2024/04/18/Go1.22%20a%20new%20math%20%20lib/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<h1>Go1.22 a new math lib</h1>
-<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
-<span id="more"></span> 
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/bb79ed583d1402f7ca9b2ff886f939e5.jpeg" alt="640"></p>
-<h2 id="Reasons">Reasons</h2>
-<ol>
-<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
-<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
-<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
-</ol>
-<h2 id="change-list">change list</h2>
-<ul>
-<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
-<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
-<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
-<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
-<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
-<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
-<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
-<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
-<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
-<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
-</ul>
-<h2 id="example">example</h2>
-<h3 id="Read-Seed">Read &amp; Seed</h3>
-<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
- <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">import</span> (</span><br><span class="line"> <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line"> <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"> b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line"> _, err := rand.Read(b)</span><br><span class="line"> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">  <span class="built_in">panic</span>(err)</span><br><span class="line"> &#125;</span><br><span class="line"> fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>output：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
-<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
-<h3 id="internal">internal</h3>
-<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail:<a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
-<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
-<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
-<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
-<ul>
-<li><code>int</code></li>
-<li><code>int8</code></li>
-<li><code>int16</code></li>
-<li><code>int32</code></li>
-<li><code>int64</code></li>
-</ul>
-<h1>Summary:</h1>
-<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
-<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of<a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -1888,51 +1956,6 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </categories>
       <tags>
         <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
-    <url>/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png" alt=""></p>
-<blockquote>
-<p>This article has expired, please do not use it</p>
-</blockquote>
-<p>GitHub Copilot is a AI assistant developed by GitHub to help developers write code. It is a Visual Studio Code plugin based on OpenAI Codex, providing features such as code suggestions, auto-completion, auto-fixing, and auto-refactoring. Currently, GitHub Copilot also supports chat functionality, powered by GPT-4. However, it is only available within the context of VS Code. In this article, I will explain how to set up a chat service using GitHub Copilot, allowing you to use it anywhere.</p>
-<span id="more"></span>
-<h1>Open-Source Components</h1>
-<ul>
-<li><a href="https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web">ChatGPT-Next-Web</a>: A well-designed, cross-platform ChatGPT web UI with support for GPT3, GPT4, and Gemini Pro.</li>
-<li><a href="https://github.com/aaamoon/copilot-gpt4-service">copilot-gpt4-service</a></li>
-<li>An AWS EC2 server is needed to run the copilot-gpt4-service, but you can choose any cloud service provider you prefer or run it locally.</li>
-<li>Vercel: A free static website hosting service to deploy the ChatGPT-Next-Web service.</li>
-<li>Cloudflare: A free CDN service used for domain name resolution.</li>
-</ul>
-<h1>Obtaining the GitHub Copilot Token</h1>
-<p>Please refer to this document, <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/README_CN.md#%E8%8E%B7%E5%8F%96-copilot-token">GitHub Copilot Token</a>. On a Mac, you can use the following command to obtain the token:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/aaamoon/copilot-gpt4-service/master/shells/get_copilot_token.sh)&quot;</span><br></pre></td></tr></table></figure>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*CKQlLPEw2yVoNGNp.png" alt=""></p>
-<p>As shown in the screenshot, you need to copy the token to the clipboard for later use.</p>
-<h1>Running the copilot-gpt4-service</h1>
-<ol>
-<li>The copilot-gpt4-service supports Docker deployment, and the official project provides a <a href="https://github.com/aaamoon/copilot-gpt4-service/blob/master/docker-compose.yml">docker-compose</a> file. You only need to modify the environment variables.</li>
-</ol>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*K537j_O1-TsDgmJl.png" alt=""></p>
-<ol>
-<li>Add a server block in NGINX:</li>
-</ol>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name chat.example.com;</span><br><span class="line"> ​</span><br><span class="line">     ssl_certificate /etc/nginx/cert/public.pem;</span><br><span class="line">     ssl_certificate_key /etc/nginx/cert/private.key;</span><br><span class="line"> ​</span><br><span class="line">     location / &#123;</span><br><span class="line">         proxy_pass http://127.0.0.1:8086/;  # Replace with the copilot-gpt4-service address</span><br><span class="line">         rewrite ^/(.*)$ /$1 break;</span><br><span class="line">         proxy_redirect off;</span><br><span class="line">         proxy_set_header Host $host;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto $scheme;</span><br><span class="line">         proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">         proxy_set_header Upgrade-Insecure-Requests 1;</span><br><span class="line">         proxy_set_header X-Forwarded-Proto https;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>Don’t forget to reload the NGINX configuration file.</p>
-<ol>
-<li>Add a domain name resolution for “<a href="http://chat.example.com">chat.example.com</a>” on Cloudflare, pointing to the IP address of your NGINX server.</li>
-</ol>
-<h1>Deploying the ChatGPT-Next-Web Service on Vercel</h1>
-<p>ChatGPT-Next-Web supports one-click deployment to Vercel. You don’t need to make any changes.</p>
-<p>Once the deployment on <code>Vercel</code> is complete, you can add a custom domain name, such as “<a href="http://chatnext.example.com">chatnext.example.com</a>”.</p>
-<h1>Testing</h1>
-<p>Open your browser and enter “<a href="http://chatnext.example.com">chatnext.example.com</a>”. Click on the settings button in the bottom left corner and select “Custom Interface”. Enter &quot; <a href="https://chat.example.com">https://chat.example.com</a>&quot; as the API endpoint, and use the GitHub Copilot token copied in the first step as the API token. Click on “Save”, and you can start chatting.</p>
-]]></content>
-      <tags>
-        <tag>chatgpt</tag>
       </tags>
   </entry>
   <entry>
@@ -2210,6 +2233,11 @@ Memory safety is <strong>the most important value</strong> for Rust. It means th
       </tags>
   </entry>
   <entry>
+    <title></title>
+    <url>/2024/05/18/post/</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
     <title>The Magical Algorithms Written by Two Old Men, Dominating the World!</title>
     <url>/2024/04/25/The%20Magical%20Algorithms%20Written%20by%20Two%20Old%20Men,%20Dominating%20the%20World/</url>
     <content><![CDATA[<p>As an ordinary person, when you browse the web, you may not realize that the web pages sent to you by the server are actually compressed.</p>
@@ -2289,33 +2317,5 @@ Windows intervened and simply integrated Zip functionality into the operating sy
         <tag>history</tag>
         <tag>compute</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
-    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
-    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
-<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
-<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
-<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
-<h1>Constantly Switching Note Formats</h1>
-<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
-<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
-<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
-<h1>Mixing Project Notes with Knowledge Notes</h1>
-<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
-<h1>Obsessive Note Organization</h1>
-<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
-]]></content>
-      <categories>
-        <category>self</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title></title>
-    <url>/2024/05/18/post/</url>
-    <content><![CDATA[]]></content>
   </entry>
 </search>
