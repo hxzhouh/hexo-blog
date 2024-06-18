@@ -280,51 +280,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       </categories>
   </entry>
   <entry>
-    <title>Aws ec2 switch to ipv6,Save $43 per year</title>
-    <url>/2024/01/19/2024-01-19_Aws-ec2-switch-to-ipv6-Save--43-per-year-6ade4eff710d/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*32WLSHGCAPKEBvI3" alt="">Photo by <a href="https://unsplash.com/@burntime?utm_source=medium&amp;utm_medium=referral">Alex Kulikov</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
-<p>IPv6 has been around for a long time, and I have dealt with many IPv6 tasks in my work. However, I never thought about switching my EC2 instance to IPv4. Yesterday, while going through my email trash, I came across a message stating that AWS will start charging for IPv4 addresses from February 1, 2024. This caught my attention, so I decided to switch my EC2 instance to IPv6 today. The process was a bit of a hassle. This article is not only applicable to EC2 instances but should also work for other Linux hosts.</p>
-<span id="more"></span>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*SHE5MfrCO4t2ckNL.png" alt=""></p>
-<h1>Adding an IPv6 Address to EC2</h1>
-<p>Since my EC2 instance’s DNS resolution is handled by Cloudflare, I mainly referred to this blog post: <a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon’s $2bn IPv4 Tax — and How to Avoid Paying It</a></p>
-<p>And also, the official AWS documentation on <a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">Migrating Your VPC from IPv4 to IPv6</a>.</p>
-<p>It’s worth noting that the demo in the “Migrating Your VPC from IPv4 to IPv6” documentation assumes that the VPC has both a public and a private subnet. If you, like me, only have a public subnet, you can skip that part.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*ESBOHJRAC3rtmcsk.png" alt=""></p>
-<p>I must say, AWS documentation is well-written, and there’s a lot to learn from it.</p>
-<p>The result after completing the setup should look like this, with both IPv4 and IPv6 addresses. Make sure to add the same rules for IPv6 in the security group.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*N95oY6RVuVkurxfn.png" alt=""></p>
-<h1>Application Support</h1>
-<p>On my EC2 instance, I only have Nginx and Docker running, and I usually log in via SSH. So, I need to add IPv6 support for Nginx and SSH.</p>
-<h1>Nginx</h1>
-<p>For your HTTP server block (the one listening on port 80), add the line <code>listen [::]:80;</code>. This allows Nginx to listen to both IPv4 and IPv6 HTTP traffic. Your modified server block should look like this:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 80;</span><br><span class="line">     listen [::]:80;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     return 301 https://$host$request_uri;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>For each HTTPS server block (those listening on port 443), add <code>listen [::]:443 ssl;</code> inside each block. This enables Nginx to listen for HTTPS traffic on IPv6. For example, for the first HTTPS server block, you need to make the following modification:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     # other configurations...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>Make these modifications for each HTTPS server block. Then, test the Nginx configuration with <code>Nginx -t</code>. If there are no issues, reload the Nginx configuration with <code>systemctl reload nginx</code>.</p>
-<h3 id="SSHD">SSHD</h3>
-<p>In the <code>sshd_config</code> file, uncomment the line <code>AddressFamily any</code> (i.e., remove the preceding <code>#</code>) to enable IPv6 listening for SSH and other applications.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config</span><br><span class="line"> ​</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">Port 22</span></span><br><span class="line"> AddressFamily any</span><br><span class="line"> AddressFamily inet</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
-<p>Then, restart SSHD with <code>sudo systemctl reload sshd</code>. Use the <code>netstat -tupln</code> command to check if SSH is successfully listening on IPv6. If you see the following output, it means SSH is listening on IPv6:</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*x564Ur3tmy5qQIOt.png" alt=""></p>
-<p>Now the application layer modifications are complete.</p>
-<h1>DNS Configuration</h1>
-<p>Finally, in Cloudflare, modify the DNS settings by changing the previous IPv4 A records to AAAA records for IPv6.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*Qpu-dV3-6obShvN4.png" alt=""></p>
-<h1>Test</h1>
-<p>Test everything to make sure it’s working fine, and then you can delete the IPv4 address to avoid being charged.</p>
-<p>Update: Running instances cannot have their IPv4 addresses removed, but you can rebuild them using an AMI. It’s a bit of a hassle, but at least AWS won’t send me any more emails. ✌️</p>
-<h1>References</h1>
-<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from EC2 instances before February 2024? (IPv6)</a></p>
-]]></content>
-      <categories>
-        <category>compute</category>
-      </categories>
-      <tags>
-        <tag>aws</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Why does It Take Four Waves For TCP To Disconnect?</title>
     <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
     <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
@@ -354,93 +309,6 @@ With the increasing popularity of open-source products, it is crucial for a back
 <li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
 <li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
 <li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>network</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Why TCP requires three handshakes to establish a connection?</title>
-    <url>/2024/01/30/2024-01-30_Why-TCP-requires-three-handshakes-to-establish-a-connection--31d814aac6b8/</url>
-    <content><![CDATA[<p>TCP protocol is a network protocol that we encounter almost every day. The majority of network connections are established based on the TCP protocol. People who have studied computer networks or have some understanding of the TCP protocol know that establishing a connection using TCP requires a three-way handshake.</p>
-<span id="more"></span>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/c680b2ef5dc88552c1838e5bf7f1ba65.png" alt="Pasted image 20240517205741"></p>
-<p>If we briefly explain the process of establishing a TCP connection, many people who have prepared for interviews would be familiar with it. However, when it comes to delving into the question of “Why does TCP require a three-way handshake to establish a connection?” most people would not be able to answer this question or might provide incorrect answers. This article will discuss why we need a three-way handshake to establish a TCP connection instead of four or two.</p>
-<h1>Overview</h1>
-<p>Before analyzing the question at hand, let’s first address a common misconception that has misled many people regarding the TCP connection process. For a long time, the author of this article also believed that it provided a good explanation for why a TCP connection requires a three-way handshake:</p>
-<blockquote>
-<p>–&gt; Can you hear me?<br>
-&lt;-- I can hear you. Can you hear me?<br>
-–&gt; I can hear you too.</p>
-</blockquote>
-<p>Using analogies to explain a problem often leads to a situation where “nine out of ten analogies are wrong.” If someone uses an analogy to answer your “why” question, you need to carefully consider the flaws in their analogy. Analogies can only provide a partial similarity, and we can never find an absolutely correct analogy. Analogies are only useful when we want to present the characteristics of something in a simple and understandable way. In the rest of the article, we will explain why this analogy is flawed, and readers can read the remaining content with this question in mind.</p>
-<p>When many people try to answer or think about this question, they tend to focus on the “three” in the three-way handshake, which is indeed important. However, if we reexamine the question, do we really understand what a “connection” is? Only when we know the definition of a “connection” can we attempt to answer why TCP requires a three-way handshake.</p>
-<blockquote>
-<p><em>The reliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection.</em></p>
-</blockquote>
-<p>The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol</a> document clearly defines what a connection is in TCP. In summary, a connection is the information used to ensure reliability and flow control mechanisms, including sockets, sequence numbers, and window sizes.</p>
-<p>Therefore, establishing a TCP connection means that the two parties involved in communication need to reach a consensus on the three types of information mentioned above. A pair of sockets in a connection is composed of an Internet address identifier and a port. The window size is mainly used for flow control, and the sequence number is used to track the sequence of data packets sent by the initiating party, allowing the receiving party to confirm the successful receipt of a particular data packet based on the sequence number.</p>
-<p>At this point, we have transformed the original question into “Why do we need a three-way handshake to initialize sockets, window sizes, and initial sequence numbers?” Next, we will analyze and seek explanations for this refined question.</p>
-<h1>Design</h1>
-<p>This article will mainly discuss why we need a three-way handshake to initialize sockets, window sizes, initial sequence numbers, and establish a TCP connection from the following aspects:</p>
-<ul>
-<li>A three-way handshake is required to prevent the initialization of duplicate historical connections.</li>
-<li>A three-way handshake is required to initialize the initial sequence numbers of both communicating parties.</li>
-<li>Discuss the possibility of establishing a connection with a different number of handshakes.</li>
-</ul>
-<p>Among these arguments, the first one is the primary reason why TCP chooses to use a three-way handshake. The other reasons are secondary in comparison. We discuss them here to provide a more comprehensive perspective and understand this interesting design decision from multiple angles.</p>
-<h1>Historical Connections</h1>
-<p>The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol</a> clearly points out the primary reason why TCP uses a three-way handshake: to prevent confusion caused by the initiation of old duplicate connections.</p>
-<blockquote>
-<p><em>The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion.</em></p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/6679e5256608619c68d265cab45e3c3c.png" alt="img for geeksforgeeks.org"></p>
-<p>Imagine this scenario: if the number of communications between the two parties is only two, once the sender sends a connection establishment request, it cannot retract this request. In a complex or poor network condition, if the sender continuously sends multiple connection establishment requests and TCP establishes a connection with only two communications, the receiver can only choose to accept or reject the sender’s request. The receiver is not sure whether this request is an expired connection due to network congestion.</p>
-<p>Therefore, TCP chooses to use a three-way handshake to establish a connection and introduces the <code>RST</code> control message. When the receiver receives the request, it sends the sender’s <code>SEQ+1</code> as part of the <code>ACK</code> control message. At this point, the sender can determine whether the current connection is a historical connection:</p>
-<ul>
-<li>If the current connection is a historical connection, meaning the <code>SEQ</code> has expired or timed out, the sender will directly send an <code>RST</code> control message to terminate this connection.</li>
-<li>If the current connection is not a historical connection, the sender will send an <code>ACK</code> control message, and the two parties will successfully establish a connection.</li>
-</ul>
-<p>By using a three-way handshake and the <code>RST</code> control message, the ultimate control over whether to establish a connection is given to the sender. Only the sender has enough context to determine if the current connection is erroneous or expired. This is also the primary reason why TCP uses a three-way handshake to establish a connection.</p>
-<h1>Initial Sequence Numbers</h1>
-<p>Another important reason for using a three-way handshake is that both communicating parties need to obtain an initial sequence number for sending information. As a reliable transport layer protocol, TCP needs to build a reliable transport layer in an unstable network environment. The uncertainty of the network can lead to issues such as packet loss and out-of-order delivery. Common problems may include:</p>
-<ul>
-<li>Data packets being repeatedly sent by the sender, resulting in duplicate data.</li>
-<li>Data packets being lost during transmission due to routing or other network nodes.</li>
-<li>Data packets arriving at the receiver may not be in the order they were sent.</li>
-</ul>
-<p>To address these potential issues, the TCP protocol requires the sender to include a “sequence number” field in the data packet. With the sequence number corresponding to each data packet, we can:</p>
-<ul>
-<li>The receiver can deduplicate repeated data packets based on the sequence number.</li>
-<li>The sender will resend the corresponding data packet until it is acknowledged.</li>
-<li>The receiver can reorder the data packets based on their sequence numbers.</li>
-</ul>
-<p>Sequence numbers play a crucial role in TCP connections, and the initial sequence number, as part of a TCP connection, needs to be initialized during the three-way handshake. Since both parties in a TCP connection need to obtain the initial sequence number, they need to send a <code>SYN</code> control message to each other, carrying their expected initial sequence number <code>SEQ</code>. Upon receiving the <code>SYN</code> message, the receiver will confirm it using the <code>ACK</code> control message and <code>SEQ+1</code>.</p>
-<p>As shown in the above diagram, the two TCPs, A and B, send <code>SYN</code> and <code>ACK</code> control messages to each other. After both parties obtain their expected initial sequence numbers, they can start communication. Due to the design of the TCP message header, we can combine the two middle communications into one. TCP B can send both the <code>ACK</code> and <code>SYN</code> control messages to TCP A simultaneously, reducing the four communications to three.</p>
-<blockquote>
-<p><em>A three-way handshake is necessary because sequence numbers are not tied to a global clock in the network, and TCPs may have different mechanisms for picking the ISN’s. The receiver of the first SYN has no way of knowing whether the segment was an old delayed one or not unless it remembers the last sequence number used on the connection (which is not always possible), and so it must ask the sender to verify this SYN. The three-way handshake and the advantages of a clock-driven scheme are discussed in [3].</em></p>
-</blockquote>
-<p>Furthermore, as a distributed system, the network does not have a global clock for counting. TCP can initialize sequence numbers using different mechanisms. As the receiver of a TCP connection, we cannot determine if the initial sequence number received from the other party is expired. Therefore, we need the other party to make this determination. It is not practical for the receiver to save and verify the sequence numbers, which reinforces the point we made in the previous section — avoiding the initialization of historical wrong connections.</p>
-<h1>Number of Communications</h1>
-<p>When discussing the number of communications required to establish a TCP connection, we often focus on why it takes three communications instead of two or four. Discussing using more communications to establish a connection is often meaningless because we can always “exchange the same information using more communications.” Therefore, it is technically possible to establish a connection using four, five, or even more communications.</p>
-<p>The issue of increasing the number of communications in a TCP connection often does not require discussion. What we pursue is actually completing the information exchange with the fewest number of communications (the theoretical minimum). This is why we repeatedly emphasize in the previous sections that using a “two-way handshake” cannot establish a TCP connection, and using a three-way handshake is the minimum number of communications required to establish a connection.</p>
-<h1>Conclusion</h1>
-<p>In this article, we discussed why TCP requires a three-way handshake to establish a connection. Before analyzing this question in detail, we first reconsidered what a TCP connection is. The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a> provides a clear definition of a TCP connection — the data used for ensuring reliability and flow control mechanisms, including sockets, sequence numbers, and window sizes.</p>
-<p>The three-way handshake in TCP can effectively prevent the initiation of erroneous historical connections and reduce unnecessary resource consumption for both communicating parties. The three-way handshake helps both parties obtain the initial sequence numbers, ensuring that data packets are transmitted without duplication or loss and maintaining their order. At this point, it is clear why “two-way handshake” and “four-way handshake” are not used:</p>
-<ul>
-<li>“Two-way handshake”: It cannot prevent the initialization of erroneous historical connections and wastes resources for the receiver.</li>
-<li>“Four-way handshake”: The design of the TCP protocol allows us to simultaneously transmit both the <code>ACK</code> and <code>SYN</code> control messages, reducing the number of communications. Therefore, there is no need to use more communications to transmit the same information.</li>
-</ul>
-<p>Returning to the question raised at the beginning of the article, why is using an analogy to explain TCP’s three-way handshake incorrect? This is mainly because the analogy does not clearly explain the core issue — avoiding the initialization of historical duplicate connections.</p>
-<h1>Reference</h1>
-<ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24068/why-do-we-need-a-3-way-handshake-why-not-just-2-way">Why do we need a 3-way handshake? Why not just 2-way?</a></li>
-<li><a href="https://www.geeksforgeeks.org/tcp-3-way-handshake-process/"># TCP 3-Way Handshake Process</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -570,166 +438,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>A Study of Concurrency Bugs In Real-World</title>
-    <url>/2024/02/04/2024-02-04_Read-the-paper--A-Study-of-Concurrency-Bugs-in-Real-World-Go/</url>
-    <content><![CDATA[<p>Today I read a paper about real-world go concurrency error bugs, and here’s a transcript of what I read as a start to learning about go concurrency programming.</p>
-<blockquote>
-<p><a href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/3f9b7292094086961ecb0d8658528cbe.png" alt="Pasted image 20240517213857"></p>
-<p>Recently, I came across a paper in one of the newsletters I subscribe to. The paper, from the University of Pennsylvania, presents the first systematic study of concurrency-related bugs in several major open-source Golang software projects. The researchers examined the commit histories of the following software: Docker, Kubernetes, etcd, gRPC, CockroachDB, and BoltDB, and drew several interesting conclusions.</p>
-<h1>Research Method</h1>
-<p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/52b66c9567ff341e8ff5a0a85387a417.png" alt="Pasted image 20240517214102"></p>
-<p>Number and types of bugs in different projects</p>
-<h1>Blocking Bugs</h1>
-<p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 1</span></span><br><span class="line">  <span class="function"><span class="keyword">func</span> <span class="title">goroutine1</span><span class="params">()</span></span> &#123;</span><br><span class="line">      m.Lock()</span><br><span class="line">-     ch &lt;- request <span class="comment">// blocks</span></span><br><span class="line">+     <span class="keyword">select</span> &#123;</span><br><span class="line">+         <span class="keyword">case</span> ch &lt;- request</span><br><span class="line">+         <span class="keyword">default</span>:</span><br><span class="line">+     &#125;</span><br><span class="line">      m.Unlock()</span><br><span class="line">  &#125;<span class="comment">// goroutine 1 func goroutine1() &#123; m.Lock() - ch &lt;- request // blocks + select &#123; + case ch &lt;- request + default: + &#125; m.Unlock() goroutine 2 func goroutine2() &#123; for &#123; m.Lock() // blocks m.Unlock() request &lt;- ch &#125;</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 2</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutine2</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        m.Lock()   <span class="comment">// blocks</span></span><br><span class="line">        m.Unlock()</span><br><span class="line">        request &lt;- ch</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In the author’s study, it was found that the proportion of bugs caused by message passing was even higher than those caused by traditional mutexes. Furthermore, there are currently no mature detection methods for such bugs.</p>
-<blockquote>
-<p><em>Overall, we found that there are around 42% blocking bugs caused by errors in protecting shared memory, and 58% are caused by errors in message passing. Considering that shared memory primitives are used more frequently than message passing ones (Section 3.2), message passing operations are even more likely to cause blocking bugs.</em></p>
-</blockquote>
-<p>Personal opinion: The reasons for these issues may include the unfamiliarity with new channel synchronization primitives or the overreliance on channels, leading to a relaxed attitude towards bugs. In summary, channels are powerful, but they are not a panacea for solving all synchronization problems.</p>
-<h1>Non-blocking Bugs</h1>
-<p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
-<p>Here’s an example where the original code uses select-case, resulting in the default case being unintentionally executed multiple times. The fix completely replaces the original code with Once:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// when multiple goroutines execute the following code, default // can execute multiple times, closing the channel more than once, // which leads to panic in Go runtime - select &#123; - case &lt;- c.closed: // do something - default: + Once.Do(func() &#123; close(c.closed) + &#125;) - &#125;// when multiple goroutines execute the following code, default</span><br><span class="line">// can execute multiple times, closing the channel more than once,</span><br><span class="line">// which leads to panic in Go runtime</span><br><span class="line"></span><br><span class="line">- select &#123;</span><br><span class="line">-     case &lt;- c.closed:</span><br><span class="line">          // do something</span><br><span class="line">-     default:</span><br><span class="line">+         Once.Do(func() &#123;</span><br><span class="line">              close(c.closed)</span><br><span class="line">+         &#125;)</span><br><span class="line">- &#125;</span><br></pre></td></tr></table></figure>
-<p>Additionally, the paper explores different methods for modifying different types of bugs and provides recommendations for the development of future bug detection tools.</p>
-<h1>Conclusions and Reflections</h1>
-<ul>
-<li>Go channels provide powerful concurrency patterns, but they are not a panacea. The study found that message passing can cause a higher proportion of blocking bugs. Currently, there are no well-established detection methods. Concurrency issues are inherently complex, and while language features may reduce complexity, they cannot effortlessly solve all problems through casual analysis.</li>
-<li>In Go programs, synchronization of shared memory (e.g., classic lock/unlock) still accounts for a higher proportion.</li>
-<li>Furthermore, misuse of channels can lead to performance issues ( <a href="https://syslog.ravelin.com/so-just-how-fast-are-channels-anyway-4c156a407e45">see this article</a>).</li>
-<li>The author observes that many Go bugs exhibit similar patterns, which suggests the possibility of developing more static analysis tools dedicated to analyzing specific types of problems.</li>
-<li>Personal opinion: When writing Go code, whether using synchronization locks or channels, it is advisable to keep the synchronized code concise, clear, and easy to verify and inspect in order to reduce bugs.</li>
-<li>The Go compiler includes deadlock and data race detection, but it cannot detect many situations. More in-depth bug research could consider using debuggers like gdb and runtime profiling tools like pprof ( <a href="https://zhuanlan.zhihu.com/p/56430428">see this article</a> and <a href="https://golang.org/pkg/net/http/pprof/">official documentation</a>).</li>
-<li>There is further discussion of this paper on HackerNews ( <a href="https://news.ycombinator.com/item?id=19280927">link</a>).</li>
-<li>Commit messages are not only helpful for tracing bugs, but also for systematically analyzing historical bugs in the future. (Remember not to write “asdfasdf” in Git commit messages, kids!)</li>
-</ul>
-]]></content>
-      <categories>
-        <category>paper</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Decrypt Go:  Understand the Three Pointers in the Go</title>
-    <url>/2024/02/25/2024-02-25_Decrypt-Go--Understand-the-Three-Pointers-in-the-Go-769bea07a6b3/</url>
-    <content><![CDATA[<h1>Decrypt Go: Understand the Three types of pointers in the Go</h1>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/55dd0bd25be20f4740f49df92d204682.png" alt="source: Dalle-3 generation"></p>
-<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of the Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
-<span id="more"></span>
-<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"> <span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line"> *(arr+<span class="number">2</span>) = <span class="number">1</span>;   <span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// Example 2</span></span><br><span class="line"> <span class="type">int</span> a = <span class="number">4</span>;</span><br><span class="line"> <span class="type">int</span>* ap = &amp;a;  <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line"> *(short*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
-<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"> <span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a  <span class="comment">// Ordinary pointer with type</span></span><br><span class="line"> ​</span><br><span class="line"> ap++        <span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line"> p := (*<span class="type">int16</span>)(ap) <span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
-<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
-<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:<br>
-<code>unsafe.Pointer</code><br>
-<code>uintptr</code></p>
-<p>To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</p>
-<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
-<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
-<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
-<p>Summary of the three types of pointers in Go language:</p>
-<ul>
-<li>Ordinary pointer: This does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
-</ul>
-<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
-<p>Here’s a simple example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">     a <span class="type">int32</span></span><br><span class="line">     b <span class="type">int32</span></span><br><span class="line"> &#125;</span><br><span class="line"> foo := &amp;Foo&#123;&#125;</span><br><span class="line"> bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>  <span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line"> *(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>   <span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line"> fmt.Println(foo.b)  <span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Why The Design :Why is the CPU slow to access the hard disk?</title>
-    <url>/2024/02/19/2024-02-19_Why-The-Design--Why-is-the-CPU-slow-to-access-the-hard-disk--910527fe7be6/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*WaxXsYm3cXY_ZGVG" alt="">Photo by <a href="https://unsplash.com/@heapdump?utm_source=medium&amp;utm_medium=referral">Patrick Lindenberg</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
-<p>Mechanical hard disk drives (HDD) and solid-state drives (SSD) are two of the most common types of hard drives. As external storage for computers, it takes a long time for the CPU to access the data stored on them. According to the table below, accessing 4KB of data randomly in an SSD takes 1,500 times longer than accessing main memory, while the seek time for a mechanical disk is 100,000 times longer than accessing main memory:</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/1*uPqEtBpV77g_KjSICrt0OA.png" alt=""><em>Latency Numbers Every Programmer Should Know</em> <a href="https://gist.github.com/jboner/2841832"><em>https://gist.github.com/jboner/2841832</em></a></p>
-<p>Although the seek time for a disk is only 10 ms, it is already a very long time for the CPU. When we scale up the times mentioned above proportionally, we can intuitively feel the performance differences. For example, if accessing L1 cache takes 1 second for the CPU, accessing main memory would take 3 minutes, reading data randomly from an SSD would take 3.4 days, disk seek would take 2 months, and network transmission could take over a year.</p>
-<p>In computer architecture, hard disks are common input/output devices, and the operating system does not necessarily need a hard disk to start. It can start through a hard disk, a network device, or an external device. Therefore, a hard disk is not a necessary condition for computer operation.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*yyPSe13T7fXKL3lI.png" alt=""><strong>Input/Output Devices</strong></p>
-<p>As an external input/output device, compared to CPU cache and memory, the slow read and write speed of a hard disk is reasonable. However, the several thousand to several hundred thousand times difference in speed does make it difficult to imagine or accept. In this article, we will analyze why accessing a hard disk is very slow for the CPU:</p>
-<ul>
-<li>The process of CPU accessing data from a hard disk is complex. It first reads the data from the disk into memory through I/O operations and then accesses the data stored in memory.</li>
-<li>Mechanical hard disks rely on mechanical structures to access the data in the disk, which requires moving the mechanical arm of the disk.</li>
-</ul>
-<h1>I/O Operations</h1>
-<p>In order for the CPU to access data from the disk, it must first read the data from the disk into memory through I/O operations, and then access the data stored in memory. There are three common types of I/O operations in computers: Programmed I/O, Interrupt-driven I/O, and Direct Memory Access (DMA). We will introduce these operations one by one:</p>
-<p>The simplest form of performing I/O operations is using <em>Programmed I/O</em>. When using Programmed I/O, the CPU is responsible for all the work. For example, if we want to output “Hello World” on the screen, the CPU will write a new character to the I/O device each time, and after writing, it will poll the device’s status and wait for it to complete its work before writing a new character. This method is simple but it occupies all the CPU resources, which can cause serious waste of computing resources in some complex systems.</p>
-<p><em>Interrupt-driven I/O</em> is a more efficient way to perform I/O operations. In Programmed I/O, the CPU actively retrieves the device’s status and waits for the device to become idle. However, if Interrupt-driven I/O is used, the device will actively initiate an interrupt when it is idle, pause the current process, and save the context. The operating system will then execute the interrupt handler for the I/O device:</p>
-<ul>
-<li>If there are no characters to be printed at the moment, the interrupt handler stops and resumes the paused process.</li>
-<li>If there are characters to be printed, the next character is copied to the device and the paused process is resumed.</li>
-</ul>
-<p>Using Interrupt-driven I/O allows the CPU to handle other tasks when the device is busy, thus maximizing CPU utilization and avoiding wasting precious computing resources. Compared to Programmed I/O, Interrupt-driven I/O delegates some work to the I/O device, thereby improving resource utilization.</p>
-<p><em>Direct Memory Access (DMA)</em> uses a DMA controller to perform I/O operations. Interrupt-driven I/O requires triggering an operating system interrupt for each character, which consumes CPU time. When we use a DMA controller, the CPU reads all the data from the buffer into the DMA controller at once, and the DMA controller is responsible for writing the data to the I/O device character by character。 Although the DMA controller can free up the CPU and reduce the number of interrupts, its execution speed is much slower than the CPU. If the DMA controller cannot drive the I/O device quickly, the CPU may have to wait for the DMA controller to trigger an interrupt. In this case, Interrupt-driven I/O or even Programmed I/O can provide faster access speed.</p>
-<p>By default, we use a DMA controller to perform I/O tasks. However, Programmed I/O and Interrupt-driven I/O are also acceptable options. When the CPU frequently needs to wait for the DMA controller to perform I/O tasks, using Interrupt-driven I/O or even polling Programmed I/O can achieve higher throughput. However, regardless of the method used, I/O is a complex and time-consuming operation in the program.</p>
-<h1>Mechanical Hard Disk</h1>
-<p>A mechanical hard disk drive (HDD) is an electronic, non-volatile mechanical data storage device. It uses magnetic storage to store and retrieve data on the disk. During the process of reading and writing data, the disk head connected to the mechanical arm of the hard disk reads and writes bits on the surface of the disk <a href="https://draveness.me/whys-the-design-cpu-and-disk//#fn:4">4</a>.</p>
-<p>Because the disk has a complex mechanical structure, reading and writing data on the disk takes a lot of time. The read and write performance of databases also depends on the performance of the disk. If we randomly query a piece of data in a database using a mechanical hard disk, it may trigger random I/O on the disk. However, it requires a significant cost to read data from the disk into memory. Loading data from a regular disk (non-SSD) involves processes such as queueing, seeking, rotating, and transferring data, which takes about 10 ms.</p>
-<p>When estimating the query performance of a database, we can use the order of magnitude of 10 ms to estimate the time occupied by random I/O. It is worth mentioning that random I/O has a significant impact on the query performance of databases. On the other hand, reading data sequentially from a disk can achieve a speed of up to 40 MB/s, which is several orders of magnitude faster. Therefore, we should try to minimize the number of random I/O operations in order to improve performance.</p>
-<p>A solid-state drive (SSD) is a computer storage device that uses flash memory as persistent storage. Unlike mechanical hard disks, SSDs do not contain any mechanical structures. When we read or write data using an SSD, no mechanical structures are involved because everything is done by circuits. Therefore, the read and write speed of an SSD is much faster than that of an HDD.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*Yw0ydv7zAqHbVrXZ.jpg" alt=""></p>
-<p><strong>Figure 5 — HDD and SSD Prices</strong></p>
-<p>Since their inception, the prices of both mechanical hard disks and SSDs have been continuously decreasing. Mechanical hard disks are the main external storage used in data centers today. Most general-purpose commercial servers use mechanical hard disks as their main external storage. However, because the read and write speed of SSDs is tens of times faster than that of mechanical hard disks, more and more servers, especially databases, use SSDs as their external storage. However, as an external storage device with mechanical structures, it is susceptible to external interference when subjected to vibration.</p>
-<h1>Conclusion</h1>
-<p>Hard disks are external storage devices in computers that can store large amounts of data persistently. However, the CPU cannot directly access the data on the hard disk. When a computer starts, the operating system loads the necessary data from the disk into memory for CPU access. But if the data the CPU wants to access is not in memory, it takes several thousand to several hundred thousand times longer to read the data. This is mainly due to the following two reasons:</p>
-<ul>
-<li>CPU needs to access data in external storage through I/O operations. The three methods of Programmed I/O, Interrupt-driven I/O, and DMA all incur additional overhead and consume a significant amount of CPU time.</li>
-<li>Mechanical hard disks access the data in the disk through mechanical structures. Each random I/O operation on the hard disk requires several processes such as queueing, seeking, rotating, and transferring data, which takes about 10 ms.</li>
-</ul>
-<p>As mentioned in the article, a hard disk is not a necessary hardware device for computer operation. A computer can load the necessary data for startup from any external storage device such as a disk or CD-ROM into memory and start normally. However, hard disks are currently the most common external storage devices. In the end, let’s look at some open-ended questions related to the topic. Interested readers can carefully consider the following questions:</p>
-<ul>
-<li>Is data written to a hard disk always persistently stored without loss?</li>
-<li>Why is the data in memory cleared after a power outage and restart?</li>
-</ul>
-<blockquote>
-<p><em>If you have any questions about the content of the article or want to learn more about the reasons behind some design decisions in software engineering, you can leave a comment below the blog post. The author will reply to related questions in a timely manner and select suitable topics for future content based on them</em></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>compute</category>
-      </categories>
-      <tags>
-        <tag>disk</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
-    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
-    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
-<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
-<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
-<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
-<h1>Constantly Switching Note Formats</h1>
-<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
-<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
-<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
-<h1>Mixing Project Notes with Knowledge Notes</h1>
-<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
-<h1>Obsessive Note Organization</h1>
-<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
-]]></content>
-      <categories>
-        <category>self</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
       </tags>
   </entry>
   <entry>
@@ -958,6 +666,275 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
+    <title>Aws ec2 switch to ipv6,Save $43 per year</title>
+    <url>/2024/01/19/2024-01-19_Aws-ec2-switch-to-ipv6-Save--43-per-year-6ade4eff710d/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*32WLSHGCAPKEBvI3" alt="">Photo by <a href="https://unsplash.com/@burntime?utm_source=medium&amp;utm_medium=referral">Alex Kulikov</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
+<p>IPv6 has been around for a long time, and I have dealt with many IPv6 tasks in my work. However, I never thought about switching my EC2 instance to IPv4. Yesterday, while going through my email trash, I came across a message stating that AWS will start charging for IPv4 addresses from February 1, 2024. This caught my attention, so I decided to switch my EC2 instance to IPv6 today. The process was a bit of a hassle. This article is not only applicable to EC2 instances but should also work for other Linux hosts.</p>
+<span id="more"></span>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*SHE5MfrCO4t2ckNL.png" alt=""></p>
+<h1>Adding an IPv6 Address to EC2</h1>
+<p>Since my EC2 instance’s DNS resolution is handled by Cloudflare, I mainly referred to this blog post: <a href="https://blog.cloudflare.com/zh-cn/amazon-2bn-ipv4-tax-how-avoid-paying-zh-cn/">Amazon’s $2bn IPv4 Tax — and How to Avoid Paying It</a></p>
+<p>And also, the official AWS documentation on <a href="https://docs.aws.amazon.com/zh_cn/vpc/latest/userguide/vpc-migrate-ipv6.html">Migrating Your VPC from IPv4 to IPv6</a>.</p>
+<p>It’s worth noting that the demo in the “Migrating Your VPC from IPv4 to IPv6” documentation assumes that the VPC has both a public and a private subnet. If you, like me, only have a public subnet, you can skip that part.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*ESBOHJRAC3rtmcsk.png" alt=""></p>
+<p>I must say, AWS documentation is well-written, and there’s a lot to learn from it.</p>
+<p>The result after completing the setup should look like this, with both IPv4 and IPv6 addresses. Make sure to add the same rules for IPv6 in the security group.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*N95oY6RVuVkurxfn.png" alt=""></p>
+<h1>Application Support</h1>
+<p>On my EC2 instance, I only have Nginx and Docker running, and I usually log in via SSH. So, I need to add IPv6 support for Nginx and SSH.</p>
+<h1>Nginx</h1>
+<p>For your HTTP server block (the one listening on port 80), add the line <code>listen [::]:80;</code>. This allows Nginx to listen to both IPv4 and IPv6 HTTP traffic. Your modified server block should look like this:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 80;</span><br><span class="line">     listen [::]:80;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     return 301 https://$host$request_uri;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>For each HTTPS server block (those listening on port 443), add <code>listen [::]:443 ssl;</code> inside each block. This enables Nginx to listen for HTTPS traffic on IPv6. For example, for the first HTTPS server block, you need to make the following modification:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">     listen 443 ssl;</span><br><span class="line">     listen [::]:443 ssl;</span><br><span class="line">     server_name hexo.hxzhouh.com;</span><br><span class="line">     # other configurations...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>Make these modifications for each HTTPS server block. Then, test the Nginx configuration with <code>Nginx -t</code>. If there are no issues, reload the Nginx configuration with <code>systemctl reload nginx</code>.</p>
+<h3 id="SSHD">SSHD</h3>
+<p>In the <code>sshd_config</code> file, uncomment the line <code>AddressFamily any</code> (i.e., remove the preceding <code>#</code>) to enable IPv6 listening for SSH and other applications.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/ssh/sshd_config</span><br><span class="line"> ​</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">Port 22</span></span><br><span class="line"> AddressFamily any</span><br><span class="line"> AddressFamily inet</span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress 0.0.0.0</span></span><br><span class="line"><span class="meta prompt_"> #</span><span class="language-bash">ListenAddress ::</span></span><br></pre></td></tr></table></figure>
+<p>Then, restart SSHD with <code>sudo systemctl reload sshd</code>. Use the <code>netstat -tupln</code> command to check if SSH is successfully listening on IPv6. If you see the following output, it means SSH is listening on IPv6:</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*x564Ur3tmy5qQIOt.png" alt=""></p>
+<p>Now the application layer modifications are complete.</p>
+<h1>DNS Configuration</h1>
+<p>Finally, in Cloudflare, modify the DNS settings by changing the previous IPv4 A records to AAAA records for IPv6.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*Qpu-dV3-6obShvN4.png" alt=""></p>
+<h1>Test</h1>
+<p>Test everything to make sure it’s working fine, and then you can delete the IPv4 address to avoid being charged.</p>
+<p>Update: Running instances cannot have their IPv4 addresses removed, but you can rebuild them using an AMI. It’s a bit of a hassle, but at least AWS won’t send me any more emails. ✌️</p>
+<h1>References</h1>
+<p><a href="https://repost.aws/questions/QUVmpO9BWGSuGwQh5tXk3f5w/how-to-remove-ipv4-public-ip-address-from-ec2-instances-before-february-2024-ipv6">How to remove IPv4 public IP address from EC2 instances before February 2024? (IPv6)</a></p>
+]]></content>
+      <categories>
+        <category>compute</category>
+      </categories>
+      <tags>
+        <tag>aws</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Why TCP requires three handshakes to establish a connection?</title>
+    <url>/2024/01/30/2024-01-30_Why-TCP-requires-three-handshakes-to-establish-a-connection--31d814aac6b8/</url>
+    <content><![CDATA[<p>TCP protocol is a network protocol that we encounter almost every day. The majority of network connections are established based on the TCP protocol. People who have studied computer networks or have some understanding of the TCP protocol know that establishing a connection using TCP requires a three-way handshake.</p>
+<span id="more"></span>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/c680b2ef5dc88552c1838e5bf7f1ba65.png" alt="Pasted image 20240517205741"></p>
+<p>If we briefly explain the process of establishing a TCP connection, many people who have prepared for interviews would be familiar with it. However, when it comes to delving into the question of “Why does TCP require a three-way handshake to establish a connection?” most people would not be able to answer this question or might provide incorrect answers. This article will discuss why we need a three-way handshake to establish a TCP connection instead of four or two.</p>
+<h1>Overview</h1>
+<p>Before analyzing the question at hand, let’s first address a common misconception that has misled many people regarding the TCP connection process. For a long time, the author of this article also believed that it provided a good explanation for why a TCP connection requires a three-way handshake:</p>
+<blockquote>
+<p>–&gt; Can you hear me?<br>
+&lt;-- I can hear you. Can you hear me?<br>
+–&gt; I can hear you too.</p>
+</blockquote>
+<p>Using analogies to explain a problem often leads to a situation where “nine out of ten analogies are wrong.” If someone uses an analogy to answer your “why” question, you need to carefully consider the flaws in their analogy. Analogies can only provide a partial similarity, and we can never find an absolutely correct analogy. Analogies are only useful when we want to present the characteristics of something in a simple and understandable way. In the rest of the article, we will explain why this analogy is flawed, and readers can read the remaining content with this question in mind.</p>
+<p>When many people try to answer or think about this question, they tend to focus on the “three” in the three-way handshake, which is indeed important. However, if we reexamine the question, do we really understand what a “connection” is? Only when we know the definition of a “connection” can we attempt to answer why TCP requires a three-way handshake.</p>
+<blockquote>
+<p><em>The reliability and flow control mechanisms described above require that TCPs initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection.</em></p>
+</blockquote>
+<p>The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol</a> document clearly defines what a connection is in TCP. In summary, a connection is the information used to ensure reliability and flow control mechanisms, including sockets, sequence numbers, and window sizes.</p>
+<p>Therefore, establishing a TCP connection means that the two parties involved in communication need to reach a consensus on the three types of information mentioned above. A pair of sockets in a connection is composed of an Internet address identifier and a port. The window size is mainly used for flow control, and the sequence number is used to track the sequence of data packets sent by the initiating party, allowing the receiving party to confirm the successful receipt of a particular data packet based on the sequence number.</p>
+<p>At this point, we have transformed the original question into “Why do we need a three-way handshake to initialize sockets, window sizes, and initial sequence numbers?” Next, we will analyze and seek explanations for this refined question.</p>
+<h1>Design</h1>
+<p>This article will mainly discuss why we need a three-way handshake to initialize sockets, window sizes, initial sequence numbers, and establish a TCP connection from the following aspects:</p>
+<ul>
+<li>A three-way handshake is required to prevent the initialization of duplicate historical connections.</li>
+<li>A three-way handshake is required to initialize the initial sequence numbers of both communicating parties.</li>
+<li>Discuss the possibility of establishing a connection with a different number of handshakes.</li>
+</ul>
+<p>Among these arguments, the first one is the primary reason why TCP chooses to use a three-way handshake. The other reasons are secondary in comparison. We discuss them here to provide a more comprehensive perspective and understand this interesting design decision from multiple angles.</p>
+<h1>Historical Connections</h1>
+<p>The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol</a> clearly points out the primary reason why TCP uses a three-way handshake: to prevent confusion caused by the initiation of old duplicate connections.</p>
+<blockquote>
+<p><em>The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion.</em></p>
+</blockquote>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/6679e5256608619c68d265cab45e3c3c.png" alt="img for geeksforgeeks.org"></p>
+<p>Imagine this scenario: if the number of communications between the two parties is only two, once the sender sends a connection establishment request, it cannot retract this request. In a complex or poor network condition, if the sender continuously sends multiple connection establishment requests and TCP establishes a connection with only two communications, the receiver can only choose to accept or reject the sender’s request. The receiver is not sure whether this request is an expired connection due to network congestion.</p>
+<p>Therefore, TCP chooses to use a three-way handshake to establish a connection and introduces the <code>RST</code> control message. When the receiver receives the request, it sends the sender’s <code>SEQ+1</code> as part of the <code>ACK</code> control message. At this point, the sender can determine whether the current connection is a historical connection:</p>
+<ul>
+<li>If the current connection is a historical connection, meaning the <code>SEQ</code> has expired or timed out, the sender will directly send an <code>RST</code> control message to terminate this connection.</li>
+<li>If the current connection is not a historical connection, the sender will send an <code>ACK</code> control message, and the two parties will successfully establish a connection.</li>
+</ul>
+<p>By using a three-way handshake and the <code>RST</code> control message, the ultimate control over whether to establish a connection is given to the sender. Only the sender has enough context to determine if the current connection is erroneous or expired. This is also the primary reason why TCP uses a three-way handshake to establish a connection.</p>
+<h1>Initial Sequence Numbers</h1>
+<p>Another important reason for using a three-way handshake is that both communicating parties need to obtain an initial sequence number for sending information. As a reliable transport layer protocol, TCP needs to build a reliable transport layer in an unstable network environment. The uncertainty of the network can lead to issues such as packet loss and out-of-order delivery. Common problems may include:</p>
+<ul>
+<li>Data packets being repeatedly sent by the sender, resulting in duplicate data.</li>
+<li>Data packets being lost during transmission due to routing or other network nodes.</li>
+<li>Data packets arriving at the receiver may not be in the order they were sent.</li>
+</ul>
+<p>To address these potential issues, the TCP protocol requires the sender to include a “sequence number” field in the data packet. With the sequence number corresponding to each data packet, we can:</p>
+<ul>
+<li>The receiver can deduplicate repeated data packets based on the sequence number.</li>
+<li>The sender will resend the corresponding data packet until it is acknowledged.</li>
+<li>The receiver can reorder the data packets based on their sequence numbers.</li>
+</ul>
+<p>Sequence numbers play a crucial role in TCP connections, and the initial sequence number, as part of a TCP connection, needs to be initialized during the three-way handshake. Since both parties in a TCP connection need to obtain the initial sequence number, they need to send a <code>SYN</code> control message to each other, carrying their expected initial sequence number <code>SEQ</code>. Upon receiving the <code>SYN</code> message, the receiver will confirm it using the <code>ACK</code> control message and <code>SEQ+1</code>.</p>
+<p>As shown in the above diagram, the two TCPs, A and B, send <code>SYN</code> and <code>ACK</code> control messages to each other. After both parties obtain their expected initial sequence numbers, they can start communication. Due to the design of the TCP message header, we can combine the two middle communications into one. TCP B can send both the <code>ACK</code> and <code>SYN</code> control messages to TCP A simultaneously, reducing the four communications to three.</p>
+<blockquote>
+<p><em>A three-way handshake is necessary because sequence numbers are not tied to a global clock in the network, and TCPs may have different mechanisms for picking the ISN’s. The receiver of the first SYN has no way of knowing whether the segment was an old delayed one or not unless it remembers the last sequence number used on the connection (which is not always possible), and so it must ask the sender to verify this SYN. The three-way handshake and the advantages of a clock-driven scheme are discussed in [3].</em></p>
+</blockquote>
+<p>Furthermore, as a distributed system, the network does not have a global clock for counting. TCP can initialize sequence numbers using different mechanisms. As the receiver of a TCP connection, we cannot determine if the initial sequence number received from the other party is expired. Therefore, we need the other party to make this determination. It is not practical for the receiver to save and verify the sequence numbers, which reinforces the point we made in the previous section — avoiding the initialization of historical wrong connections.</p>
+<h1>Number of Communications</h1>
+<p>When discussing the number of communications required to establish a TCP connection, we often focus on why it takes three communications instead of two or four. Discussing using more communications to establish a connection is often meaningless because we can always “exchange the same information using more communications.” Therefore, it is technically possible to establish a connection using four, five, or even more communications.</p>
+<p>The issue of increasing the number of communications in a TCP connection often does not require discussion. What we pursue is actually completing the information exchange with the fewest number of communications (the theoretical minimum). This is why we repeatedly emphasize in the previous sections that using a “two-way handshake” cannot establish a TCP connection, and using a three-way handshake is the minimum number of communications required to establish a connection.</p>
+<h1>Conclusion</h1>
+<p>In this article, we discussed why TCP requires a three-way handshake to establish a connection. Before analyzing this question in detail, we first reconsidered what a TCP connection is. The <a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a> provides a clear definition of a TCP connection — the data used for ensuring reliability and flow control mechanisms, including sockets, sequence numbers, and window sizes.</p>
+<p>The three-way handshake in TCP can effectively prevent the initiation of erroneous historical connections and reduce unnecessary resource consumption for both communicating parties. The three-way handshake helps both parties obtain the initial sequence numbers, ensuring that data packets are transmitted without duplication or loss and maintaining their order. At this point, it is clear why “two-way handshake” and “four-way handshake” are not used:</p>
+<ul>
+<li>“Two-way handshake”: It cannot prevent the initialization of erroneous historical connections and wastes resources for the receiver.</li>
+<li>“Four-way handshake”: The design of the TCP protocol allows us to simultaneously transmit both the <code>ACK</code> and <code>SYN</code> control messages, reducing the number of communications. Therefore, there is no need to use more communications to transmit the same information.</li>
+</ul>
+<p>Returning to the question raised at the beginning of the article, why is using an analogy to explain TCP’s three-way handshake incorrect? This is mainly because the analogy does not clearly explain the core issue — avoiding the initialization of historical duplicate connections.</p>
+<h1>Reference</h1>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24068/why-do-we-need-a-3-way-handshake-why-not-just-2-way">Why do we need a 3-way handshake? Why not just 2-way?</a></li>
+<li><a href="https://www.geeksforgeeks.org/tcp-3-way-handshake-process/"># TCP 3-Way Handshake Process</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>network</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Why The Design :Why is the CPU slow to access the hard disk?</title>
+    <url>/2024/02/19/2024-02-19_Why-The-Design--Why-is-the-CPU-slow-to-access-the-hard-disk--910527fe7be6/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*WaxXsYm3cXY_ZGVG" alt="">Photo by <a href="https://unsplash.com/@heapdump?utm_source=medium&amp;utm_medium=referral">Patrick Lindenberg</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
+<p>Mechanical hard disk drives (HDD) and solid-state drives (SSD) are two of the most common types of hard drives. As external storage for computers, it takes a long time for the CPU to access the data stored on them. According to the table below, accessing 4KB of data randomly in an SSD takes 1,500 times longer than accessing main memory, while the seek time for a mechanical disk is 100,000 times longer than accessing main memory:</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/1*uPqEtBpV77g_KjSICrt0OA.png" alt=""><em>Latency Numbers Every Programmer Should Know</em> <a href="https://gist.github.com/jboner/2841832"><em>https://gist.github.com/jboner/2841832</em></a></p>
+<p>Although the seek time for a disk is only 10 ms, it is already a very long time for the CPU. When we scale up the times mentioned above proportionally, we can intuitively feel the performance differences. For example, if accessing L1 cache takes 1 second for the CPU, accessing main memory would take 3 minutes, reading data randomly from an SSD would take 3.4 days, disk seek would take 2 months, and network transmission could take over a year.</p>
+<p>In computer architecture, hard disks are common input/output devices, and the operating system does not necessarily need a hard disk to start. It can start through a hard disk, a network device, or an external device. Therefore, a hard disk is not a necessary condition for computer operation.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*yyPSe13T7fXKL3lI.png" alt=""><strong>Input/Output Devices</strong></p>
+<p>As an external input/output device, compared to CPU cache and memory, the slow read and write speed of a hard disk is reasonable. However, the several thousand to several hundred thousand times difference in speed does make it difficult to imagine or accept. In this article, we will analyze why accessing a hard disk is very slow for the CPU:</p>
+<ul>
+<li>The process of CPU accessing data from a hard disk is complex. It first reads the data from the disk into memory through I/O operations and then accesses the data stored in memory.</li>
+<li>Mechanical hard disks rely on mechanical structures to access the data in the disk, which requires moving the mechanical arm of the disk.</li>
+</ul>
+<h1>I/O Operations</h1>
+<p>In order for the CPU to access data from the disk, it must first read the data from the disk into memory through I/O operations, and then access the data stored in memory. There are three common types of I/O operations in computers: Programmed I/O, Interrupt-driven I/O, and Direct Memory Access (DMA). We will introduce these operations one by one:</p>
+<p>The simplest form of performing I/O operations is using <em>Programmed I/O</em>. When using Programmed I/O, the CPU is responsible for all the work. For example, if we want to output “Hello World” on the screen, the CPU will write a new character to the I/O device each time, and after writing, it will poll the device’s status and wait for it to complete its work before writing a new character. This method is simple but it occupies all the CPU resources, which can cause serious waste of computing resources in some complex systems.</p>
+<p><em>Interrupt-driven I/O</em> is a more efficient way to perform I/O operations. In Programmed I/O, the CPU actively retrieves the device’s status and waits for the device to become idle. However, if Interrupt-driven I/O is used, the device will actively initiate an interrupt when it is idle, pause the current process, and save the context. The operating system will then execute the interrupt handler for the I/O device:</p>
+<ul>
+<li>If there are no characters to be printed at the moment, the interrupt handler stops and resumes the paused process.</li>
+<li>If there are characters to be printed, the next character is copied to the device and the paused process is resumed.</li>
+</ul>
+<p>Using Interrupt-driven I/O allows the CPU to handle other tasks when the device is busy, thus maximizing CPU utilization and avoiding wasting precious computing resources. Compared to Programmed I/O, Interrupt-driven I/O delegates some work to the I/O device, thereby improving resource utilization.</p>
+<p><em>Direct Memory Access (DMA)</em> uses a DMA controller to perform I/O operations. Interrupt-driven I/O requires triggering an operating system interrupt for each character, which consumes CPU time. When we use a DMA controller, the CPU reads all the data from the buffer into the DMA controller at once, and the DMA controller is responsible for writing the data to the I/O device character by character。 Although the DMA controller can free up the CPU and reduce the number of interrupts, its execution speed is much slower than the CPU. If the DMA controller cannot drive the I/O device quickly, the CPU may have to wait for the DMA controller to trigger an interrupt. In this case, Interrupt-driven I/O or even Programmed I/O can provide faster access speed.</p>
+<p>By default, we use a DMA controller to perform I/O tasks. However, Programmed I/O and Interrupt-driven I/O are also acceptable options. When the CPU frequently needs to wait for the DMA controller to perform I/O tasks, using Interrupt-driven I/O or even polling Programmed I/O can achieve higher throughput. However, regardless of the method used, I/O is a complex and time-consuming operation in the program.</p>
+<h1>Mechanical Hard Disk</h1>
+<p>A mechanical hard disk drive (HDD) is an electronic, non-volatile mechanical data storage device. It uses magnetic storage to store and retrieve data on the disk. During the process of reading and writing data, the disk head connected to the mechanical arm of the hard disk reads and writes bits on the surface of the disk <a href="https://draveness.me/whys-the-design-cpu-and-disk//#fn:4">4</a>.</p>
+<p>Because the disk has a complex mechanical structure, reading and writing data on the disk takes a lot of time. The read and write performance of databases also depends on the performance of the disk. If we randomly query a piece of data in a database using a mechanical hard disk, it may trigger random I/O on the disk. However, it requires a significant cost to read data from the disk into memory. Loading data from a regular disk (non-SSD) involves processes such as queueing, seeking, rotating, and transferring data, which takes about 10 ms.</p>
+<p>When estimating the query performance of a database, we can use the order of magnitude of 10 ms to estimate the time occupied by random I/O. It is worth mentioning that random I/O has a significant impact on the query performance of databases. On the other hand, reading data sequentially from a disk can achieve a speed of up to 40 MB/s, which is several orders of magnitude faster. Therefore, we should try to minimize the number of random I/O operations in order to improve performance.</p>
+<p>A solid-state drive (SSD) is a computer storage device that uses flash memory as persistent storage. Unlike mechanical hard disks, SSDs do not contain any mechanical structures. When we read or write data using an SSD, no mechanical structures are involved because everything is done by circuits. Therefore, the read and write speed of an SSD is much faster than that of an HDD.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*Yw0ydv7zAqHbVrXZ.jpg" alt=""></p>
+<p><strong>Figure 5 — HDD and SSD Prices</strong></p>
+<p>Since their inception, the prices of both mechanical hard disks and SSDs have been continuously decreasing. Mechanical hard disks are the main external storage used in data centers today. Most general-purpose commercial servers use mechanical hard disks as their main external storage. However, because the read and write speed of SSDs is tens of times faster than that of mechanical hard disks, more and more servers, especially databases, use SSDs as their external storage. However, as an external storage device with mechanical structures, it is susceptible to external interference when subjected to vibration.</p>
+<h1>Conclusion</h1>
+<p>Hard disks are external storage devices in computers that can store large amounts of data persistently. However, the CPU cannot directly access the data on the hard disk. When a computer starts, the operating system loads the necessary data from the disk into memory for CPU access. But if the data the CPU wants to access is not in memory, it takes several thousand to several hundred thousand times longer to read the data. This is mainly due to the following two reasons:</p>
+<ul>
+<li>CPU needs to access data in external storage through I/O operations. The three methods of Programmed I/O, Interrupt-driven I/O, and DMA all incur additional overhead and consume a significant amount of CPU time.</li>
+<li>Mechanical hard disks access the data in the disk through mechanical structures. Each random I/O operation on the hard disk requires several processes such as queueing, seeking, rotating, and transferring data, which takes about 10 ms.</li>
+</ul>
+<p>As mentioned in the article, a hard disk is not a necessary hardware device for computer operation. A computer can load the necessary data for startup from any external storage device such as a disk or CD-ROM into memory and start normally. However, hard disks are currently the most common external storage devices. In the end, let’s look at some open-ended questions related to the topic. Interested readers can carefully consider the following questions:</p>
+<ul>
+<li>Is data written to a hard disk always persistently stored without loss?</li>
+<li>Why is the data in memory cleared after a power outage and restart?</li>
+</ul>
+<blockquote>
+<p><em>If you have any questions about the content of the article or want to learn more about the reasons behind some design decisions in software engineering, you can leave a comment below the blog post. The author will reply to related questions in a timely manner and select suitable topics for future content based on them</em></p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>compute</category>
+      </categories>
+      <tags>
+        <tag>disk</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>A Study of Concurrency Bugs In Real-World</title>
+    <url>/2024/02/04/2024-02-04_Read-the-paper--A-Study-of-Concurrency-Bugs-in-Real-World-Go/</url>
+    <content><![CDATA[<p>Today I read a paper about real-world go concurrency error bugs, and here’s a transcript of what I read as a start to learning about go concurrency programming.</p>
+<blockquote>
+<p><a href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
+</blockquote>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/3f9b7292094086961ecb0d8658528cbe.png" alt="Pasted image 20240517213857"></p>
+<p>Recently, I came across a paper in one of the newsletters I subscribe to. The paper, from the University of Pennsylvania, presents the first systematic study of concurrency-related bugs in several major open-source Golang software projects. The researchers examined the commit histories of the following software: Docker, Kubernetes, etcd, gRPC, CockroachDB, and BoltDB, and drew several interesting conclusions.</p>
+<h1>Research Method</h1>
+<p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/52b66c9567ff341e8ff5a0a85387a417.png" alt="Pasted image 20240517214102"></p>
+<p>Number and types of bugs in different projects</p>
+<h1>Blocking Bugs</h1>
+<p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 1</span></span><br><span class="line">  <span class="function"><span class="keyword">func</span> <span class="title">goroutine1</span><span class="params">()</span></span> &#123;</span><br><span class="line">      m.Lock()</span><br><span class="line">-     ch &lt;- request <span class="comment">// blocks</span></span><br><span class="line">+     <span class="keyword">select</span> &#123;</span><br><span class="line">+         <span class="keyword">case</span> ch &lt;- request</span><br><span class="line">+         <span class="keyword">default</span>:</span><br><span class="line">+     &#125;</span><br><span class="line">      m.Unlock()</span><br><span class="line">  &#125;<span class="comment">// goroutine 1 func goroutine1() &#123; m.Lock() - ch &lt;- request // blocks + select &#123; + case ch &lt;- request + default: + &#125; m.Unlock() goroutine 2 func goroutine2() &#123; for &#123; m.Lock() // blocks m.Unlock() request &lt;- ch &#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 2</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutine2</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        m.Lock()   <span class="comment">// blocks</span></span><br><span class="line">        m.Unlock()</span><br><span class="line">        request &lt;- ch</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the author’s study, it was found that the proportion of bugs caused by message passing was even higher than those caused by traditional mutexes. Furthermore, there are currently no mature detection methods for such bugs.</p>
+<blockquote>
+<p><em>Overall, we found that there are around 42% blocking bugs caused by errors in protecting shared memory, and 58% are caused by errors in message passing. Considering that shared memory primitives are used more frequently than message passing ones (Section 3.2), message passing operations are even more likely to cause blocking bugs.</em></p>
+</blockquote>
+<p>Personal opinion: The reasons for these issues may include the unfamiliarity with new channel synchronization primitives or the overreliance on channels, leading to a relaxed attitude towards bugs. In summary, channels are powerful, but they are not a panacea for solving all synchronization problems.</p>
+<h1>Non-blocking Bugs</h1>
+<p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
+<p>Here’s an example where the original code uses select-case, resulting in the default case being unintentionally executed multiple times. The fix completely replaces the original code with Once:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// when multiple goroutines execute the following code, default // can execute multiple times, closing the channel more than once, // which leads to panic in Go runtime - select &#123; - case &lt;- c.closed: // do something - default: + Once.Do(func() &#123; close(c.closed) + &#125;) - &#125;// when multiple goroutines execute the following code, default</span><br><span class="line">// can execute multiple times, closing the channel more than once,</span><br><span class="line">// which leads to panic in Go runtime</span><br><span class="line"></span><br><span class="line">- select &#123;</span><br><span class="line">-     case &lt;- c.closed:</span><br><span class="line">          // do something</span><br><span class="line">-     default:</span><br><span class="line">+         Once.Do(func() &#123;</span><br><span class="line">              close(c.closed)</span><br><span class="line">+         &#125;)</span><br><span class="line">- &#125;</span><br></pre></td></tr></table></figure>
+<p>Additionally, the paper explores different methods for modifying different types of bugs and provides recommendations for the development of future bug detection tools.</p>
+<h1>Conclusions and Reflections</h1>
+<ul>
+<li>Go channels provide powerful concurrency patterns, but they are not a panacea. The study found that message passing can cause a higher proportion of blocking bugs. Currently, there are no well-established detection methods. Concurrency issues are inherently complex, and while language features may reduce complexity, they cannot effortlessly solve all problems through casual analysis.</li>
+<li>In Go programs, synchronization of shared memory (e.g., classic lock/unlock) still accounts for a higher proportion.</li>
+<li>Furthermore, misuse of channels can lead to performance issues ( <a href="https://syslog.ravelin.com/so-just-how-fast-are-channels-anyway-4c156a407e45">see this article</a>).</li>
+<li>The author observes that many Go bugs exhibit similar patterns, which suggests the possibility of developing more static analysis tools dedicated to analyzing specific types of problems.</li>
+<li>Personal opinion: When writing Go code, whether using synchronization locks or channels, it is advisable to keep the synchronized code concise, clear, and easy to verify and inspect in order to reduce bugs.</li>
+<li>The Go compiler includes deadlock and data race detection, but it cannot detect many situations. More in-depth bug research could consider using debuggers like gdb and runtime profiling tools like pprof ( <a href="https://zhuanlan.zhihu.com/p/56430428">see this article</a> and <a href="https://golang.org/pkg/net/http/pprof/">official documentation</a>).</li>
+<li>There is further discussion of this paper on HackerNews ( <a href="https://news.ycombinator.com/item?id=19280927">link</a>).</li>
+<li>Commit messages are not only helpful for tracing bugs, but also for systematically analyzing historical bugs in the future. (Remember not to write “asdfasdf” in Git commit messages, kids!)</li>
+</ul>
+]]></content>
+      <categories>
+        <category>paper</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Decrypt Go:  Understand the Three Pointers in the Go</title>
+    <url>/2024/02/25/2024-02-25_Decrypt-Go--Understand-the-Three-Pointers-in-the-Go-769bea07a6b3/</url>
+    <content><![CDATA[<h1>Decrypt Go: Understand the Three types of pointers in the Go</h1>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/55dd0bd25be20f4740f49df92d204682.png" alt="source: Dalle-3 generation"></p>
+<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of the Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
+<span id="more"></span>
+<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"> <span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line"> *(arr+<span class="number">2</span>) = <span class="number">1</span>;   <span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// Example 2</span></span><br><span class="line"> <span class="type">int</span> a = <span class="number">4</span>;</span><br><span class="line"> <span class="type">int</span>* ap = &amp;a;  <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line"> *(short*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
+<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"> <span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a  <span class="comment">// Ordinary pointer with type</span></span><br><span class="line"> ​</span><br><span class="line"> ap++        <span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line"> p := (*<span class="type">int16</span>)(ap) <span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
+<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
+<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:<br>
+<code>unsafe.Pointer</code><br>
+<code>uintptr</code></p>
+<p>To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</p>
+<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
+<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
+<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
+<p>Summary of the three types of pointers in Go language:</p>
+<ul>
+<li>Ordinary pointer: This does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
+</ul>
+<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
+<p>Here’s a simple example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">     a <span class="type">int32</span></span><br><span class="line">     b <span class="type">int32</span></span><br><span class="line"> &#125;</span><br><span class="line"> foo := &amp;Foo&#123;&#125;</span><br><span class="line"> bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>  <span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line"> *(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>   <span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line"> fmt.Println(foo.b)  <span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>11 Tips for Detecting and Responding to Intrusions on Linux</title>
     <url>/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db9ed8c90e3341c2adf625afbd5ea8b0.png" alt="Generate By DELLA-3">Generate By DELLA-3</p>
@@ -1107,6 +1084,92 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>db</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Decryption go: understand go language pointer</title>
+    <url>/2024/04/23/Decryption%20go%EF%BC%9A%20understand%20go%20language%20pointer_%20english/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
+<span id="more"></span>
+<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"><span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line">*(arr+<span class="number">2</span>) = <span class="number">1</span>;		<span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Example 2</span></span><br><span class="line"><span class="type">int</span> a = <span class="number">4</span>;	</span><br><span class="line"><span class="type">int</span>* ap = &amp;a;	 <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line">*(<span class="type">short</span>*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
+<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"><span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a	<span class="comment">// Ordinary pointer with type</span></span><br><span class="line"></span><br><span class="line">ap++ 				<span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line">p := (*<span class="type">int16</span>)(ap)	<span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
+<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
+<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:</p>
+<ul>
+<li><code>unsafe.Pointer</code>.</li>
+<li><code>uintptr</code>.<br>
+To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</li>
+</ul>
+<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> on a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that a data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
+<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
+<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
+<p>Summary of the three types of pointers in Go language:</p>
+<ul>
+<li>Ordinary pointer: Does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
+</ul>
+<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
+<p>Here’s a simple example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">    a <span class="type">int32</span></span><br><span class="line">    b <span class="type">int32</span></span><br><span class="line">&#125;</span><br><span class="line">foo := &amp;Foo&#123;&#125;</span><br><span class="line">bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>	<span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line">*(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>		<span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line">fmt.Println(foo.b)	<span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
+<blockquote>
+<p>本文基于 go 1.14</p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<span id="more"></span>
+<h1>Order</h1>
+<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+<p>在 select 的每次迭代中，case 都会被打乱：<br>
+![[Pasted image 20240517215906.png]]</p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1>Non-ready channels</h1>
+<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1>Simplification</h1>
+<p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
       </tags>
   </entry>
   <entry>
@@ -1271,92 +1334,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
-    <title>Decryption go: understand go language pointer</title>
-    <url>/2024/04/23/Decryption%20go%EF%BC%9A%20understand%20go%20language%20pointer_%20english/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
-<span id="more"></span>
-<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"><span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line">*(arr+<span class="number">2</span>) = <span class="number">1</span>;		<span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Example 2</span></span><br><span class="line"><span class="type">int</span> a = <span class="number">4</span>;	</span><br><span class="line"><span class="type">int</span>* ap = &amp;a;	 <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line">*(<span class="type">short</span>*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
-<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"><span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a	<span class="comment">// Ordinary pointer with type</span></span><br><span class="line"></span><br><span class="line">ap++ 				<span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line">p := (*<span class="type">int16</span>)(ap)	<span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
-<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
-<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:</p>
-<ul>
-<li><code>unsafe.Pointer</code>.</li>
-<li><code>uintptr</code>.<br>
-To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</li>
-</ul>
-<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> on a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that a data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
-<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
-<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
-<p>Summary of the three types of pointers in Go language:</p>
-<ul>
-<li>Ordinary pointer: Does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
-</ul>
-<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
-<p>Here’s a simple example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">    a <span class="type">int32</span></span><br><span class="line">    b <span class="type">int32</span></span><br><span class="line">&#125;</span><br><span class="line">foo := &amp;Foo&#123;&#125;</span><br><span class="line">bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>	<span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line">*(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>		<span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line">fmt.Println(foo.b)	<span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
-<blockquote>
-<p>本文基于 go 1.14</p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<span id="more"></span>
-<h1>Order</h1>
-<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-<p>在 select 的每次迭代中，case 都会被打乱：<br>
-![[Pasted image 20240517215906.png]]</p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1>Non-ready channels</h1>
-<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1>Simplification</h1>
-<p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go Program pattern 04: Map-Reduce</title>
     <url>/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/</url>
     <content><![CDATA[<p>Map-Reduce is a programming paradigm used for processing large-scale datasets. It helps simplify the process of parallel computation and improves computational efficiency.</p>
@@ -1401,6 +1378,73 @@ First, we have an employee object and some data:</p>
       <categories>
         <category>go</category>
       </categories>
+  </entry>
+  <entry>
+    <title>Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</title>
+    <url>/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/</url>
+    <content><![CDATA[<p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
+<span id="more"></span>
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>Strictly speaking, Go language is not an object-oriented programming language, at least not the best choice for object-oriented programming (Java is the most established one). However, we can simulate object-oriented programming based on some features provided by Go.</p>
+<p>To implement object-oriented programming, we must implement the three major features of object-oriented programming: encapsulation, inheritance, and polymorphism.</p>
+<h2 id="Inheritance">Inheritance</h2>
+<p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
+<p>In traditional object-oriented programming, explicitly defining inheritance relationships has two drawbacks: one is that it leads to increasingly complex class hierarchies, and the other is that it affects the extensibility of classes. Many software design patterns advocate using composition instead of inheritance to improve class extensibility.</p>
+<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>
+If we want to define a class representing <code>Label</code>, we can do it like this:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Label <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Here, <code>Label</code> inherits all the properties of <code>Widget</code> and adds a new property <code>text</code>. Similarly, we can define the <code>Button</code> and <code>ListBox</code> classes:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Button <span class="keyword">struct</span> &#123;</span><br><span class="line">    Label</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ListBox <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text  []<span class="type">string</span></span><br><span class="line">    index <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Polymorphism">Polymorphism</h2>
+<p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Painter <span class="keyword">interface</span> &#123;</span><br><span class="line">    Paint()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Clicker <span class="keyword">interface</span> &#123;</span><br><span class="line">    Click()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Then, the components implement these interfaces:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(label Label)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display label</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;%p:Label.Paint(%q)\n&quot;</span>, &amp;label, label.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Paint(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Click() &#123;</span><br><span class="line">    <span class="comment">// click button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Click(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(listBox ListBox)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display listBox</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;ListBox.Paint(%q)\n&quot;</span>, listBox.text)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Label</code> implements <code>Painter</code>, and <code>Button</code> and <code>ListBox</code> implement both <code>Painter</code> and <code>Clicker</code>.</p>
+<p>At the application level, we can use these components like this:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">label := Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">10</span>&#125;, <span class="string">&quot;State:&quot;</span>&#125;</span><br><span class="line">button1 := Button&#123;Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">70</span>&#125;, <span class="string">&quot;OK&quot;</span>&#125;&#125;</span><br><span class="line">button2 := NewButton(<span class="number">50</span>, <span class="number">70</span>, <span class="string">&quot;Cancel&quot;</span>)</span><br><span class="line">listBox := ListBox&#123;Widget&#123;<span class="number">10</span>, <span class="number">40</span>&#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;AL&quot;</span>, <span class="string">&quot;AK&quot;</span>, <span class="string">&quot;AZ&quot;</span>, <span class="string">&quot;AR&quot;</span>&#125;, <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">for</span> _, painter := <span class="keyword">range</span> []Painter&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    painter.Paint()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, clicker := <span class="keyword">range</span> []Clicker&#123;listBox, button1, button2&#125; &#123;</span><br><span class="line">    clicker.Click()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, widget := <span class="keyword">range</span> []<span class="keyword">interface</span>&#123;&#125;&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    widget.(Painter).Paint()</span><br><span class="line">    <span class="keyword">if</span> clicker, ok := widget.(Clicker); ok &#123;</span><br><span class="line">        clicker.Click()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go language is different from object-oriented programming languages like Java and PHP in that it does not provide keywords specifically for referencing parent class instances (such as <code>super</code>, <code>parent</code>, etc.). In Go language, the design philosophy is simplicity, without any unnecessary keywords. All calls are straightforward.</p>
+<h2 id="Summary">Summary</h2>
+<p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
+<p>All methods associated with a data type collectively form the method set of that type. Like other object-oriented programming languages, methods within the same method set cannot have the same name. Additionally, if they belong to a structure type, their names cannot overlap with any field names in that type.</p>
+<h2 id="References">References</h2>
+<ul>
+<li><a href="https://stackoverflow.com/questions/37011799/how-to-pass-a-child-struct-into-a-function-accepting-parent-struct">How to pass a ‘child’ struct into a function accepting ‘parent’ struct?</a></li>
+<li><a href="https://stackoverflow.com/questions/61585699/check-if-a-struct-has-struct-embedding-at-run-time">Check if a struct has struct embedding at run time</a></li>
+<li><a href="https://coolshell.cn/articles/21214.html">GO编程模式：委托和反转控制</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
+    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
+    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
+<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
+<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
+<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
+<h1>Constantly Switching Note Formats</h1>
+<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
+<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
+<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
+<h1>Mixing Project Notes with Knowledge Notes</h1>
+<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
+<h1>Obsessive Note Organization</h1>
+<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
+]]></content>
+      <categories>
+        <category>self</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
   </entry>
   <entry>
     <title>Go program pattern 01: Functional Options Pattern</title>
@@ -1468,50 +1512,6 @@ Let’s define a <code>Server</code> struct:</p>
 <li><a href="https://github.com/uber-go/guide/blob/master/style.md#functional-options">https://github.com/uber-go/guide/blob/master/style.md#functional-options</a></li>
 </ul>
 <p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</title>
-    <url>/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/</url>
-    <content><![CDATA[<p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
-<span id="more"></span>
-<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>Strictly speaking, Go language is not an object-oriented programming language, at least not the best choice for object-oriented programming (Java is the most established one). However, we can simulate object-oriented programming based on some features provided by Go.</p>
-<p>To implement object-oriented programming, we must implement the three major features of object-oriented programming: encapsulation, inheritance, and polymorphism.</p>
-<h2 id="Inheritance">Inheritance</h2>
-<p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
-<p>In traditional object-oriented programming, explicitly defining inheritance relationships has two drawbacks: one is that it leads to increasingly complex class hierarchies, and the other is that it affects the extensibility of classes. Many software design patterns advocate using composition instead of inheritance to improve class extensibility.</p>
-<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>
-If we want to define a class representing <code>Label</code>, we can do it like this:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Label <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Here, <code>Label</code> inherits all the properties of <code>Widget</code> and adds a new property <code>text</code>. Similarly, we can define the <code>Button</code> and <code>ListBox</code> classes:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Button <span class="keyword">struct</span> &#123;</span><br><span class="line">    Label</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ListBox <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text  []<span class="type">string</span></span><br><span class="line">    index <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Polymorphism">Polymorphism</h2>
-<p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Painter <span class="keyword">interface</span> &#123;</span><br><span class="line">    Paint()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Clicker <span class="keyword">interface</span> &#123;</span><br><span class="line">    Click()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Then, the components implement these interfaces:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(label Label)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display label</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;%p:Label.Paint(%q)\n&quot;</span>, &amp;label, label.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Paint(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Click() &#123;</span><br><span class="line">    <span class="comment">// click button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Click(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(listBox ListBox)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display listBox</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;ListBox.Paint(%q)\n&quot;</span>, listBox.text)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>Label</code> implements <code>Painter</code>, and <code>Button</code> and <code>ListBox</code> implement both <code>Painter</code> and <code>Clicker</code>.</p>
-<p>At the application level, we can use these components like this:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">label := Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">10</span>&#125;, <span class="string">&quot;State:&quot;</span>&#125;</span><br><span class="line">button1 := Button&#123;Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">70</span>&#125;, <span class="string">&quot;OK&quot;</span>&#125;&#125;</span><br><span class="line">button2 := NewButton(<span class="number">50</span>, <span class="number">70</span>, <span class="string">&quot;Cancel&quot;</span>)</span><br><span class="line">listBox := ListBox&#123;Widget&#123;<span class="number">10</span>, <span class="number">40</span>&#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;AL&quot;</span>, <span class="string">&quot;AK&quot;</span>, <span class="string">&quot;AZ&quot;</span>, <span class="string">&quot;AR&quot;</span>&#125;, <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">for</span> _, painter := <span class="keyword">range</span> []Painter&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    painter.Paint()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, clicker := <span class="keyword">range</span> []Clicker&#123;listBox, button1, button2&#125; &#123;</span><br><span class="line">    clicker.Click()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, widget := <span class="keyword">range</span> []<span class="keyword">interface</span>&#123;&#125;&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    widget.(Painter).Paint()</span><br><span class="line">    <span class="keyword">if</span> clicker, ok := widget.(Clicker); ok &#123;</span><br><span class="line">        clicker.Click()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Go language is different from object-oriented programming languages like Java and PHP in that it does not provide keywords specifically for referencing parent class instances (such as <code>super</code>, <code>parent</code>, etc.). In Go language, the design philosophy is simplicity, without any unnecessary keywords. All calls are straightforward.</p>
-<h2 id="Summary">Summary</h2>
-<p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
-<p>All methods associated with a data type collectively form the method set of that type. Like other object-oriented programming languages, methods within the same method set cannot have the same name. Additionally, if they belong to a structure type, their names cannot overlap with any field names in that type.</p>
-<h2 id="References">References</h2>
-<ul>
-<li><a href="https://stackoverflow.com/questions/37011799/how-to-pass-a-child-struct-into-a-function-accepting-parent-struct">How to pass a ‘child’ struct into a function accepting ‘parent’ struct?</a></li>
-<li><a href="https://stackoverflow.com/questions/61585699/check-if-a-struct-has-struct-embedding-at-run-time">Check if a struct has struct embedding at run time</a></li>
-<li><a href="https://coolshell.cn/articles/21214.html">GO编程模式：委托和反转控制</a></li>
-</ul>
 ]]></content>
       <categories>
         <category>go</category>
@@ -1593,45 +1593,6 @@ If we want to define a class representing <code>Label</code>, we can do it like 
       </categories>
       <tags>
         <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go defer：makes the function simpler and more robust.</title>
-    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
-<span id="more"></span> 
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p><code>defer</code> is used to release locks or any other resources.</p>
-<blockquote>
-<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
-The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
-</blockquote>
-<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
-<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
-<h1>Several Use Cases for <code>defer</code></h1>
-<ul>
-<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
-<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
-<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
-<h1>Performance Overhead of <code>defer</code></h1>
-<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
-<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
-<h1>Conclusion</h1>
-<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
       </tags>
   </entry>
   <entry>
@@ -1761,6 +1722,49 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
       </tags>
   </entry>
   <entry>
+    <title>If Google No Longer supports Golang</title>
+    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
+<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
+<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
+<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
+As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
+<h1>What does Google offer to Go?</h1>
+<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
+<ol>
+<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
+<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
+<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
+<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
+<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
+</ol>
+<h1>Potential Scenarios</h1>
+<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
+<ul>
+<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
+<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
+<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
+<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
+</ul>
+<h1>Probability of Occurrence</h1>
+<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
+<h1>Conclusion</h1>
+<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
+<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>How to Set Up ChatGPT-4 Service Using GitHub Copilot</title>
     <url>/2024/01/12/How-to-Set-Up-ChatGPT-4-Service-Using-GitHub-Copilot-329237bac187/</url>
     <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/1*jfXCQTbth8PaLKaE5KgNzg.png" alt=""></p>
@@ -1806,43 +1810,39 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
       </tags>
   </entry>
   <entry>
-    <title>If Google No Longer supports Golang</title>
-    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
-<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
-<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
-<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
-As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
-<h1>What does Google offer to Go?</h1>
-<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
-<ol>
-<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
-<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
-<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
-<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
-<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
-</ol>
-<h1>Potential Scenarios</h1>
-<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
+    <title>Go defer：makes the function simpler and more robust.</title>
+    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
+<span id="more"></span> 
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p><code>defer</code> is used to release locks or any other resources.</p>
+<blockquote>
+<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
+The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
+</blockquote>
+<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
+<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
+<h1>Several Use Cases for <code>defer</code></h1>
 <ul>
-<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
-<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
-<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
-<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
+<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
+<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
+<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
 </ul>
-<h1>Probability of Occurrence</h1>
-<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
+<h1>Performance Overhead of <code>defer</code></h1>
+<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
+<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
 <h1>Conclusion</h1>
-<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
-<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
-</ul>
+<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
 ]]></content>
       <categories>
-        <category>blog</category>
+        <category>go</category>
       </categories>
       <tags>
         <tag>golang</tag>
@@ -2121,43 +2121,6 @@ Memory safety is <strong>the most important value</strong> for Rust. It means th
       </tags>
   </entry>
   <entry>
-    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
-    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
-    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
-<span id="more"></span>
-<blockquote>
-<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
-</blockquote>
-<h2 id="Using-dmc">Using <code>dmc</code></h2>
-<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
-<p>It offers various disk profiles to choose from:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
-<p>Each profile corresponds to different speed modes, such as:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
-<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
-<p>Then, to verify the status:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
-<h2 id="Verification">Verification</h2>
-<p>We can validate using the <code>fio</code> tool:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
-<p>Now, with <code>dmc</code> turned off and the same command:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
-<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Smart Go compiler: Slimming</title>
     <url>/2024/05/11/Smart%20Go%20compiler%20Slimming/</url>
     <content><![CDATA[<h1>Smart Go compiler:  Slimming</h1>
@@ -2316,6 +2279,43 @@ Windows intervened and simply integrated Zip functionality into the operating sy
       <tags>
         <tag>history</tag>
         <tag>compute</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
+    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
+    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
+<span id="more"></span>
+<blockquote>
+<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
+</blockquote>
+<h2 id="Using-dmc">Using <code>dmc</code></h2>
+<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
+<p>It offers various disk profiles to choose from:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
+<p>Each profile corresponds to different speed modes, such as:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
+<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
+<p>Then, to verify the status:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
+<h2 id="Verification">Verification</h2>
+<p>We can validate using the <code>fio</code> tool:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
+<p>Now, with <code>dmc</code> turned off and the same command:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
+<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
       </tags>
   </entry>
 </search>
