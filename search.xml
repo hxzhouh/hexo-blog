@@ -1,6 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Go1.22 add frist v2 lib, math/rand/v2 more fast and more Standard</title>
+    <url>/2024/01/13/2024-01-13_Go1-22-add-frist-v2-lib--math-rand-v2-more-fast-and-more-Standard-27137c212612/</url>
+    <content><![CDATA[<h3 id="Go1-22-add-first-v2-lib-math-rand-v2-more-fast-and-more-Standard">Go1.22 add first v2 lib, math/rand/v2 more fast and more Standard</h3>
+<p><img src="https://cdn-images-1.medium.com/max/800/1*E5rm9m4S6Dr8EoHIuV5BBQ.jpeg" alt=""></p>
+<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
+<span id="more"></span>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*VHcA1NXtgo7WDlxo" alt=""></p>
+<h1>Reasons</h1>
+<ol>
+<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
+<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
+<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
+</ol>
+<h1>change list</h1>
+<ul>
+<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
+<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
+<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
+<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
+<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
+<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
+<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
+<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
+<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
+<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
+</ul>
+<h1>example</h1>
+<h2 id="Read-Seed">Read &amp; Seed</h2>
+<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line">  <span class="string">&quot;fmt&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line">  _, err := rand.Read(b)</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">   <span class="built_in">panic</span>(err)</span><br><span class="line">  &#125;</span><br><span class="line">  fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>output：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
+<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
+<h4 id="internal">internal</h4>
+<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail: <a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
+<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
+<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
+<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
+<ul>
+<li><code>int</code></li>
+<li><code>int8</code></li>
+<li><code>int16</code></li>
+<li><code>int32</code></li>
+<li><code>int64</code></li>
+</ul>
+<h1>Summary:</h1>
+<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
+<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of <a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+        <tag>golib</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>11 Tips for Detecting and Responding to Intrusions on Linux</title>
     <url>/2024/05/10/11%20Tips%20for%20Detecting%20and%20Responding%20to%20Intrusions%20on%20Linux/</url>
     <content><![CDATA[<p>![[Pasted image 20240510093043.png]]<br>
@@ -73,64 +131,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       <tags>
         <tag>linux</tag>
         <tag>security</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go1.22 add frist v2 lib, math/rand/v2 more fast and more Standard</title>
-    <url>/2024/01/13/2024-01-13_Go1-22-add-frist-v2-lib--math-rand-v2-more-fast-and-more-Standard-27137c212612/</url>
-    <content><![CDATA[<h3 id="Go1-22-add-first-v2-lib-math-rand-v2-more-fast-and-more-Standard">Go1.22 add first v2 lib, math/rand/v2 more fast and more Standard</h3>
-<p><img src="https://cdn-images-1.medium.com/max/800/1*E5rm9m4S6Dr8EoHIuV5BBQ.jpeg" alt=""></p>
-<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
-<span id="more"></span>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*VHcA1NXtgo7WDlxo" alt=""></p>
-<h1>Reasons</h1>
-<ol>
-<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
-<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
-<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
-</ol>
-<h1>change list</h1>
-<ul>
-<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
-<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
-<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
-<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
-<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
-<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
-<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
-<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
-<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
-<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
-</ul>
-<h1>example</h1>
-<h2 id="Read-Seed">Read &amp; Seed</h2>
-<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line">  <span class="string">&quot;fmt&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line">  _, err := rand.Read(b)</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">   <span class="built_in">panic</span>(err)</span><br><span class="line">  &#125;</span><br><span class="line">  fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>output：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
-<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
-<h4 id="internal">internal</h4>
-<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail: <a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
-<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
-<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
-<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
-<ul>
-<li><code>int</code></li>
-<li><code>int8</code></li>
-<li><code>int16</code></li>
-<li><code>int32</code></li>
-<li><code>int64</code></li>
-</ul>
-<h1>Summary:</h1>
-<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
-<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of <a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-        <tag>golib</tag>
       </tags>
   </entry>
   <entry>
@@ -412,6 +412,45 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
+    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
+    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
+    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
+<span id="more"></span>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
+<h1>Overview</h1>
+<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
+<h1>Design</h1>
+<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
+<h1>Ensuring Data Integrity</h1>
+<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
+<h1>Handling Network Latency and Packet Loss</h1>
+<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
+<h1>Waiting for Unsent Data to be Sent</h1>
+<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
+<h1>Handling the Half-Closed State</h1>
+<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
+<h1>Conclusion</h1>
+<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
+<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
+<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
+<hr>
+<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>network</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Performance Profiling with PProf</title>
     <url>/2024/02/02/2024-02-02_Performance-Profiling-with-PProf--A-Powerful-Tool-in-Golang-c0b0fbce4bdb/</url>
     <content><![CDATA[<h1>Introduction</h1>
@@ -531,45 +570,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
-    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
-    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
-<span id="more"></span>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
-<h1>Overview</h1>
-<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
-<h1>Design</h1>
-<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
-<h1>Ensuring Data Integrity</h1>
-<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
-<h1>Handling Network Latency and Packet Loss</h1>
-<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
-<h1>Waiting for Unsent Data to be Sent</h1>
-<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
-<h1>Handling the Half-Closed State</h1>
-<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
-<h1>Conclusion</h1>
-<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
-<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
-<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
-<hr>
-<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>network</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
       </tags>
   </entry>
   <entry>
@@ -1309,6 +1309,93 @@ To understand these two, we need to establish a concept: a pointer is essentiall
       </tags>
   </entry>
   <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
+<blockquote>
+<p>本文基于 go 1.14</p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<span id="more"></span>
+<h1>Order</h1>
+<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+<p>在 select 的每次迭代中，case 都会被打乱：<br>
+![[Pasted image 20240517215906.png]]</p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1>Non-ready channels</h1>
+<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1>Simplification</h1>
+<p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go defer：makes the function simpler and more robust.</title>
+    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
+<span id="more"></span> 
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p><code>defer</code> is used to release locks or any other resources.</p>
+<blockquote>
+<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
+The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
+</blockquote>
+<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
+<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
+<h1>Several Use Cases for <code>defer</code></h1>
+<ul>
+<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
+<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
+<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
+<h1>Performance Overhead of <code>defer</code></h1>
+<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
+<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
+<h1>Conclusion</h1>
+<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Go program pattern 01: Functional Options Pattern</title>
     <url>/2024/04/23/Go%20program%20pattern%2001%EF%BC%9A%20Functional%20Options%20Pattern/</url>
     <content><![CDATA[<p>Go is not a fully object-oriented language, and some object-oriented patterns are not well-suited for it. However, over the years, Go has developed its own set of patterns. Today, I would like to introduce a common pattern: the Functional Options Pattern.</p>
@@ -1374,89 +1461,6 @@ Let’s define a <code>Server</code> struct:</p>
 <li><a href="https://github.com/uber-go/guide/blob/master/style.md#functional-options">https://github.com/uber-go/guide/blob/master/style.md#functional-options</a></li>
 </ul>
 <p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go defer：makes the function simpler and more robust.</title>
-    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
-<span id="more"></span> 
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p><code>defer</code> is used to release locks or any other resources.</p>
-<blockquote>
-<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
-The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
-</blockquote>
-<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
-<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
-<h1>Several Use Cases for <code>defer</code></h1>
-<ul>
-<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
-<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
-<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
-<h1>Performance Overhead of <code>defer</code></h1>
-<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
-<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
-<h1>Conclusion</h1>
-<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</title>
-    <url>/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/</url>
-    <content><![CDATA[<p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
-<span id="more"></span>
-<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>Strictly speaking, Go language is not an object-oriented programming language, at least not the best choice for object-oriented programming (Java is the most established one). However, we can simulate object-oriented programming based on some features provided by Go.</p>
-<p>To implement object-oriented programming, we must implement the three major features of object-oriented programming: encapsulation, inheritance, and polymorphism.</p>
-<h2 id="Inheritance">Inheritance</h2>
-<p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
-<p>In traditional object-oriented programming, explicitly defining inheritance relationships has two drawbacks: one is that it leads to increasingly complex class hierarchies, and the other is that it affects the extensibility of classes. Many software design patterns advocate using composition instead of inheritance to improve class extensibility.</p>
-<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>
-If we want to define a class representing <code>Label</code>, we can do it like this:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Label <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Here, <code>Label</code> inherits all the properties of <code>Widget</code> and adds a new property <code>text</code>. Similarly, we can define the <code>Button</code> and <code>ListBox</code> classes:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Button <span class="keyword">struct</span> &#123;</span><br><span class="line">    Label</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ListBox <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text  []<span class="type">string</span></span><br><span class="line">    index <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Polymorphism">Polymorphism</h2>
-<p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Painter <span class="keyword">interface</span> &#123;</span><br><span class="line">    Paint()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Clicker <span class="keyword">interface</span> &#123;</span><br><span class="line">    Click()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Then, the components implement these interfaces:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(label Label)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display label</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;%p:Label.Paint(%q)\n&quot;</span>, &amp;label, label.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Paint(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Click() &#123;</span><br><span class="line">    <span class="comment">// click button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Click(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(listBox ListBox)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display listBox</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;ListBox.Paint(%q)\n&quot;</span>, listBox.text)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>Label</code> implements <code>Painter</code>, and <code>Button</code> and <code>ListBox</code> implement both <code>Painter</code> and <code>Clicker</code>.</p>
-<p>At the application level, we can use these components like this:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">label := Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">10</span>&#125;, <span class="string">&quot;State:&quot;</span>&#125;</span><br><span class="line">button1 := Button&#123;Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">70</span>&#125;, <span class="string">&quot;OK&quot;</span>&#125;&#125;</span><br><span class="line">button2 := NewButton(<span class="number">50</span>, <span class="number">70</span>, <span class="string">&quot;Cancel&quot;</span>)</span><br><span class="line">listBox := ListBox&#123;Widget&#123;<span class="number">10</span>, <span class="number">40</span>&#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;AL&quot;</span>, <span class="string">&quot;AK&quot;</span>, <span class="string">&quot;AZ&quot;</span>, <span class="string">&quot;AR&quot;</span>&#125;, <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">for</span> _, painter := <span class="keyword">range</span> []Painter&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    painter.Paint()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, clicker := <span class="keyword">range</span> []Clicker&#123;listBox, button1, button2&#125; &#123;</span><br><span class="line">    clicker.Click()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, widget := <span class="keyword">range</span> []<span class="keyword">interface</span>&#123;&#125;&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    widget.(Painter).Paint()</span><br><span class="line">    <span class="keyword">if</span> clicker, ok := widget.(Clicker); ok &#123;</span><br><span class="line">        clicker.Click()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Go language is different from object-oriented programming languages like Java and PHP in that it does not provide keywords specifically for referencing parent class instances (such as <code>super</code>, <code>parent</code>, etc.). In Go language, the design philosophy is simplicity, without any unnecessary keywords. All calls are straightforward.</p>
-<h2 id="Summary">Summary</h2>
-<p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
-<p>All methods associated with a data type collectively form the method set of that type. Like other object-oriented programming languages, methods within the same method set cannot have the same name. Additionally, if they belong to a structure type, their names cannot overlap with any field names in that type.</p>
-<h2 id="References">References</h2>
-<ul>
-<li><a href="https://stackoverflow.com/questions/37011799/how-to-pass-a-child-struct-into-a-function-accepting-parent-struct">How to pass a ‘child’ struct into a function accepting ‘parent’ struct?</a></li>
-<li><a href="https://stackoverflow.com/questions/61585699/check-if-a-struct-has-struct-embedding-at-run-time">Check if a struct has struct embedding at run time</a></li>
-<li><a href="https://coolshell.cn/articles/21214.html">GO编程模式：委托和反转控制</a></li>
-</ul>
 ]]></content>
       <categories>
         <category>go</category>
@@ -1587,6 +1591,50 @@ First, we have an employee object and some data:</p>
       </tags>
   </entry>
   <entry>
+    <title>Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</title>
+    <url>/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/</url>
+    <content><![CDATA[<p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
+<span id="more"></span>
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>Strictly speaking, Go language is not an object-oriented programming language, at least not the best choice for object-oriented programming (Java is the most established one). However, we can simulate object-oriented programming based on some features provided by Go.</p>
+<p>To implement object-oriented programming, we must implement the three major features of object-oriented programming: encapsulation, inheritance, and polymorphism.</p>
+<h2 id="Inheritance">Inheritance</h2>
+<p>Next is <strong>inheritance</strong>. Although Go does not directly provide syntax for inheritance, we can indirectly achieve similar functionality through <strong>composition</strong>. Composition means embedding one type into another type to build a new type structure.</p>
+<p>In traditional object-oriented programming, explicitly defining inheritance relationships has two drawbacks: one is that it leads to increasingly complex class hierarchies, and the other is that it affects the extensibility of classes. Many software design patterns advocate using composition instead of inheritance to improve class extensibility.</p>
+<p>Let’s take an example. Suppose we want to create a UI component library. We have a <code>Widget</code> structure type with two properties, <code>x</code> and <code>y</code>, representing the length and width of the component.<br>
+If we want to define a class representing <code>Label</code>, we can do it like this:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Label <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Here, <code>Label</code> inherits all the properties of <code>Widget</code> and adds a new property <code>text</code>. Similarly, we can define the <code>Button</code> and <code>ListBox</code> classes:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Button <span class="keyword">struct</span> &#123;</span><br><span class="line">    Label</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> ListBox <span class="keyword">struct</span> &#123;</span><br><span class="line">    Widget</span><br><span class="line">    text  []<span class="type">string</span></span><br><span class="line">    index <span class="type">int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Polymorphism">Polymorphism</h2>
+<p>First, we define two interfaces, <code>Painter</code> for painting and <code>Clicker</code> for clicking:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Painter <span class="keyword">interface</span> &#123;</span><br><span class="line">    Paint()</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> Clicker <span class="keyword">interface</span> &#123;</span><br><span class="line">    Click()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Then, the components implement these interfaces:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(label Label)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display label</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;%p:Label.Paint(%q)\n&quot;</span>, &amp;label, label.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Paint(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(button Button)</span></span> Click() &#123;</span><br><span class="line">    <span class="comment">// click button</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Button.Click(%q)\n&quot;</span>, button.text)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(listBox ListBox)</span></span> Paint() &#123;</span><br><span class="line">    <span class="comment">// display listBox</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;ListBox.Paint(%q)\n&quot;</span>, listBox.text)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Label</code> implements <code>Painter</code>, and <code>Button</code> and <code>ListBox</code> implement both <code>Painter</code> and <code>Clicker</code>.</p>
+<p>At the application level, we can use these components like this:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">label := Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">10</span>&#125;, <span class="string">&quot;State:&quot;</span>&#125;</span><br><span class="line">button1 := Button&#123;Label&#123;Widget&#123;<span class="number">10</span>, <span class="number">70</span>&#125;, <span class="string">&quot;OK&quot;</span>&#125;&#125;</span><br><span class="line">button2 := NewButton(<span class="number">50</span>, <span class="number">70</span>, <span class="string">&quot;Cancel&quot;</span>)</span><br><span class="line">listBox := ListBox&#123;Widget&#123;<span class="number">10</span>, <span class="number">40</span>&#125;,</span><br><span class="line">    []<span class="type">string</span>&#123;<span class="string">&quot;AL&quot;</span>, <span class="string">&quot;AK&quot;</span>, <span class="string">&quot;AZ&quot;</span>, <span class="string">&quot;AR&quot;</span>&#125;, <span class="number">0</span>&#125;</span><br><span class="line"><span class="keyword">for</span> _, painter := <span class="keyword">range</span> []Painter&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    painter.Paint()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, clicker := <span class="keyword">range</span> []Clicker&#123;listBox, button1, button2&#125; &#123;</span><br><span class="line">    clicker.Click()</span><br><span class="line">&#125;</span><br><span class="line">fmt.Println(<span class="string">&quot;=========================================&quot;</span>)</span><br><span class="line"><span class="keyword">for</span> _, widget := <span class="keyword">range</span> []<span class="keyword">interface</span>&#123;&#125;&#123;label, listBox, button1, button2&#125; &#123;</span><br><span class="line">    widget.(Painter).Paint()</span><br><span class="line">    <span class="keyword">if</span> clicker, ok := widget.(Clicker); ok &#123;</span><br><span class="line">        clicker.Click()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Go language is different from object-oriented programming languages like Java and PHP in that it does not provide keywords specifically for referencing parent class instances (such as <code>super</code>, <code>parent</code>, etc.). In Go language, the design philosophy is simplicity, without any unnecessary keywords. All calls are straightforward.</p>
+<h2 id="Summary">Summary</h2>
+<p>Let’s summarize briefly. In Go language, the concept of classes in traditional object-oriented programming is intentionally weakened, which is in line with Go’s philosophy of simplicity. The “classes” defined based on structures are just ordinary data types, similar to built-in data types. Built-in data types can also be transformed into “classes” that can contain custom member methods using the <code>type</code> keyword.</p>
+<p>All methods associated with a data type collectively form the method set of that type. Like other object-oriented programming languages, methods within the same method set cannot have the same name. Additionally, if they belong to a structure type, their names cannot overlap with any field names in that type.</p>
+<h2 id="References">References</h2>
+<ul>
+<li><a href="https://stackoverflow.com/questions/37011799/how-to-pass-a-child-struct-into-a-function-accepting-parent-struct">How to pass a ‘child’ struct into a function accepting ‘parent’ struct?</a></li>
+<li><a href="https://stackoverflow.com/questions/61585699/check-if-a-struct-has-struct-embedding-at-run-time">Check if a struct has struct embedding at run time</a></li>
+<li><a href="https://coolshell.cn/articles/21214.html">GO编程模式：委托和反转控制</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Go1.22 a new math  lib</title>
     <url>/2024/04/18/Go1.22%20a%20new%20math%20%20lib/</url>
     <content><![CDATA[<blockquote>
@@ -1643,54 +1691,6 @@ First, we have an employee object and some data:</p>
       </categories>
       <tags>
         <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
-<blockquote>
-<p>本文基于 go 1.14</p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<span id="more"></span>
-<h1>Order</h1>
-<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-<p>在 select 的每次迭代中，case 都会被打乱：<br>
-![[Pasted image 20240517215906.png]]</p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1>Non-ready channels</h1>
-<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1>Simplification</h1>
-<p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
       </tags>
   </entry>
   <entry>
@@ -1806,6 +1806,49 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
       </tags>
   </entry>
   <entry>
+    <title>If Google No Longer supports Golang</title>
+    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
+<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
+<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
+<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
+As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
+<h1>What does Google offer to Go?</h1>
+<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
+<ol>
+<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
+<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
+<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
+<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
+<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
+</ol>
+<h1>Potential Scenarios</h1>
+<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
+<ul>
+<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
+<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
+<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
+<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
+</ul>
+<h1>Probability of Occurrence</h1>
+<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
+<h1>Conclusion</h1>
+<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
+<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Learn How to Handle Time In Golang</title>
     <url>/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png" alt="99e178071ff04a758df4210c2e330fc8.png~tplv-6bxrjdptv7-image"><br>
@@ -1916,49 +1959,6 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </tags>
   </entry>
   <entry>
-    <title>If Google No Longer supports Golang</title>
-    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
-<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
-<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
-<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
-As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
-<h1>What does Google offer to Go?</h1>
-<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
-<ol>
-<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
-<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
-<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
-<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
-<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
-</ol>
-<h1>Potential Scenarios</h1>
-<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
-<ul>
-<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
-<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
-<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
-<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
-</ul>
-<h1>Probability of Occurrence</h1>
-<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
-<h1>Conclusion</h1>
-<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
-<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Performance analysis of goroutine switching</title>
     <url>/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
@@ -2024,103 +2024,6 @@ In terms of performance, IO multiplexing + thread pool completely outperforms co
       </tags>
   </entry>
   <entry>
-    <title>Rust Lesson 1： A Gopher&#39;s View on Rust</title>
-    <url>/2024/04/26/Rust%20Lesson%201%20A%20Gopher&#39;s%20View%20on%20Rust/</url>
-    <content><![CDATA[<blockquote>
-<p>source ：<a href="https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust">https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust</a></p>
-</blockquote>
-<p>To talk about which backend programming language has been the hottest in the past two years,If <a href="https://www.rust-lang.org/">Rust</a> claims to be second , and no one dares to say first . <a href="https://survey.stackoverflow.co/2023/#section-admired-and-desired-programming-scripting-and-markup-languages">Rust has topped the Stack Overflow’s most admired programming languages for 8 consecutive years</a>, and it has even been referred to as the “perfect programming language” by Jack Dorsey, the co-founder of Twitter:</p>
-<h1>1. Why should I learn Rust?</h1>
-<p>Learning Rust isn’t about riding the hype train; it’s about practical development needs. In certain situations, Go’s performance isn’t particularly good due to issues like STW. From benchmarks, Rust’s performance is three times better than Go’s: <a href="https://goodmanwen.github.io/Programming-Language-Benchmarks-Visualization/">The Computer Language Benchmarks Game Visualization</a> In our own business, after rewriting a gateway service in Rust, performance improved by about 70%. This is a significant improvement for our business scenario. Moreover, Rust’s widespread use in the Linux kernel validates its reliability, making Rust worth trying.</p>
-<p>However, the rise of Rust in certain domains has indeed sparked some dissatisfaction and controversy in other programming language communities. Particularly, the proposition from some in the Rust community to “Rewrite Everything in Rust” has made many programming language communities, especially the C++ community, quite uneasy. The Go community, on the other hand, is relatively more open and friendly. The mainstream view is that Go and Rust can complement each other, with each language playing its role in its respective areas of strength. Through cooperation rather than confrontation, developers can be provided with better choices. For more details, you can refer to an article co-authored by Steve Francia, former product manager of the Go team and author of Hugo, <a href="https://thenewstack.io/rust-vs-go-why-theyre-better-together/">Rust vs. Go: Why They’re Better Together</a>.</p>
-<p>In other words, Go is still my primary language, but considering the requirements of my work, I need to systematically learn Rust. To avoid the “from learning to giving up” scenario, I plan to learn Rust while outputting. On one hand, this can motivate me to learn, and on the other hand, I hope to interact with readers promptly and correct any misunderstandings in learning.</p>
-<p>I’ve always believed that when you start learning a new language, you must understand its history and current status. This way, you can build an overall understanding of the language and anticipate its future direction. Moreover, it can establish a sense of “security” in learning, believing that it can bring you enough value and returns, thus enabling you to learn more confidently.</p>
-<p>In this article, I’ll first explore the history of Rust’s development and its current state, as well as its unique design philosophy. I’ll also make a simple comparison with Go, hoping to provide myself and the readers with a preliminary understanding of Rust.</p>
-<h1>2. Rust’s History and Current Status</h1>
-<h2 id="2-1-The-Birth-and-Evolution-of-Rust">2.1 The Birth and Evolution of Rust</h2>
-<p>Rust was born in 2006, a year earlier than the “conspiracy” of the three Google giants to create the Go language. However, compared to the three founders of Go: Ken Thompson, Turing Award winner, co-inventor of C syntax, and father of Unix; Rob Pike, leader of the Plan 9 operating system and original designer of UTF-8 encoding; and Robert Griesemer, one of the designers of the HotSpot virtual machine for Java and the JavaScript V8 engine for the Chrome browser, the identity and status of Rust’s father, Graydon Hoare, were not so “prominent”. At that time, he was just a Canadian developer under 30 years old working at Mozilla Research:</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/04/f0511d1952c37285e033a815d94fdafe.png" alt="Pasted image 20240424162718"></p>
-<p>The birth of a new generation programming language often comes with a story, such as the founders of Go frequently encountering long compile times in C++ projects at Google. Whenever they started compiling a C++ project, they had to wait for a long time, during which they could drink several cups of coffee. This deeply impressed them and made them realize the need to design a new language with faster compilation speed, thus Go was born. Similar to the “drink coffee, wait for C++ project to compile” scenario, the birth of Rust also has a story:</p>
-<p>In 2006, 29-year-old Hoare returned home to Vancouver one day, only to find that the elevator was broken, and the elevator software crashed! He had to climb the stairs back to his 21st-floor apartment. As he climbed the stairs, he felt very annoyed. He thought, “We programmers actually can’t create an elevator that can work properly without crashing!” Hoare knew that many such crashes were caused by issues with memory usage in programs. The software inside devices like elevators is usually written in C++ or C, languages known for allowing programmers to write code that runs very fast and is quite compact. The problem is that these languages also make it easy to inadvertently introduce memory errors, which can lead to crashes. Hoare decided to do something about it. So he opened his laptop and started designing a new programming language, one that he hoped could write small and fast code without memory errors, and he named it <strong>Rust</strong>.</p>
-<p>This story is obviously unverifiable. But what can be confirmed is that for several years starting from 2006, the personal language project Rust created by Hoare was not actually used to improve elevator systems, but was sponsored by Mozilla and used in the continuous development of Mozilla’s browser engine Servo. Mozilla officially announced the project in 2010, and Hoare also introduced the Rust language for the first time in a <a href="http://venge.net/graydon/talks/intro-talk-2.pdf">speech in 2010</a>:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/d3e4b587df3b6506555016e0e5d81e82.png" alt="Pasted image 20240424162832"><br>
-The first line of Rust code was also open-sourced in 2010:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/268bb398052726a456879a821561db54.png" alt="Pasted image 20240424162852"><br>
-In addition, the initial Rust compiler was implemented in OCaml, and in 2011, the Rust team re-implemented the compiler in Rust based on LLVM and achieved bootstrapping. That same year, Rust also got its own logo, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=680521">inspired by a bicycle gear</a>:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/455a441a093721eb30097e64719b718b.png" alt="Pasted image 20240424162917"><br>
-In 2012, <a href="https://www.infoq.com/news/2012/08/Interview-Rust/">Graydon Hoare was interviewed by InfoQ</a> and talked about leading the Rust team in developing Rust, a systems programming language at Mozilla, including Rust’s features, advantages and differences compared to C/C++/Java/Go, and Rust 1.0 release plans.</p>
-<p>However, in the following year, in 2013, <a href="https://wikitia.com/wiki/Graydon_Hoare">Graydon Hoare resigned as leader of the Rust team due to exhaustion</a>, leaving his own Rust team and distancing himself from Rust development. Hoare’s departure was a significant loss for the Rust team and the language itself, but the Rust community and team took proactive measures to ensure the continued development and evolution of Rust.</p>
-<p>In November 2014, <a href="https://blog.rust-lang.org/2014/11/20/Cargo.html">Rust officially announced cargo and crates.io</a>. Cargo is Rust’s project build manager, while <a href="http://crates.io">crates.io</a> is the central package repository for Rust code maintained by the Rust team. With cargo, developers can easily build and publish packages to <a href="http://crates.io">crates.io</a> or pull dependencies of Rust code from <a href="http://crates.io">crates.io</a>.</p>
-<p>On May 15, 2015, Rust reached a milestone moment: <a href="https://blog.rust-lang.org/2015/05/15/Rust-1.0.html">Rust 1.0 was officially released!</a>, which was 3 years later than <a href="https://go.dev/blog/go1">the release of Go 1.0</a>. However, as the official blog stated, “the release of version 1.0 marks the end of the chaos. This version is the formal beginning of our stability commitment, providing a solid foundation for building applications and libraries. From now on, major changes are essentially out of scope (some minor warnings apply, such as compiler errors).”</p>
-<p>After the release of Rust 1.0, the release cycle and rhythm of Rust were determined, with <a href="https://blog.rust-lang.org/2014/10/30/Stability.html">a stable version released every 6 weeks</a>. Following this rhythm, Rust 1.1 Beta was released simultaneously with Rust 1.0. After six weeks of testing, Rust 1.1 Beta became Rust 1.1 stable, and Rust 1.2 Beta was released, and so on. Of course, Rust also has a nightly build version, which contains the latest but unstable features. Compared to the Go community and developers who can only “get high” twice a year, Rust developers and the community are more fortunate to “get high” every six weeks!</p>
-<p>Rust’s evolution is <a href="https://github.com/rust-lang/rfcs">driven by RFCs (Request For Comments)</a>, and this measure was <a href="https://github.com/rust-lang/rfcs/blob/master/text/0002-rfc-process.md">established based on RFCs before the release of Rust 1.0</a>. This is similar to the Go Proposal process, but it feels more standardized and rigorous, which of course is related to the composition and rules of governance structures of the two languages.</p>
-<p>However, the</p>
-<p>evolution and development of Rust is not as smooth and perfect as one might expect. For example, at the <a href="https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-Rust-2018.html">Rust 2018 edition launch event</a>, <a href="https://github.com/alexcrichton">Alex Crichton</a>, one of the core members of the Rust team, mentioned in the keynote speech that in the evolution of the Rust language, some past design decisions may not have been optimal, which sometimes hinders the language’s progress. One example is the error handling mechanism. However, Rust’s development team has proven that they are good at introspection and adjustment. For example, the aforementioned error handling mechanism was greatly improved with the introduction of the “Try” trait in Rust 1.26, and with the release of Rust 1.31, the Rust 2018 edition resolved many issues with Rust’s design.</p>
-<h2 id="2-2-Rust’s-Current-Status">2.2 Rust’s Current Status</h2>
-<p>In the past decade, Rust has gradually developed from a personal project of Graydon Hoare to a popular systems programming language with a large and active community. According to <a href="https://octoverse.github.com/projects#languages">GitHub’s 2020 Octoverse report</a>, Rust was the fastest-growing programming language in the GitHub open-source community, with 235% more contributors than in 2019, making it the most loved language in the Stack Overflow Developer Survey for five consecutive years from 2016 to 2020.</p>
-<p>However, it should be pointed out that Rust is still not widely used in large-scale commercial projects, especially compared to C/C++/Java/Go. The main reason is that Rust’s ecosystem and maturity are still not comparable to those languages. For example, the Alibaba e-commerce team mentioned in 2017 that they have 100,000+ Java developers and have invested heavily in Java and the JVM ecosystem. They also mentioned that in recent years, Alibaba has considered using Rust to solve some distributed computing problems, but has not yet considered using Rust in large-scale commercial projects due to concerns about the immaturity of Rust’s ecosystem.</p>
-<p>However, Rust is gradually being adopted and applied in some fields and areas where C/C++ is traditionally dominant, such as systems programming, game development, and blockchain systems. For example, in the blockchain field, in addition to the Solana project I mentioned earlier, the Parity project, which is known for the development of the Polkadot blockchain framework, is also developed in Rust. In addition, in the blockchain field, some small and medium-sized blockchain projects also use Rust to develop blockchain systems. For example, the <a href="https://github.com/rust-bitcoin/rust-bitcoin">Bitcoin Light client library BTC-Rust</a> implemented by the Bitcoin-NG team is developed in Rust.</p>
-<h1>3. The Design Philosophy of Rust</h1>
-<p><strong>The design philosophy of a programming language is like the values of a person—it dictates its behavior.</strong> If you don’t agree with someone’s values, it’s hard to maintain a continuous relationship, as they say, “different paths do not converge.” Similarly, if you don’t agree with the design philosophy of a programming language, you’ll likely encounter the problems mentioned earlier in your subsequent language learning, which may dampen your motivation to continue learning. Therefore, before diving into Rust syntax and coding, let’s first understand Rust’s design philosophy. After understanding these, you’ll have a deeper understanding of why you’re learning Rust.</p>
-<h2 id="3-1-Core-Values-of-Rust">3.1 Core Values of Rust</h2>
-<p>In June 2019, Rust core team member Stephen Klabnik delivered a speech titled <a href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a> at QCon London, where he outlined his personal understanding of Rust’s core values, <strong>which are the points Rust’s team refuses to compromise on when making design decisions</strong>, including memory safety, execution speed, and productivity:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/2827e93a0c773f5a5a96d57843c30fdd.png" alt="Pasted image 20240424163821"></p>
-<p>According to Stephen Klabnik, these three core values are ordered, with memory safety being paramount, followed by high performance, and finally productivity. When conflicts arise among them, decisions are made according to the highest value!</p>
-<p>This is consistent with the official description of Rust:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/32d3930c49c4fcb209a74b0b347bf3ac.png" alt="Pasted image 20240424163834"></p>
-<p>The “Reliable” corresponds to memory safety, while “efficient” has two meanings: runtime efficiency and high productivity during development.</p>
-<p>These three values are the design goals of the Rust language and the essence of its characteristics and advantages. After losing Graydon Hoare, the father of the language, these values became the fundamental basis for the Rust core team to determine the direction of language evolution.</p>
-<ol>
-<li><strong>Memory Safety</strong><br>
-Memory safety is <strong>the most important value</strong> for Rust. It means that Rust programs won’t suffer from memory leaks, buffer overflows, dangling pointers, and other memory-related errors at runtime (without using unsafe code). These errors not only lead to program crashes but can also result in security vulnerabilities. Rust ensures memory safety by features like ownership, lifetimes, and borrowing, which are thoroughly checked at compile time.</li>
-</ol>
-<p>Rust’s memory safety mechanism not only enhances program stability and reliability but also reduces development and maintenance complexity. With Rust’s ability to detect memory errors at compile time, developers don’t have to spend a lot of time and effort searching for and fixing these errors.</p>
-<ol>
-<li><strong>High Performance</strong></li>
-</ol>
-<p>High performance is the second core value of Rust, closely following memory safety. One of Rust’s design goals is to be a high-performance systems programming language. Through features like zero-cost abstractions, move semantics, and generic programming, Rust enables programs to achieve performance comparable to traditional systems programming languages like C and C++ at runtime.</p>
-<p>Rust’s high-performance mechanism not only improves program execution speed but also reduces hardware costs. Because Rust can better utilize hardware resources, Rust programs typically outperform programs in other languages with the same hardware conditions and resource overhead.</p>
-<ol>
-<li><strong>Productivity</strong></li>
-</ol>
-<p>Productivity is the third core value of Rust. One of Rust’s design goals is to be a language that enhances developer productivity. With features like the Cargo package manager, smart editor support, rich library ecosystem, and detailed system documentation, Rust makes it easier for developers to write, debug, and maintain Rust programs.</p>
-<h2 id="3-2-Secondary-Values-of-Rust">3.2 Secondary Values of Rust</h2>
-<p>Stephen Klabnik also summarized three secondary values of Rust:<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/b906bd07490a8c0f1b5c509a0f8974a5.png" alt="Pasted image 20240424163847"></p>
-<p>We see that Rust’s secondary values include ergonomics, compile times, and correctness. These values are also design goals of the Rust language, but unlike the primary core values mentioned above, they are subject to compromise.</p>
-<p><strong>Ergonomics</strong> refers to the ease of use of the Rust language, which is an important design goal of Rust. Rust aims to make it easier for developers to write Rust programs through simple syntax and a rich library ecosystem.</p>
-<p><strong>Compile Times</strong> refer to the compilation time of the Rust compiler. Rust’s compiler is slow, which is a problem that the Rust team is actively working to optimize. However, the Rust team is more concerned about the final execution speed of the binary than making the compiler faster, hence why compile time is a secondary value.</p>
-<p><strong>Correctness</strong> refers to the correctness of Rust programs. Rust really cares about whether your program is correct and aims to ensure the correctness of Rust programs as much as possible through a powerful type system and static checks. However, Rust is not willing to rely entirely on types and proof assistants to prove the correctness of your code.</p>
-<h2 id="3-3-Comparison-with-Go’s-Values">3.3 Comparison with Go’s Values</h2>
-<p>Let’s compare Go’s official introduction to Go’s implicit values (design philosophy):<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/04/4d25094f8a0cfe86a13b2da3056cb192.png" alt="Pasted image 20240424163901"></p>
-<p>In the official description of Go, there are three keywords: Simple, Secure, and Scalable.</p>
-<p><strong>Simple</strong> is the primary design principle of Go. The designers of Go hope that Go can be simple and easy to use, enabling developers to learn and use Go more quickly to rapidly develop production capabilities. Go has a simple and understandable syntax, and it removes many complex features found in other programming languages, such as type hierarchies and inheritance, making Go more concise, easy to learn, read, use, and maintain.</p>
-<p><strong>Secure</strong> is about making Go more secure and reliable, avoiding common security vulnerabilities found in many other programming languages. Go achieves this by automatically managing memory through garbage collection, avoiding common memory leaks and buffer overflow issues found in many other programming languages. Additionally, Go provides lightweight goroutines and channels, making it easier for developers to implement concurrent programming. With data race detection tools, Go also prevents common data race issues in concurrent programming. Furthermore, Go provides a simple and easy-to-use explicit error handling mechanism, ensuring no error handling is missed by developers.</p>
-<p><strong>Scalable</strong> is reflected in Go’s engineering orientation, built-in concurrency, and a philosophy that emphasizes composition. The designers of Go hope that Go can better support scalability, enabling Go programs to better adapt to different organizational scales, workloads, and hardware environments. Go achieves this through simple syntax, module-based reproducible build management, extremely fast compilation speed, high-quality standard library, practical toolchain, powerful built-in concurrency mechanism, and interface-oriented programming, making Go programs more scalable and productive.</p>
-<h1>4 Conclusion</h1>
-<p>In summary, Rust prioritizes safety, low-level control, and optimal performance, while Go emphasizes simplicity, security, scalability, and engineering efficiency. There are differences in their positioning and design philosophies, but they also share some common characteristics, such as modern toolchains and active communities.</p>
-<p>In this article, we’ve learned about the birth, current development, and unique design philosophy of Rust. By comparing it with Go, we can see some differences in their backgrounds, goals, and design philosophies.</p>
-<p>As software systems become increasingly complex, the demand for security, performance, and concurrency is also rising. As a new language focused on low-level systems programming and performance optimization, Rust is attracting more and more developers’ attention. I believe that through comprehensive and systematic learning of Rust later on, we will all gain a deeper understanding and mastery of Rust.</p>
-<p>If you find Rust’s values align with yours and you agree with Rust’s future development, stay tuned for the next article, where we’ll start hands-on learning Rust!</p>
-<h1>5 References</h1>
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/Rust_(programming_language)">Rust Wikipedia</a></li>
-<li><a href="https://www.technologyreview.com/2023/02/14/1067869/rust-worlds-fastest-growing-programming-language/">How Rust went from a side project to the world’s most-loved programming language</a></li>
-<li><a href="https://rustmagazine.org/issue-1/2022-review-the-adoption-of-rust-in-business/">2022 Review | The adoption of Rust in Business</a></li>
-<li><a href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a></li>
-<li><a href="https://rustacean.net/">Unofficial Rust mascot Ferris</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-        <tag>rust</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Mac: Slowing Down Your Disk Speed by 60x</title>
     <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
     <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
@@ -2156,6 +2059,11 @@ Memory safety is <strong>the most important value</strong> for Rust. It means th
       <tags>
         <tag>tools</tag>
       </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2024/05/18/post/</url>
+    <content><![CDATA[]]></content>
   </entry>
   <entry>
     <title>Smart Go compiler: Slimming</title>
@@ -2314,8 +2222,100 @@ Windows intervened and simply integrated Zip functionality into the operating sy
       </tags>
   </entry>
   <entry>
-    <title></title>
-    <url>/2024/05/18/post/</url>
-    <content><![CDATA[]]></content>
+    <title>Rust Lesson 1： A Gopher&#39;s View on Rust</title>
+    <url>/2024/04/26/Rust%20Lesson%201%20A%20Gopher&#39;s%20View%20on%20Rust/</url>
+    <content><![CDATA[<blockquote>
+<p>source ：<a href="https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust">https://tonybai.com/2024/04/22/gopher-rust-first-lesson-all-about-rust</a></p>
+</blockquote>
+<p>To talk about which backend programming language has been the hottest in the past two years,If <a href="https://www.rust-lang.org/">Rust</a> claims to be second , and no one dares to say first . <a href="https://survey.stackoverflow.co/2023/#section-admired-and-desired-programming-scripting-and-markup-languages">Rust has topped the Stack Overflow’s most admired programming languages for 8 consecutive years</a>, and it has even been referred to as the “perfect programming language” by Jack Dorsey, the co-founder of Twitter:</p>
+<h1>1. Why should I learn Rust?</h1>
+<p>Learning Rust isn’t about riding the hype train; it’s about practical development needs. In certain situations, Go’s performance isn’t particularly good due to issues like STW. From benchmarks, Rust’s performance is three times better than Go’s: <a href="https://goodmanwen.github.io/Programming-Language-Benchmarks-Visualization/">The Computer Language Benchmarks Game Visualization</a> In our own business, after rewriting a gateway service in Rust, performance improved by about 70%. This is a significant improvement for our business scenario. Moreover, Rust’s widespread use in the Linux kernel validates its reliability, making Rust worth trying.</p>
+<p>However, the rise of Rust in certain domains has indeed sparked some dissatisfaction and controversy in other programming language communities. Particularly, the proposition from some in the Rust community to “Rewrite Everything in Rust” has made many programming language communities, especially the C++ community, quite uneasy. The Go community, on the other hand, is relatively more open and friendly. The mainstream view is that Go and Rust can complement each other, with each language playing its role in its respective areas of strength. Through cooperation rather than confrontation, developers can be provided with better choices. For more details, you can refer to an article co-authored by Steve Francia, former product manager of the Go team and author of Hugo, <a href="https://thenewstack.io/rust-vs-go-why-theyre-better-together/">Rust vs. Go: Why They’re Better Together</a>.</p>
+<p>In other words, Go is still my primary language, but considering the requirements of my work, I need to systematically learn Rust. To avoid the “from learning to giving up” scenario, I plan to learn Rust while outputting. On one hand, this can motivate me to learn, and on the other hand, I hope to interact with readers promptly and correct any misunderstandings in learning.</p>
+<p>I’ve always believed that when you start learning a new language, you must understand its history and current status. This way, you can build an overall understanding of the language and anticipate its future direction. Moreover, it can establish a sense of “security” in learning, believing that it can bring you enough value and returns, thus enabling you to learn more confidently.</p>
+<p>In this article, I’ll first explore the history of Rust’s development and its current state, as well as its unique design philosophy. I’ll also make a simple comparison with Go, hoping to provide myself and the readers with a preliminary understanding of Rust.</p>
+<h1>2. Rust’s History and Current Status</h1>
+<h2 id="2-1-The-Birth-and-Evolution-of-Rust">2.1 The Birth and Evolution of Rust</h2>
+<p>Rust was born in 2006, a year earlier than the “conspiracy” of the three Google giants to create the Go language. However, compared to the three founders of Go: Ken Thompson, Turing Award winner, co-inventor of C syntax, and father of Unix; Rob Pike, leader of the Plan 9 operating system and original designer of UTF-8 encoding; and Robert Griesemer, one of the designers of the HotSpot virtual machine for Java and the JavaScript V8 engine for the Chrome browser, the identity and status of Rust’s father, Graydon Hoare, were not so “prominent”. At that time, he was just a Canadian developer under 30 years old working at Mozilla Research:</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/04/f0511d1952c37285e033a815d94fdafe.png" alt="Pasted image 20240424162718"></p>
+<p>The birth of a new generation programming language often comes with a story, such as the founders of Go frequently encountering long compile times in C++ projects at Google. Whenever they started compiling a C++ project, they had to wait for a long time, during which they could drink several cups of coffee. This deeply impressed them and made them realize the need to design a new language with faster compilation speed, thus Go was born. Similar to the “drink coffee, wait for C++ project to compile” scenario, the birth of Rust also has a story:</p>
+<p>In 2006, 29-year-old Hoare returned home to Vancouver one day, only to find that the elevator was broken, and the elevator software crashed! He had to climb the stairs back to his 21st-floor apartment. As he climbed the stairs, he felt very annoyed. He thought, “We programmers actually can’t create an elevator that can work properly without crashing!” Hoare knew that many such crashes were caused by issues with memory usage in programs. The software inside devices like elevators is usually written in C++ or C, languages known for allowing programmers to write code that runs very fast and is quite compact. The problem is that these languages also make it easy to inadvertently introduce memory errors, which can lead to crashes. Hoare decided to do something about it. So he opened his laptop and started designing a new programming language, one that he hoped could write small and fast code without memory errors, and he named it <strong>Rust</strong>.</p>
+<p>This story is obviously unverifiable. But what can be confirmed is that for several years starting from 2006, the personal language project Rust created by Hoare was not actually used to improve elevator systems, but was sponsored by Mozilla and used in the continuous development of Mozilla’s browser engine Servo. Mozilla officially announced the project in 2010, and Hoare also introduced the Rust language for the first time in a <a href="http://venge.net/graydon/talks/intro-talk-2.pdf">speech in 2010</a>:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/d3e4b587df3b6506555016e0e5d81e82.png" alt="Pasted image 20240424162832"><br>
+The first line of Rust code was also open-sourced in 2010:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/268bb398052726a456879a821561db54.png" alt="Pasted image 20240424162852"><br>
+In addition, the initial Rust compiler was implemented in OCaml, and in 2011, the Rust team re-implemented the compiler in Rust based on LLVM and achieved bootstrapping. That same year, Rust also got its own logo, <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=680521">inspired by a bicycle gear</a>:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/455a441a093721eb30097e64719b718b.png" alt="Pasted image 20240424162917"><br>
+In 2012, <a href="https://www.infoq.com/news/2012/08/Interview-Rust/">Graydon Hoare was interviewed by InfoQ</a> and talked about leading the Rust team in developing Rust, a systems programming language at Mozilla, including Rust’s features, advantages and differences compared to C/C++/Java/Go, and Rust 1.0 release plans.</p>
+<p>However, in the following year, in 2013, <a href="https://wikitia.com/wiki/Graydon_Hoare">Graydon Hoare resigned as leader of the Rust team due to exhaustion</a>, leaving his own Rust team and distancing himself from Rust development. Hoare’s departure was a significant loss for the Rust team and the language itself, but the Rust community and team took proactive measures to ensure the continued development and evolution of Rust.</p>
+<p>In November 2014, <a href="https://blog.rust-lang.org/2014/11/20/Cargo.html">Rust officially announced cargo and crates.io</a>. Cargo is Rust’s project build manager, while <a href="http://crates.io">crates.io</a> is the central package repository for Rust code maintained by the Rust team. With cargo, developers can easily build and publish packages to <a href="http://crates.io">crates.io</a> or pull dependencies of Rust code from <a href="http://crates.io">crates.io</a>.</p>
+<p>On May 15, 2015, Rust reached a milestone moment: <a href="https://blog.rust-lang.org/2015/05/15/Rust-1.0.html">Rust 1.0 was officially released!</a>, which was 3 years later than <a href="https://go.dev/blog/go1">the release of Go 1.0</a>. However, as the official blog stated, “the release of version 1.0 marks the end of the chaos. This version is the formal beginning of our stability commitment, providing a solid foundation for building applications and libraries. From now on, major changes are essentially out of scope (some minor warnings apply, such as compiler errors).”</p>
+<p>After the release of Rust 1.0, the release cycle and rhythm of Rust were determined, with <a href="https://blog.rust-lang.org/2014/10/30/Stability.html">a stable version released every 6 weeks</a>. Following this rhythm, Rust 1.1 Beta was released simultaneously with Rust 1.0. After six weeks of testing, Rust 1.1 Beta became Rust 1.1 stable, and Rust 1.2 Beta was released, and so on. Of course, Rust also has a nightly build version, which contains the latest but unstable features. Compared to the Go community and developers who can only “get high” twice a year, Rust developers and the community are more fortunate to “get high” every six weeks!</p>
+<p>Rust’s evolution is <a href="https://github.com/rust-lang/rfcs">driven by RFCs (Request For Comments)</a>, and this measure was <a href="https://github.com/rust-lang/rfcs/blob/master/text/0002-rfc-process.md">established based on RFCs before the release of Rust 1.0</a>. This is similar to the Go Proposal process, but it feels more standardized and rigorous, which of course is related to the composition and rules of governance structures of the two languages.</p>
+<p>However, the</p>
+<p>evolution and development of Rust is not as smooth and perfect as one might expect. For example, at the <a href="https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-Rust-2018.html">Rust 2018 edition launch event</a>, <a href="https://github.com/alexcrichton">Alex Crichton</a>, one of the core members of the Rust team, mentioned in the keynote speech that in the evolution of the Rust language, some past design decisions may not have been optimal, which sometimes hinders the language’s progress. One example is the error handling mechanism. However, Rust’s development team has proven that they are good at introspection and adjustment. For example, the aforementioned error handling mechanism was greatly improved with the introduction of the “Try” trait in Rust 1.26, and with the release of Rust 1.31, the Rust 2018 edition resolved many issues with Rust’s design.</p>
+<h2 id="2-2-Rust’s-Current-Status">2.2 Rust’s Current Status</h2>
+<p>In the past decade, Rust has gradually developed from a personal project of Graydon Hoare to a popular systems programming language with a large and active community. According to <a href="https://octoverse.github.com/projects#languages">GitHub’s 2020 Octoverse report</a>, Rust was the fastest-growing programming language in the GitHub open-source community, with 235% more contributors than in 2019, making it the most loved language in the Stack Overflow Developer Survey for five consecutive years from 2016 to 2020.</p>
+<p>However, it should be pointed out that Rust is still not widely used in large-scale commercial projects, especially compared to C/C++/Java/Go. The main reason is that Rust’s ecosystem and maturity are still not comparable to those languages. For example, the Alibaba e-commerce team mentioned in 2017 that they have 100,000+ Java developers and have invested heavily in Java and the JVM ecosystem. They also mentioned that in recent years, Alibaba has considered using Rust to solve some distributed computing problems, but has not yet considered using Rust in large-scale commercial projects due to concerns about the immaturity of Rust’s ecosystem.</p>
+<p>However, Rust is gradually being adopted and applied in some fields and areas where C/C++ is traditionally dominant, such as systems programming, game development, and blockchain systems. For example, in the blockchain field, in addition to the Solana project I mentioned earlier, the Parity project, which is known for the development of the Polkadot blockchain framework, is also developed in Rust. In addition, in the blockchain field, some small and medium-sized blockchain projects also use Rust to develop blockchain systems. For example, the <a href="https://github.com/rust-bitcoin/rust-bitcoin">Bitcoin Light client library BTC-Rust</a> implemented by the Bitcoin-NG team is developed in Rust.</p>
+<h1>3. The Design Philosophy of Rust</h1>
+<p><strong>The design philosophy of a programming language is like the values of a person—it dictates its behavior.</strong> If you don’t agree with someone’s values, it’s hard to maintain a continuous relationship, as they say, “different paths do not converge.” Similarly, if you don’t agree with the design philosophy of a programming language, you’ll likely encounter the problems mentioned earlier in your subsequent language learning, which may dampen your motivation to continue learning. Therefore, before diving into Rust syntax and coding, let’s first understand Rust’s design philosophy. After understanding these, you’ll have a deeper understanding of why you’re learning Rust.</p>
+<h2 id="3-1-Core-Values-of-Rust">3.1 Core Values of Rust</h2>
+<p>In June 2019, Rust core team member Stephen Klabnik delivered a speech titled <a href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a> at QCon London, where he outlined his personal understanding of Rust’s core values, <strong>which are the points Rust’s team refuses to compromise on when making design decisions</strong>, including memory safety, execution speed, and productivity:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/2827e93a0c773f5a5a96d57843c30fdd.png" alt="Pasted image 20240424163821"></p>
+<p>According to Stephen Klabnik, these three core values are ordered, with memory safety being paramount, followed by high performance, and finally productivity. When conflicts arise among them, decisions are made according to the highest value!</p>
+<p>This is consistent with the official description of Rust:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/32d3930c49c4fcb209a74b0b347bf3ac.png" alt="Pasted image 20240424163834"></p>
+<p>The “Reliable” corresponds to memory safety, while “efficient” has two meanings: runtime efficiency and high productivity during development.</p>
+<p>These three values are the design goals of the Rust language and the essence of its characteristics and advantages. After losing Graydon Hoare, the father of the language, these values became the fundamental basis for the Rust core team to determine the direction of language evolution.</p>
+<ol>
+<li><strong>Memory Safety</strong><br>
+Memory safety is <strong>the most important value</strong> for Rust. It means that Rust programs won’t suffer from memory leaks, buffer overflows, dangling pointers, and other memory-related errors at runtime (without using unsafe code). These errors not only lead to program crashes but can also result in security vulnerabilities. Rust ensures memory safety by features like ownership, lifetimes, and borrowing, which are thoroughly checked at compile time.</li>
+</ol>
+<p>Rust’s memory safety mechanism not only enhances program stability and reliability but also reduces development and maintenance complexity. With Rust’s ability to detect memory errors at compile time, developers don’t have to spend a lot of time and effort searching for and fixing these errors.</p>
+<ol>
+<li><strong>High Performance</strong></li>
+</ol>
+<p>High performance is the second core value of Rust, closely following memory safety. One of Rust’s design goals is to be a high-performance systems programming language. Through features like zero-cost abstractions, move semantics, and generic programming, Rust enables programs to achieve performance comparable to traditional systems programming languages like C and C++ at runtime.</p>
+<p>Rust’s high-performance mechanism not only improves program execution speed but also reduces hardware costs. Because Rust can better utilize hardware resources, Rust programs typically outperform programs in other languages with the same hardware conditions and resource overhead.</p>
+<ol>
+<li><strong>Productivity</strong></li>
+</ol>
+<p>Productivity is the third core value of Rust. One of Rust’s design goals is to be a language that enhances developer productivity. With features like the Cargo package manager, smart editor support, rich library ecosystem, and detailed system documentation, Rust makes it easier for developers to write, debug, and maintain Rust programs.</p>
+<h2 id="3-2-Secondary-Values-of-Rust">3.2 Secondary Values of Rust</h2>
+<p>Stephen Klabnik also summarized three secondary values of Rust:<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/b906bd07490a8c0f1b5c509a0f8974a5.png" alt="Pasted image 20240424163847"></p>
+<p>We see that Rust’s secondary values include ergonomics, compile times, and correctness. These values are also design goals of the Rust language, but unlike the primary core values mentioned above, they are subject to compromise.</p>
+<p><strong>Ergonomics</strong> refers to the ease of use of the Rust language, which is an important design goal of Rust. Rust aims to make it easier for developers to write Rust programs through simple syntax and a rich library ecosystem.</p>
+<p><strong>Compile Times</strong> refer to the compilation time of the Rust compiler. Rust’s compiler is slow, which is a problem that the Rust team is actively working to optimize. However, the Rust team is more concerned about the final execution speed of the binary than making the compiler faster, hence why compile time is a secondary value.</p>
+<p><strong>Correctness</strong> refers to the correctness of Rust programs. Rust really cares about whether your program is correct and aims to ensure the correctness of Rust programs as much as possible through a powerful type system and static checks. However, Rust is not willing to rely entirely on types and proof assistants to prove the correctness of your code.</p>
+<h2 id="3-3-Comparison-with-Go’s-Values">3.3 Comparison with Go’s Values</h2>
+<p>Let’s compare Go’s official introduction to Go’s implicit values (design philosophy):<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/04/4d25094f8a0cfe86a13b2da3056cb192.png" alt="Pasted image 20240424163901"></p>
+<p>In the official description of Go, there are three keywords: Simple, Secure, and Scalable.</p>
+<p><strong>Simple</strong> is the primary design principle of Go. The designers of Go hope that Go can be simple and easy to use, enabling developers to learn and use Go more quickly to rapidly develop production capabilities. Go has a simple and understandable syntax, and it removes many complex features found in other programming languages, such as type hierarchies and inheritance, making Go more concise, easy to learn, read, use, and maintain.</p>
+<p><strong>Secure</strong> is about making Go more secure and reliable, avoiding common security vulnerabilities found in many other programming languages. Go achieves this by automatically managing memory through garbage collection, avoiding common memory leaks and buffer overflow issues found in many other programming languages. Additionally, Go provides lightweight goroutines and channels, making it easier for developers to implement concurrent programming. With data race detection tools, Go also prevents common data race issues in concurrent programming. Furthermore, Go provides a simple and easy-to-use explicit error handling mechanism, ensuring no error handling is missed by developers.</p>
+<p><strong>Scalable</strong> is reflected in Go’s engineering orientation, built-in concurrency, and a philosophy that emphasizes composition. The designers of Go hope that Go can better support scalability, enabling Go programs to better adapt to different organizational scales, workloads, and hardware environments. Go achieves this through simple syntax, module-based reproducible build management, extremely fast compilation speed, high-quality standard library, practical toolchain, powerful built-in concurrency mechanism, and interface-oriented programming, making Go programs more scalable and productive.</p>
+<h1>4 Conclusion</h1>
+<p>In summary, Rust prioritizes safety, low-level control, and optimal performance, while Go emphasizes simplicity, security, scalability, and engineering efficiency. There are differences in their positioning and design philosophies, but they also share some common characteristics, such as modern toolchains and active communities.</p>
+<p>In this article, we’ve learned about the birth, current development, and unique design philosophy of Rust. By comparing it with Go, we can see some differences in their backgrounds, goals, and design philosophies.</p>
+<p>As software systems become increasingly complex, the demand for security, performance, and concurrency is also rising. As a new language focused on low-level systems programming and performance optimization, Rust is attracting more and more developers’ attention. I believe that through comprehensive and systematic learning of Rust later on, we will all gain a deeper understanding and mastery of Rust.</p>
+<p>If you find Rust’s values align with yours and you agree with Rust’s future development, stay tuned for the next article, where we’ll start hands-on learning Rust!</p>
+<h1>5 References</h1>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Rust_(programming_language)">Rust Wikipedia</a></li>
+<li><a href="https://www.technologyreview.com/2023/02/14/1067869/rust-worlds-fastest-growing-programming-language/">How Rust went from a side project to the world’s most-loved programming language</a></li>
+<li><a href="https://rustmagazine.org/issue-1/2022-review-the-adoption-of-rust-in-business/">2022 Review | The adoption of Rust in Business</a></li>
+<li><a href="https://www.infoq.com/presentations/rust-tradeoffs/">How Rust Views Tradeoffs</a></li>
+<li><a href="https://rustacean.net/">Unofficial Rust mascot Ferris</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+        <tag>rust</tag>
+      </tags>
   </entry>
 </search>
