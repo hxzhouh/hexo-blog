@@ -249,45 +249,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
-    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
-    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
-    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
-<span id="more"></span>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
-<h1>Overview</h1>
-<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
-<h1>Design</h1>
-<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
-<h1>Ensuring Data Integrity</h1>
-<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
-<h1>Handling Network Latency and Packet Loss</h1>
-<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
-<h1>Waiting for Unsent Data to be Sent</h1>
-<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
-<h1>Handling the Half-Closed State</h1>
-<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
-<h1>Conclusion</h1>
-<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
-<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
-<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
-<hr>
-<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>network</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Overview of Changes in Go’s Concurrency Library in 2023</title>
     <url>/2024/01/19/2024-01-19_Overview-of-Changes-in-Go-s-Concurrency-Library-in-2023-144a65184715/</url>
     <content><![CDATA[<p>In 2023, there have been some changes to Go’s concurrency library, and this article provides an overview of these changes. Minor details such as typos and documentation changes will not be covered.</p>
@@ -451,6 +412,316 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
+    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
+    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
+    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
+<span id="more"></span>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
+<h1>Overview</h1>
+<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
+<h1>Design</h1>
+<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
+<h1>Ensuring Data Integrity</h1>
+<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
+<h1>Handling Network Latency and Packet Loss</h1>
+<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
+<h1>Waiting for Unsent Data to be Sent</h1>
+<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
+<h1>Handling the Half-Closed State</h1>
+<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
+<h1>Conclusion</h1>
+<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
+<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
+<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
+<hr>
+<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>network</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Advanced Debugging Tips for the Go Language</title>
+    <url>/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/</url>
+    <content><![CDATA[<p>Last time we shared the method of <a href="https://medium.com/@hxzhouh/how-to-analyze-go-code-in-assembly-81cada6d4f0a">debugging Go code using assembly language</a>. Assembly language allows us to easily trace low-level knowledge of the Go runtime and other underlying details. In this article, we will introduce the powerful debugging tool called “go tool”, which, when mastered, can elevate your development skills to the next level.</p>
+<span id="more"></span>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b" alt=""></p>
+<p>This article focuses on practical techniques for debugging in Golang and the effective usage of related tools, so you no longer need to worry about how to debug Golang code. Golang, as a modern language, comes with built-in debugging capabilities from the very beginning:</p>
+<ul>
+<li>Golang tools are directly integrated into the language tools, supporting memory analysis, CPU analysis, and blocking lock analysis, among others.</li>
+<li>Delve and GDB are the most commonly used debug tools, allowing you to dive deeper into program debugging.</li>
+<li>Delve is currently the most user-friendly Golang debugging program, and IDE debugging is essentially calling dlv, such as in Goland.</li>
+<li>Unit testing is deeply integrated into the language design, making it very convenient to execute unit tests and generate code coverage.</li>
+</ul>
+<h1>Golang tools</h1>
+<p>Golang integrates a variety of useful tools at the language level, which are the essence of the experience accumulated by Robert Griesemer, Rob Pike, Ken Thompson, and other experts. After installing Golang, you can see all the built-in tools by executing <code>go tool</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~&gt; go tool</span><br><span class="line"> addr2line</span><br><span class="line"> asm</span><br><span class="line"> buildid</span><br><span class="line"> cgo</span><br><span class="line"> compile</span><br><span class="line"> covdata</span><br><span class="line"> cover</span><br><span class="line"> dist</span><br><span class="line"> distpack</span><br><span class="line"> doc</span><br><span class="line"> fix</span><br><span class="line"> link</span><br><span class="line"> nm</span><br><span class="line"> objdump</span><br><span class="line"> pack</span><br><span class="line"> pprof</span><br><span class="line"> test2json</span><br><span class="line"> trace</span><br><span class="line"> vet</span><br></pre></td></tr></table></figure>
+<p>Here, I will focus on selecting several commonly used debug tools:</p>
+<ul>
+<li><code>nm</code>: view the symbol table (equivalent to the system <code>nm</code> command).</li>
+<li><code>objdump</code>: disassembly tool, used to analyze binary files (equivalent to the system <code>objdump</code> command).</li>
+<li><code>pprof</code>: metric and performance analysis tool.</li>
+<li><code>cover</code>: code coverage generation.</li>
+<li><code>trace</code>: sampling over a period of time, metric tracking and analysis tool.</li>
+<li><code>compile</code>: code assembly.</li>
+</ul>
+<p>Now, I will demonstrate the usage of these tools with an example.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">import</span> (</span><br><span class="line">     <span class="string">&quot;log&quot;</span></span><br><span class="line">     <span class="string">&quot;net&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">var</span> helloCount <span class="type">int</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">     listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:50050&quot;</span>)</span><br><span class="line">     <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">         log.Fatal(err)</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">defer</span> listener.Close()</span><br><span class="line"> ​</span><br><span class="line">     <span class="keyword">for</span> &#123;</span><br><span class="line">         conn, err := listener.Accept()</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Fatal(err)</span><br><span class="line">         &#125;</span><br><span class="line">         tcpConn := conn.(*net.TCPConn)</span><br><span class="line">         err = tcpConn.SetNoDelay(<span class="literal">true</span>)</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Println(err)</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">go</span> handleConnection(conn)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">     <span class="keyword">defer</span> conn.Close()</span><br><span class="line">     helloCount++</span><br><span class="line">     resp := []<span class="type">byte</span>(<span class="string">&quot;Hello count: &quot;</span>)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, []<span class="type">byte</span>(<span class="type">string</span>(<span class="type">rune</span>(helloCount)))...)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">     conn.Write(resp)</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// go build main.go</span></span><br></pre></td></tr></table></figure>
+<h2 id="nm">nm</h2>
+<p>The <code>nm</code> command is used to view the symbol table, which is equivalent to the system <code>nm</code> command and is very useful. When setting breakpoints, if you don’t know the function symbol of the breakpoint, you can use this command to find out (this command operates on binary program files).</p>
+<h2 id="compile">compile</h2>
+<p>Assemble a specific file:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool compile -N -l -S main.go</span><br></pre></td></tr></table></figure>
+<p>You will be able to see the assembly code corresponding to your Go code (please note that this command operates on Go code text), which is cool.</p>
+<h2 id="objdump">objdump</h2>
+<p>The objdump tool is used to disassemble binaries, equivalent to the system <code>objdump</code> (please note that this command parses binary program files).</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool objdump main.o</span><br><span class="line">go tool objdump -s DoFunc main.o  // Disassembling specific functions</span><br></pre></td></tr></table></figure>
+<p>Assembly code may not be needed in 90% of scenarios, but if you have experience working with C programs, in certain special situations, inferring application behavior by disassembling a piece of logic may be your only way out. This is because the code running in production usually has optimization enabled, which can cause your code to not match. Furthermore, you cannot attach to processes at will in production environments. Many times, you only have a core file to troubleshoot.</p>
+<h2 id="pprof">pprof</h2>
+<p>pprof supports four types of analysis:</p>
+<ul>
+<li><code>CPU</code>: CPU analysis, sampling calls that consume CPU resources, which is generally used to locate and troubleshoot areas of high computational resource consumption in programs.</li>
+<li><code>Memory</code>: Memory analysis, which is generally used to troubleshoot memory usage, memory leaks, and other issues.</li>
+<li><code>Block</code>: Blocking analysis, which samples the blocking calls in the program.</li>
+<li><code>Mutex</code>: Mutex analysis, which samples the competition for mutex locks.</li>
+</ul>
+<p>For more information about pprof, you can refer to this article.</p>
+<h2 id="trace">trace</h2>
+<p>Program trace debugging:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool trace -http=&quot;:6060&quot; ./ssd_336959_20190704_105540_trace</span><br></pre></td></tr></table></figure>
+<p>The trace command allows you to trace and collect information over a period of time, then dump it to a file, and finally analyze the dump file using <code>go tool trace</code> and open it in a web format.</p>
+<h1>Unit Testing</h1>
+<p>The importance of unit testing is self-evident. In Golang, files ending with <code>_test.go</code> are considered test files. As a modern language, Golang supports unit testing at the language tool level.</p>
+<h2 id="Running-Unit-Tests">Running Unit Tests</h2>
+<p>There are two ways to execute unit tests:</p>
+<ul>
+<li>Run <code>go test</code> directly, which is the simplest method.</li>
+<li>Compile the test files first, then run them. This method provides more flexibility.</li>
+</ul>
+<h2 id="Running-go-test">Running <code>go test</code></h2>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Run go test directly in your project directory.</span><br><span class="line"> go test .</span><br><span class="line"> // Specify the running function.</span><br><span class="line"> go test -run=TestPutAndGetKeyValue</span><br><span class="line"> // Print details.</span><br><span class="line"> go test -v</span><br></pre></td></tr></table></figure>
+<h2 id="Compilation-and-Execution">Compilation and Execution</h2>
+<p>Essentially, running Golang unit tests involves compiling <code>*_test.go</code> files into binaries and then running these binaries. When you execute <code>go test</code>, the tool handles these actions for you, but you can also perform them separately.</p>
+<p>Compile the test files to generate the test executable:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Compile the .test file first.</span><br><span class="line">go test -c -coverpkg=. -covermode=atomic -o 1TestSwapInt32_in_sync_atomic.test sync/atomic</span><br><span class="line"> // Specify running a file.</span><br><span class="line">./1TestSwapInt32_in_sync_atomic.test -test.timeout=10m0s -test.v=true -test.run=TestSwapInt32</span><br></pre></td></tr></table></figure>
+<p>This method is usually used in the following scenarios:</p>
+<ol>
+<li>Compile on one machine and run tests on another.</li>
+<li>Debugging test programs.</li>
+</ol>
+<h1>Code Coverage Analysis</h1>
+<p>Golang’s code coverage is based on unit tests, which serve as the starting point for measuring code coverage of your business code. The operation is simple:</p>
+<ol>
+<li>Add the <code>-coverprofile</code> parameter when running tests to record code coverage.</li>
+<li>Use the <code>go tool cover</code> command to analyze and generate coverage reports.</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go test -coverprofile=coverage.out</span><br><span class="line">go tool cover -func=coverage.out</span><br></pre></td></tr></table></figure>
+<p>The output will be similar to the following:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~/w/g/s/sync&gt; go tool cover -func=coverage.out                                                                                                                heads/go1.21.4?</span><br><span class="line">sync/cond.go:47:        NewCond                         100.0%</span><br><span class="line">sync/cond.go:66:        Wait                            100.0%</span><br><span class="line">sync/cond.go:81:        Signal                          100.0%</span><br><span class="line">sync/cond.go:90:        Broadcast                       100.0%</span><br><span class="line">sync/cond.go:98:        check                           100.0%</span><br><span class="line">sync/cond.go:116:       Lock                            0.0%</span><br><span class="line">sync/cond.go:117:       Unlock                          0.0%</span><br><span class="line">sync/map.go:104:        newEntry                        100.0%</span><br><span class="line">sync/map.go:110:        loadReadOnly                    100.0%</span><br><span class="line">sync/map.go:120:        Load                            100.0%</span><br><span class="line">sync/map.go:145:        load                            100.0%</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+<p>This way, you can see the code coverage for each function.</p>
+<h1>Program Debugging</h1>
+<p>Program debugging mainly relies on two tools:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. dlv</span><br><span class="line">2. gdb</span><br></pre></td></tr></table></figure>
+<p>Here, I recommend dlv because GDB’s functionality is limited. GDB does not understand Golang’s specific types such as channels, maps, and slices. GDB’s native support for goroutines is limited since it only understands threads. However, GDB has one irreplaceable feature, which is the <code>gcore</code> command.</p>
+<h2 id="dlv-Debugging">dlv Debugging</h2>
+<h4 id="Debugging-Binaries">Debugging Binaries</h4>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec &lt;path/to/binary&gt; [flags]</span><br></pre></td></tr></table></figure>
+<p>For example:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging binaries with dlv and passing arguments:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main -- --audit=./d</span><br></pre></td></tr></table></figure>
+<h2 id="Debugging-Processes">Debugging Processes</h2>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach $&#123;pid&#125; [executable] [flags]</span><br></pre></td></tr></table></figure>
+<p>The process ID is mandatory. For example:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+<h4 id="Debugging-Core-Files">Debugging Core Files</h4>
+<p>Debugging core files with dlv and redirecting standard output to a file:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core &lt;executable&gt; &lt;core&gt; [flags]</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+<h1>Common Debugging Syntax</h1>
+<h2 id="System-Summary">System Summary</h2>
+<p><strong>Program Execution</strong></p>
+<ol>
+<li>call: call a function (note that this will cause the entire program to run).</li>
+<li>continue: resume execution.</li>
+<li>next: step over.</li>
+<li>restart: restart.</li>
+<li>step: step into a function.</li>
+<li>step-instruction: step into a specific assembly instruction.</li>
+<li>stepout: step out of the current function.</li>
+</ol>
+<h2 id="Breakpoint-related"><strong>Breakpoint-related</strong></h2>
+<ol>
+<li>break (alias: b): set a breakpoint.</li>
+<li>breakpoints (alias: bp): print all breakpoint information.</li>
+<li>clear: clear a breakpoint.</li>
+<li>clearall: clear all breakpoints.</li>
+<li>condition (alias: cond): set a conditional breakpoint.</li>
+<li>on: set a command to be executed when a breakpoint is hit.</li>
+<li>trace (alias: t): set a tracepoint, which is also a breakpoint but does not stop the program when hit; it only prints a line of information. This command is useful in certain scenarios where stopping the program affects logic (e.g., business timeouts), and you only want to print a specific variable.</li>
+</ol>
+<h2 id="Information-Printing"><strong>Information Printing</strong></h2>
+<ul>
+<li>args: print function arguments.</li>
+<li>examinemem (alias: x): a powerful command for examining memory, similar to gdb’s <code>x</code> command.</li>
+<li>locals: print local variables.</li>
+<li>print (alias: p): print an expression or variable.</li>
+<li>regs: print register information.</li>
+<li>set: set variable value.</li>
+<li>vars: print global variables (package variables).</li>
+<li>whatis: print type information.</li>
+</ul>
+<h2 id="Goroutine-related"><strong>Goroutine-related</strong></h2>
+<ul>
+<li>goroutine (alias: gr): print information of a specific goroutine.</li>
+<li>goroutines (alias: grs): list all goroutines.</li>
+<li>thread (alias: tr): switch to a specific thread.</li>
+<li>threads: print information of all threads.</li>
+</ul>
+<h2 id="Stack-related"><strong>Stack-related</strong></h2>
+<ul>
+<li>deferred: execute commands in the context of a defer function.</li>
+<li>down: move up the stack.</li>
+<li>frame: jump to a specific stack frame.</li>
+<li>stack (alias: bt): print stack information.</li>
+<li>up: move down the stack.</li>
+</ul>
+<h2 id="Other-Commands"><strong>Other Commands</strong></h2>
+<ul>
+<li>config: modify configurations.</li>
+<li>disassemble (alias: disass): disassemble.</li>
+<li>edit (alias: ed): omitted.</li>
+<li>exit (alias: quit | q): omitted.</li>
+<li>funcs: print all function symbols.</li>
+<li>libraries: print all loaded dynamic libraries.</li>
+<li>list (alias: ls | l): display source code.</li>
+<li>source: load commands.</li>
+<li>sources: print source code.</li>
+<li>types: print all type information.</li>
+</ul>
+<p>The above commands cover the complete set of commands supported by dlv, which meet our debugging needs (some commands are only applicable during development and debugging, as it is not possible to single-step debug on production code in most cases).</p>
+<p>Application Examples</p>
+<p><strong>Print Global Variables</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(dlv) vars</span><br></pre></td></tr></table></figure>
+<p>This is very useful for inspecting global variables.</p>
+<p><strong>Conditional Breakpoints</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set a breakpoint first.</span></span><br><span class="line">(dlv) b</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Check breakpoint information.</span></span><br><span class="line">(dlv) bp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Customize the condition.</span></span><br><span class="line">(dlv) condition 2 i==2 &amp;&amp; j==7 &amp;&amp; z==32</span><br></pre></td></tr></table></figure>
+<p><strong>Inspecting the Stack</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Show all stacks.</span></span><br><span class="line">(dlv) goroutines</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Expand all stacks.</span></span><br><span class="line">(dlv) goroutines -t</span><br></pre></td></tr></table></figure>
+<p><strong>Examining Memory</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(dlv) x -fmt hex -len 20 0xc00008af38</span><br></pre></td></tr></table></figure>
+<p>The <code>x</code> command is the same as gdb’s <code>x</code> command.</p>
+<h3 id="gdb-Debugging">gdb Debugging</h3>
+<p>GDB’s support for Golang debugging is achieved through a Python script called <code>src/runtime/runtime-gdb.py</code>, so its functionality is limited. GDB can only perform basic variable printing and cannot understand some of Golang’s specific types such as channels, maps, and slices. GDB cannot directly debug goroutines because it only understands threads. However, GDB has one feature that cannot be replaced, which is the <code>gcore</code> command.</p>
+<h4 id="dlv-Debugging-Example">dlv Debugging Example</h4>
+<p>Debugging a Binary</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging a Process</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging a Core File</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+<h4 id="gdb-Debugging-Example">gdb Debugging Example</h4>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gdb ./main</span><br></pre></td></tr></table></figure>
+<p>Print Global Variables (note the single quotation marks)</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p &#x27;runtime.firstmoduledata&#x27;</span><br></pre></td></tr></table></figure>
+<p>Due to GDB’s limited understanding of Golang’s type system, sometimes it may not be able to print variables, so please pay attention to this.</p>
+<p>Print Array Length</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p $len(xxx)</span><br></pre></td></tr></table></figure>
+<p>Therefore, I usually only use GDB to generate core files.</p>
+<h3 id="Tips-and-Tricks">Tips and Tricks</h3>
+<h3 id="Don’t-know-how-to-set-breakpoints-in-functions">Don’t know how to set breakpoints in functions?</h3>
+<p>Sometimes you don’t know how to set breakpoints in a function. You can use <code>nm</code> to query the function and then set a breakpoint, which will ensure that you hit the breakpoint.</p>
+<h3 id="Don’t-know-the-calling-context">Don’t know the calling context?</h3>
+<p>Add the following line in your code:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">debug.PrintStack()</span><br></pre></td></tr></table></figure>
+<p>This will print the stack trace at the current code position, allowing you to understand the calling path of the function.</p>
+<h3 id="Don’t-know-how-to-enable-pprof">Don’t know how to enable pprof?</h3>
+<p>There are two ways to enable pprof, corresponding to two packages:</p>
+<ul>
+<li>net/http/pprof: used in web server scenarios.</li>
+<li>runtime/pprof: used in non-server applications.</li>
+</ul>
+<p>These two packages are essentially the same, with <code>net/http/pprof</code> being a web wrapper on top of <code>runtime/pprof</code>.</p>
+<p><strong>Using</strong> <code>net/http/pprof</code></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br></pre></td></tr></table></figure>
+<p><strong>Using</strong> <code>runtime/pprof</code></p>
+<p>This method is usually used for performance optimization. When running a program that is not a server application, you want to find bottlenecks, so you typically use this method.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CPU pprof file path</span></span><br><span class="line">    f, err := os.Create(<span class="string">&quot;cpufile.pprof&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Start CPU pprof</span></span><br><span class="line">    pprof.StartCPUProfile(f)</span><br><span class="line">    <span class="keyword">defer</span> pprof.StopCPUProfile()</span><br></pre></td></tr></table></figure>
+<h3 id="Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging">Why does the code sometimes execute unexpectedly during single-step debugging?</h3>
+<p>This situation is usually caused by compiler optimization, such as function inlining and removal of redundant logic and parameters from the compiled binary. This can cause unexpected execution during dlv single-step debugging or prevent the printing of certain variables. The solution to this problem is to disable compiler optimization.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go build -gcflags &quot;-N -l&quot;</span><br></pre></td></tr></table></figure>
+<h1>Conclusion</h1>
+<p>This article provides a systematic overview of the techniques and usage of Golang program debugging:</p>
+<ol>
+<li>The language tool package provides built-in tools that support assembly, disassembly, pprof analysis, symbol table queries, and other practical functions.</li>
+<li>The language tool package integrates unit testing, and code coverage relies on triggering unit tests.</li>
+<li>The powerful dlv/gdb tools serve as the main debugging tools, supporting the analysis of binaries, processes, and core files.</li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>A Study of Concurrency Bugs In Real-World</title>
+    <url>/2024/02/04/2024-02-04_Read-the-paper--A-Study-of-Concurrency-Bugs-in-Real-World-Go/</url>
+    <content><![CDATA[<p>Today I read a paper about real-world go concurrency error bugs, and here’s a transcript of what I read as a start to learning about go concurrency programming.</p>
+<blockquote>
+<p><a href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
+</blockquote>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/3f9b7292094086961ecb0d8658528cbe.png" alt="Pasted image 20240517213857"></p>
+<p>Recently, I came across a paper in one of the newsletters I subscribe to. The paper, from the University of Pennsylvania, presents the first systematic study of concurrency-related bugs in several major open-source Golang software projects. The researchers examined the commit histories of the following software: Docker, Kubernetes, etcd, gRPC, CockroachDB, and BoltDB, and drew several interesting conclusions.</p>
+<h1>Research Method</h1>
+<p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/52b66c9567ff341e8ff5a0a85387a417.png" alt="Pasted image 20240517214102"></p>
+<p>Number and types of bugs in different projects</p>
+<h1>Blocking Bugs</h1>
+<p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 1</span></span><br><span class="line">  <span class="function"><span class="keyword">func</span> <span class="title">goroutine1</span><span class="params">()</span></span> &#123;</span><br><span class="line">      m.Lock()</span><br><span class="line">-     ch &lt;- request <span class="comment">// blocks</span></span><br><span class="line">+     <span class="keyword">select</span> &#123;</span><br><span class="line">+         <span class="keyword">case</span> ch &lt;- request</span><br><span class="line">+         <span class="keyword">default</span>:</span><br><span class="line">+     &#125;</span><br><span class="line">      m.Unlock()</span><br><span class="line">  &#125;<span class="comment">// goroutine 1 func goroutine1() &#123; m.Lock() - ch &lt;- request // blocks + select &#123; + case ch &lt;- request + default: + &#125; m.Unlock() goroutine 2 func goroutine2() &#123; for &#123; m.Lock() // blocks m.Unlock() request &lt;- ch &#125;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 2</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutine2</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        m.Lock()   <span class="comment">// blocks</span></span><br><span class="line">        m.Unlock()</span><br><span class="line">        request &lt;- ch</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In the author’s study, it was found that the proportion of bugs caused by message passing was even higher than those caused by traditional mutexes. Furthermore, there are currently no mature detection methods for such bugs.</p>
+<blockquote>
+<p><em>Overall, we found that there are around 42% blocking bugs caused by errors in protecting shared memory, and 58% are caused by errors in message passing. Considering that shared memory primitives are used more frequently than message passing ones (Section 3.2), message passing operations are even more likely to cause blocking bugs.</em></p>
+</blockquote>
+<p>Personal opinion: The reasons for these issues may include the unfamiliarity with new channel synchronization primitives or the overreliance on channels, leading to a relaxed attitude towards bugs. In summary, channels are powerful, but they are not a panacea for solving all synchronization problems.</p>
+<h1>Non-blocking Bugs</h1>
+<p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
+<p>Here’s an example where the original code uses select-case, resulting in the default case being unintentionally executed multiple times. The fix completely replaces the original code with Once:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// when multiple goroutines execute the following code, default // can execute multiple times, closing the channel more than once, // which leads to panic in Go runtime - select &#123; - case &lt;- c.closed: // do something - default: + Once.Do(func() &#123; close(c.closed) + &#125;) - &#125;// when multiple goroutines execute the following code, default</span><br><span class="line">// can execute multiple times, closing the channel more than once,</span><br><span class="line">// which leads to panic in Go runtime</span><br><span class="line"></span><br><span class="line">- select &#123;</span><br><span class="line">-     case &lt;- c.closed:</span><br><span class="line">          // do something</span><br><span class="line">-     default:</span><br><span class="line">+         Once.Do(func() &#123;</span><br><span class="line">              close(c.closed)</span><br><span class="line">+         &#125;)</span><br><span class="line">- &#125;</span><br></pre></td></tr></table></figure>
+<p>Additionally, the paper explores different methods for modifying different types of bugs and provides recommendations for the development of future bug detection tools.</p>
+<h1>Conclusions and Reflections</h1>
+<ul>
+<li>Go channels provide powerful concurrency patterns, but they are not a panacea. The study found that message passing can cause a higher proportion of blocking bugs. Currently, there are no well-established detection methods. Concurrency issues are inherently complex, and while language features may reduce complexity, they cannot effortlessly solve all problems through casual analysis.</li>
+<li>In Go programs, synchronization of shared memory (e.g., classic lock/unlock) still accounts for a higher proportion.</li>
+<li>Furthermore, misuse of channels can lead to performance issues ( <a href="https://syslog.ravelin.com/so-just-how-fast-are-channels-anyway-4c156a407e45">see this article</a>).</li>
+<li>The author observes that many Go bugs exhibit similar patterns, which suggests the possibility of developing more static analysis tools dedicated to analyzing specific types of problems.</li>
+<li>Personal opinion: When writing Go code, whether using synchronization locks or channels, it is advisable to keep the synchronized code concise, clear, and easy to verify and inspect in order to reduce bugs.</li>
+<li>The Go compiler includes deadlock and data race detection, but it cannot detect many situations. More in-depth bug research could consider using debuggers like gdb and runtime profiling tools like pprof ( <a href="https://zhuanlan.zhihu.com/p/56430428">see this article</a> and <a href="https://golang.org/pkg/net/http/pprof/">official documentation</a>).</li>
+<li>There is further discussion of this paper on HackerNews ( <a href="https://news.ycombinator.com/item?id=19280927">link</a>).</li>
+<li>Commit messages are not only helpful for tracing bugs, but also for systematically analyzing historical bugs in the future. (Remember not to write “asdfasdf” in Git commit messages, kids!)</li>
+</ul>
+]]></content>
+      <categories>
+        <category>paper</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Performance Profiling with PProf</title>
     <url>/2024/02/02/2024-02-02_Performance-Profiling-with-PProf--A-Powerful-Tool-in-Golang-c0b0fbce4bdb/</url>
     <content><![CDATA[<h1>Introduction</h1>
@@ -573,52 +844,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
-    <title>A Study of Concurrency Bugs In Real-World</title>
-    <url>/2024/02/04/2024-02-04_Read-the-paper--A-Study-of-Concurrency-Bugs-in-Real-World-Go/</url>
-    <content><![CDATA[<p>Today I read a paper about real-world go concurrency error bugs, and here’s a transcript of what I read as a start to learning about go concurrency programming.</p>
-<blockquote>
-<p><a href="https://golangweekly.com/link/59972/b208593eda">Link</a></p>
-</blockquote>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/3f9b7292094086961ecb0d8658528cbe.png" alt="Pasted image 20240517213857"></p>
-<p>Recently, I came across a paper in one of the newsletters I subscribe to. The paper, from the University of Pennsylvania, presents the first systematic study of concurrency-related bugs in several major open-source Golang software projects. The researchers examined the commit histories of the following software: Docker, Kubernetes, etcd, gRPC, CockroachDB, and BoltDB, and drew several interesting conclusions.</p>
-<h1>Research Method</h1>
-<p>The focus of this study was on concurrency-related bugs. The researchers conducted their study by examining the commit histories of these projects. They searched for keywords such as “race,” “deadlock,” “synchronization,” and Golang-specific synchronization primitives like “context,” “once,” and “WaitGroup.” They identified fixes for synchronization bugs and even performed some bug replay and reproduction. The bugs were classified as either “blocking” or “non-blocking.”</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/52b66c9567ff341e8ff5a0a85387a417.png" alt="Pasted image 20240517214102"></p>
-<p>Number and types of bugs in different projects</p>
-<h1>Blocking Bugs</h1>
-<p>Blocking bugs refer to bugs where one or more Goroutines are blocked, leading to partial or global deadlock. These bugs typically arise from circular dependencies. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 1</span></span><br><span class="line">  <span class="function"><span class="keyword">func</span> <span class="title">goroutine1</span><span class="params">()</span></span> &#123;</span><br><span class="line">      m.Lock()</span><br><span class="line">-     ch &lt;- request <span class="comment">// blocks</span></span><br><span class="line">+     <span class="keyword">select</span> &#123;</span><br><span class="line">+         <span class="keyword">case</span> ch &lt;- request</span><br><span class="line">+         <span class="keyword">default</span>:</span><br><span class="line">+     &#125;</span><br><span class="line">      m.Unlock()</span><br><span class="line">  &#125;<span class="comment">// goroutine 1 func goroutine1() &#123; m.Lock() - ch &lt;- request // blocks + select &#123; + case ch &lt;- request + default: + &#125; m.Unlock() goroutine 2 func goroutine2() &#123; for &#123; m.Lock() // blocks m.Unlock() request &lt;- ch &#125;</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// goroutine 2</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutine2</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        m.Lock()   <span class="comment">// blocks</span></span><br><span class="line">        m.Unlock()</span><br><span class="line">        request &lt;- ch</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In the author’s study, it was found that the proportion of bugs caused by message passing was even higher than those caused by traditional mutexes. Furthermore, there are currently no mature detection methods for such bugs.</p>
-<blockquote>
-<p><em>Overall, we found that there are around 42% blocking bugs caused by errors in protecting shared memory, and 58% are caused by errors in message passing. Considering that shared memory primitives are used more frequently than message passing ones (Section 3.2), message passing operations are even more likely to cause blocking bugs.</em></p>
-</blockquote>
-<p>Personal opinion: The reasons for these issues may include the unfamiliarity with new channel synchronization primitives or the overreliance on channels, leading to a relaxed attitude towards bugs. In summary, channels are powerful, but they are not a panacea for solving all synchronization problems.</p>
-<h1>Non-blocking Bugs</h1>
-<p>Non-blocking bugs refer to data race issues caused by inadequate memory protection, as well as Goroutine leaks due to delayed sending or receiving on Goroutine channels, which are unique to Go.</p>
-<p>Here’s an example where the original code uses select-case, resulting in the default case being unintentionally executed multiple times. The fix completely replaces the original code with Once:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">// when multiple goroutines execute the following code, default // can execute multiple times, closing the channel more than once, // which leads to panic in Go runtime - select &#123; - case &lt;- c.closed: // do something - default: + Once.Do(func() &#123; close(c.closed) + &#125;) - &#125;// when multiple goroutines execute the following code, default</span><br><span class="line">// can execute multiple times, closing the channel more than once,</span><br><span class="line">// which leads to panic in Go runtime</span><br><span class="line"></span><br><span class="line">- select &#123;</span><br><span class="line">-     case &lt;- c.closed:</span><br><span class="line">          // do something</span><br><span class="line">-     default:</span><br><span class="line">+         Once.Do(func() &#123;</span><br><span class="line">              close(c.closed)</span><br><span class="line">+         &#125;)</span><br><span class="line">- &#125;</span><br></pre></td></tr></table></figure>
-<p>Additionally, the paper explores different methods for modifying different types of bugs and provides recommendations for the development of future bug detection tools.</p>
-<h1>Conclusions and Reflections</h1>
-<ul>
-<li>Go channels provide powerful concurrency patterns, but they are not a panacea. The study found that message passing can cause a higher proportion of blocking bugs. Currently, there are no well-established detection methods. Concurrency issues are inherently complex, and while language features may reduce complexity, they cannot effortlessly solve all problems through casual analysis.</li>
-<li>In Go programs, synchronization of shared memory (e.g., classic lock/unlock) still accounts for a higher proportion.</li>
-<li>Furthermore, misuse of channels can lead to performance issues ( <a href="https://syslog.ravelin.com/so-just-how-fast-are-channels-anyway-4c156a407e45">see this article</a>).</li>
-<li>The author observes that many Go bugs exhibit similar patterns, which suggests the possibility of developing more static analysis tools dedicated to analyzing specific types of problems.</li>
-<li>Personal opinion: When writing Go code, whether using synchronization locks or channels, it is advisable to keep the synchronized code concise, clear, and easy to verify and inspect in order to reduce bugs.</li>
-<li>The Go compiler includes deadlock and data race detection, but it cannot detect many situations. More in-depth bug research could consider using debuggers like gdb and runtime profiling tools like pprof ( <a href="https://zhuanlan.zhihu.com/p/56430428">see this article</a> and <a href="https://golang.org/pkg/net/http/pprof/">official documentation</a>).</li>
-<li>There is further discussion of this paper on HackerNews ( <a href="https://news.ycombinator.com/item?id=19280927">link</a>).</li>
-<li>Commit messages are not only helpful for tracing bugs, but also for systematically analyzing historical bugs in the future. (Remember not to write “asdfasdf” in Git commit messages, kids!)</li>
-</ul>
-]]></content>
-      <categories>
-        <category>paper</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Why The Design :Why is the CPU slow to access the hard disk?</title>
     <url>/2024/02/19/2024-02-19_Why-The-Design--Why-is-the-CPU-slow-to-access-the-hard-disk--910527fe7be6/</url>
     <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*WaxXsYm3cXY_ZGVG" alt="">Photo by <a href="https://unsplash.com/@heapdump?utm_source=medium&amp;utm_medium=referral">Patrick Lindenberg</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></p>
@@ -671,42 +896,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>disk</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Decrypt Go:  Understand the Three Pointers in the Go</title>
-    <url>/2024/02/25/2024-02-25_Decrypt-Go--Understand-the-Three-Pointers-in-the-Go-769bea07a6b3/</url>
-    <content><![CDATA[<h1>Decrypt Go: Understand the Three types of pointers in the Go</h1>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/55dd0bd25be20f4740f49df92d204682.png" alt="source: Dalle-3 generation"></p>
-<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of the Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
-<span id="more"></span>
-<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"> <span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line"> *(arr+<span class="number">2</span>) = <span class="number">1</span>;   <span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// Example 2</span></span><br><span class="line"> <span class="type">int</span> a = <span class="number">4</span>;</span><br><span class="line"> <span class="type">int</span>* ap = &amp;a;  <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line"> *(short*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
-<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"> <span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a  <span class="comment">// Ordinary pointer with type</span></span><br><span class="line"> ​</span><br><span class="line"> ap++        <span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line"> p := (*<span class="type">int16</span>)(ap) <span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
-<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
-<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:<br>
-<code>unsafe.Pointer</code><br>
-<code>uintptr</code></p>
-<p>To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</p>
-<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
-<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
-<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
-<p>Summary of the three types of pointers in Go language:</p>
-<ul>
-<li>Ordinary pointer: This does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
-</ul>
-<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
-<p>Here’s a simple example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">     a <span class="type">int32</span></span><br><span class="line">     b <span class="type">int32</span></span><br><span class="line"> &#125;</span><br><span class="line"> foo := &amp;Foo&#123;&#125;</span><br><span class="line"> bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>  <span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line"> *(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>   <span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line"> fmt.Println(foo.b)  <span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
       </tags>
   </entry>
   <entry>
@@ -801,6 +990,42 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>safe</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Decrypt Go:  Understand the Three Pointers in the Go</title>
+    <url>/2024/02/25/2024-02-25_Decrypt-Go--Understand-the-Three-Pointers-in-the-Go-769bea07a6b3/</url>
+    <content><![CDATA[<h1>Decrypt Go: Understand the Three types of pointers in the Go</h1>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/55dd0bd25be20f4740f49df92d204682.png" alt="source: Dalle-3 generation"></p>
+<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of the Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
+<span id="more"></span>
+<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"> <span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line"> *(arr+<span class="number">2</span>) = <span class="number">1</span>;   <span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// Example 2</span></span><br><span class="line"> <span class="type">int</span> a = <span class="number">4</span>;</span><br><span class="line"> <span class="type">int</span>* ap = &amp;a;  <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line"> *(short*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
+<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"> <span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a  <span class="comment">// Ordinary pointer with type</span></span><br><span class="line"> ​</span><br><span class="line"> ap++        <span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line"> p := (*<span class="type">int16</span>)(ap) <span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
+<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
+<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:<br>
+<code>unsafe.Pointer</code><br>
+<code>uintptr</code></p>
+<p>To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</p>
+<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
+<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
+<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
+<p>Summary of the three types of pointers in Go language:</p>
+<ul>
+<li>Ordinary pointer: This does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
+</ul>
+<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
+<p>Here’s a simple example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">     a <span class="type">int32</span></span><br><span class="line">     b <span class="type">int32</span></span><br><span class="line"> &#125;</span><br><span class="line"> foo := &amp;Foo&#123;&#125;</span><br><span class="line"> bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>  <span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line"> *(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>   <span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line"> fmt.Println(foo.b)  <span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
       </tags>
   </entry>
   <entry>
@@ -1084,50 +1309,43 @@ To understand these two, we need to establish a concept: a pointer is essentiall
       </tags>
   </entry>
   <entry>
-    <title>Go Program pattern 04: Map-Reduce</title>
-    <url>/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/</url>
-    <content><![CDATA[<p>Map-Reduce is a programming paradigm used for processing large-scale datasets. It helps simplify the process of parallel computation and improves computational efficiency.</p>
-<span id="more"></span>
-<blockquote>
+    <title>Go defer：makes the function simpler and more robust.</title>
+    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
+    <content><![CDATA[<blockquote>
 <p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
 </blockquote>
-<p>First, let’s understand the concepts of Map and Reduce.</p>
+<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
+<span id="more"></span> 
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p><code>defer</code> is used to release locks or any other resources.</p>
+<blockquote>
+<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
+The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
+</blockquote>
+<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
+<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
+<h1>Several Use Cases for <code>defer</code></h1>
 <ul>
-<li>Map: In the Map phase, the input dataset is divided into a series of key-value pairs, and the same operation is applied to each key-value pair. This operation can be a function or a code block used to process each key-value pair and generate intermediate results.</li>
-<li>Reduce: In the Reduce phase, the intermediate results generated in the Map phase are combined and processed to obtain the final output result. In the Reduce phase, we can aggregate, summarize, or perform other operations on intermediate results with the same key.</li>
+<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
+<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
+<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
 </ul>
-<p>The core idea of the Map-Reduce programming paradigm is “divide and conquer.” It allows us to break down complex computational tasks into multiple independent subtasks, process these subtasks in parallel, and then merge the results to obtain the final result.</p>
-<h1>Basic Example</h1>
-<p>Here is a simple example demonstrating the workflow of Map-Reduce:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MapFunction</span><span class="params">(arr []<span class="type">string</span>, fn <span class="keyword">func</span>(<span class="type">string</span>)</span></span> <span class="type">string</span>) &lt;-<span class="keyword">chan</span> <span class="type">string</span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> _, v := <span class="keyword">range</span> arr &#123;</span><br><span class="line">			ch &lt;- fn(v)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="built_in">close</span>(ch)</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> ch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReduceFunction</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="type">string</span>, fn <span class="keyword">func</span>(<span class="type">string</span>, <span class="type">string</span>)</span></span> <span class="type">string</span>) <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">		res = fn(res, v)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// generate 10 random strings</span></span><br><span class="line">	arr := []<span class="type">string</span>&#123;<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>, <span class="string">&quot;d&quot;</span>, <span class="string">&quot;e&quot;</span>, <span class="string">&quot;f&quot;</span>, <span class="string">&quot;g&quot;</span>, <span class="string">&quot;h&quot;</span>, <span class="string">&quot;i&quot;</span>&#125;</span><br><span class="line">	<span class="comment">// map</span></span><br><span class="line">	ch := MapFunction(arr, <span class="function"><span class="keyword">func</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> strings.ToUpper(s)</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="comment">// reduce</span></span><br><span class="line">	res := ReduceFunction(ch, <span class="function"><span class="keyword">func</span><span class="params">(s1, s2 <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> s1 + s2</span><br><span class="line">	&#125;)</span><br><span class="line">	fmt.Println(res)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><a href="https://go.dev/play/p/ovHjy4xoXBm">go.dev</a></p>
-<p>In this example, we define a <code>MapFunction</code> that takes a string array and converts each element to uppercase using a custom function <code>fn</code>, returning a channel. The <code>ReduceFunction</code> takes a channel and a custom function <code>fn</code> to concatenate the results and print them out.</p>
-<p>The following image provides a metaphor that vividly illustrates the business semantics of Map-Reduce, which is very useful in data processing.</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/01/2ffc57f0bf0517c3367cd693084e368c.png" alt="Pasted image 20240129172925"></p>
-<p>You may understand that Map/Reduce is just a control logic, and the real business logic is defined by the data and the function passed to them. Yes, this is a classic programming pattern of separating “business logic” from “control logic.” Now let’s take a look at a code example with meaningful business logic to reinforce the understanding of separating “control logic” and “business logic.”</p>
-<h1>Business Example</h1>
-<p><strong>Employee Information</strong><br>
-First, we have an employee object and some data:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name     <span class="type">string</span></span><br><span class="line">    Age      <span class="type">int</span></span><br><span class="line">    Vacation <span class="type">int</span></span><br><span class="line">    Salary   <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> list = []Employee&#123;</span><br><span class="line">    &#123;<span class="string">&quot;Hao&quot;</span>, <span class="number">44</span>, <span class="number">0</span>, <span class="number">8000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Bob&quot;</span>, <span class="number">34</span>, <span class="number">10</span>, <span class="number">5000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Alice&quot;</span>, <span class="number">23</span>, <span class="number">5</span>, <span class="number">9000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Jack&quot;</span>, <span class="number">26</span>, <span class="number">0</span>, <span class="number">4000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Tom&quot;</span>, <span class="number">48</span>, <span class="number">9</span>, <span class="number">7500</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Marry&quot;</span>, <span class="number">29</span>, <span class="number">0</span>, <span class="number">6000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Mike&quot;</span>, <span class="number">32</span>, <span class="number">8</span>, <span class="number">4000</span>&#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h5 id="Related-Reduce-Filter-Functions">Related Reduce/Filter Functions</h5>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeCountIf</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">bool</span>) <span class="type">int</span> &#123;</span><br><span class="line">    count := <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> fn(&amp;list[i]) &#123;</span><br><span class="line">            count += <span class="number">1</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeFilterIn</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">bool</span>) []Employee &#123;</span><br><span class="line">    <span class="keyword">var</span> newList []Employee</span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> fn(&amp;list[i]) &#123;</span><br><span class="line">            newList = <span class="built_in">append</span>(newList, list[i])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeSumIf</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">int</span>) <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> sum = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        sum += fn(&amp;list[i])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Here’s a brief explanation:</p>
-<ul>
-<li><code>EmployeeCountIf</code> and <code>EmployeeSumIf</code> are used to count the number of employees or calculate the total based on a certain condition. They represent the semantics of Filter + Reduce.</li>
-<li><code>EmployeeFilterIn</code> filters the employees based on a certain condition. It represents the semantics of Filter.</li>
-</ul>
-<p>Now we can have the following code:<br>
-<strong>1) Count the number of employees over 40 years old:</strong></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">old := EmployeeCountIf(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Age &gt; <span class="number">40</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;Old people: %d\n&quot;</span>, old)</span><br><span class="line"><span class="comment">//Old people: 2</span></span><br></pre></td></tr></table></figure>
-<p><strong>2) Count the number of employees with a salary greater than 6000:</strong></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">highPay := EmployeeCountIf(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Salary &gt;= <span class="number">6000</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;High Salary people: %d\n&quot;</span>, highPay)</span><br><span class="line"><span class="comment">//High Salary people: 4</span></span><br></pre></td></tr></table></figure>
-<p><strong>3) List employees who have not taken any vacation:</strong></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">noVacation := EmployeeFilterIn(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Vacation == <span class="number">0</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;People with no vacation: %v\n&quot;</span>, noVacation)</span><br></pre></td></tr></table></figure>
-<p>The Map-Reduce programming paradigm divides the computational task into Map and Reduce phases. Although writing single-machine code may not be faster than a simple for loop and may appear complex, in the era of cloud-native computing, we can leverage parallel computation and shared data access to improve computational efficiency. It is a powerful tool suitable for handling large-scale data and parallel computing scenarios, such as the original Google PageRank algorithm. The main purpose of learning it is to understand its mindset.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
+<h1>Performance Overhead of <code>defer</code></h1>
+<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
+<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
+<h1>Conclusion</h1>
+<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
 ]]></content>
       <categories>
         <category>go</category>
       </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
   </entry>
   <entry>
     <title>Go - Ordering in Select Statements</title>
@@ -1176,6 +1394,52 @@ First, we have an employee object and some data:</p>
         <tag>go</tag>
         <tag>底层</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>Go Program pattern 04: Map-Reduce</title>
+    <url>/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/</url>
+    <content><![CDATA[<p>Map-Reduce is a programming paradigm used for processing large-scale datasets. It helps simplify the process of parallel computation and improves computational efficiency.</p>
+<span id="more"></span>
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>First, let’s understand the concepts of Map and Reduce.</p>
+<ul>
+<li>Map: In the Map phase, the input dataset is divided into a series of key-value pairs, and the same operation is applied to each key-value pair. This operation can be a function or a code block used to process each key-value pair and generate intermediate results.</li>
+<li>Reduce: In the Reduce phase, the intermediate results generated in the Map phase are combined and processed to obtain the final output result. In the Reduce phase, we can aggregate, summarize, or perform other operations on intermediate results with the same key.</li>
+</ul>
+<p>The core idea of the Map-Reduce programming paradigm is “divide and conquer.” It allows us to break down complex computational tasks into multiple independent subtasks, process these subtasks in parallel, and then merge the results to obtain the final result.</p>
+<h1>Basic Example</h1>
+<p>Here is a simple example demonstrating the workflow of Map-Reduce:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">MapFunction</span><span class="params">(arr []<span class="type">string</span>, fn <span class="keyword">func</span>(<span class="type">string</span>)</span></span> <span class="type">string</span>) &lt;-<span class="keyword">chan</span> <span class="type">string</span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">string</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> _, v := <span class="keyword">range</span> arr &#123;</span><br><span class="line">			ch &lt;- fn(v)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="built_in">close</span>(ch)</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">return</span> ch</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ReduceFunction</span><span class="params">(ch &lt;-<span class="keyword">chan</span> <span class="type">string</span>, fn <span class="keyword">func</span>(<span class="type">string</span>, <span class="type">string</span>)</span></span> <span class="type">string</span>) <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">var</span> res <span class="type">string</span></span><br><span class="line">	<span class="keyword">for</span> v := <span class="keyword">range</span> ch &#123;</span><br><span class="line">		res = fn(res, v)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// generate 10 random strings</span></span><br><span class="line">	arr := []<span class="type">string</span>&#123;<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>, <span class="string">&quot;d&quot;</span>, <span class="string">&quot;e&quot;</span>, <span class="string">&quot;f&quot;</span>, <span class="string">&quot;g&quot;</span>, <span class="string">&quot;h&quot;</span>, <span class="string">&quot;i&quot;</span>&#125;</span><br><span class="line">	<span class="comment">// map</span></span><br><span class="line">	ch := MapFunction(arr, <span class="function"><span class="keyword">func</span><span class="params">(s <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> strings.ToUpper(s)</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="comment">// reduce</span></span><br><span class="line">	res := ReduceFunction(ch, <span class="function"><span class="keyword">func</span><span class="params">(s1, s2 <span class="type">string</span>)</span></span> <span class="type">string</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> s1 + s2</span><br><span class="line">	&#125;)</span><br><span class="line">	fmt.Println(res)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://go.dev/play/p/ovHjy4xoXBm">go.dev</a></p>
+<p>In this example, we define a <code>MapFunction</code> that takes a string array and converts each element to uppercase using a custom function <code>fn</code>, returning a channel. The <code>ReduceFunction</code> takes a channel and a custom function <code>fn</code> to concatenate the results and print them out.</p>
+<p>The following image provides a metaphor that vividly illustrates the business semantics of Map-Reduce, which is very useful in data processing.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/01/2ffc57f0bf0517c3367cd693084e368c.png" alt="Pasted image 20240129172925"></p>
+<p>You may understand that Map/Reduce is just a control logic, and the real business logic is defined by the data and the function passed to them. Yes, this is a classic programming pattern of separating “business logic” from “control logic.” Now let’s take a look at a code example with meaningful business logic to reinforce the understanding of separating “control logic” and “business logic.”</p>
+<h1>Business Example</h1>
+<p><strong>Employee Information</strong><br>
+First, we have an employee object and some data:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Employee <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name     <span class="type">string</span></span><br><span class="line">    Age      <span class="type">int</span></span><br><span class="line">    Vacation <span class="type">int</span></span><br><span class="line">    Salary   <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> list = []Employee&#123;</span><br><span class="line">    &#123;<span class="string">&quot;Hao&quot;</span>, <span class="number">44</span>, <span class="number">0</span>, <span class="number">8000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Bob&quot;</span>, <span class="number">34</span>, <span class="number">10</span>, <span class="number">5000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Alice&quot;</span>, <span class="number">23</span>, <span class="number">5</span>, <span class="number">9000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Jack&quot;</span>, <span class="number">26</span>, <span class="number">0</span>, <span class="number">4000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Tom&quot;</span>, <span class="number">48</span>, <span class="number">9</span>, <span class="number">7500</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Marry&quot;</span>, <span class="number">29</span>, <span class="number">0</span>, <span class="number">6000</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Mike&quot;</span>, <span class="number">32</span>, <span class="number">8</span>, <span class="number">4000</span>&#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Related-Reduce-Filter-Functions">Related Reduce/Filter Functions</h5>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeCountIf</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">bool</span>) <span class="type">int</span> &#123;</span><br><span class="line">    count := <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> fn(&amp;list[i]) &#123;</span><br><span class="line">            count += <span class="number">1</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> count</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeFilterIn</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">bool</span>) []Employee &#123;</span><br><span class="line">    <span class="keyword">var</span> newList []Employee</span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> fn(&amp;list[i]) &#123;</span><br><span class="line">            newList = <span class="built_in">append</span>(newList, list[i])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> newList</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">EmployeeSumIf</span><span class="params">(list []Employee, fn <span class="keyword">func</span>(e *Employee)</span></span> <span class="type">int</span>) <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> sum = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i, _ := <span class="keyword">range</span> list &#123;</span><br><span class="line">        sum += fn(&amp;list[i])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Here’s a brief explanation:</p>
+<ul>
+<li><code>EmployeeCountIf</code> and <code>EmployeeSumIf</code> are used to count the number of employees or calculate the total based on a certain condition. They represent the semantics of Filter + Reduce.</li>
+<li><code>EmployeeFilterIn</code> filters the employees based on a certain condition. It represents the semantics of Filter.</li>
+</ul>
+<p>Now we can have the following code:<br>
+<strong>1) Count the number of employees over 40 years old:</strong></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">old := EmployeeCountIf(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Age &gt; <span class="number">40</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;Old people: %d\n&quot;</span>, old)</span><br><span class="line"><span class="comment">//Old people: 2</span></span><br></pre></td></tr></table></figure>
+<p><strong>2) Count the number of employees with a salary greater than 6000:</strong></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">highPay := EmployeeCountIf(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Salary &gt;= <span class="number">6000</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;High Salary people: %d\n&quot;</span>, highPay)</span><br><span class="line"><span class="comment">//High Salary people: 4</span></span><br></pre></td></tr></table></figure>
+<p><strong>3) List employees who have not taken any vacation:</strong></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">noVacation := EmployeeFilterIn(list, <span class="function"><span class="keyword">func</span><span class="params">(e *Employee)</span></span> <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> e.Vacation == <span class="number">0</span></span><br><span class="line">&#125;)</span><br><span class="line">fmt.Printf(<span class="string">&quot;People with no vacation: %v\n&quot;</span>, noVacation)</span><br></pre></td></tr></table></figure>
+<p>The Map-Reduce programming paradigm divides the computational task into Map and Reduce phases. Although writing single-machine code may not be faster than a simple for loop and may appear complex, in the era of cloud-native computing, we can leverage parallel computation and shared data access to improve computational efficiency. It is a powerful tool suitable for handling large-scale data and parallel computing scenarios, such as the original Google PageRank algorithm. The main purpose of learning it is to understand its mindset.</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
   </entry>
   <entry>
     <title>Go program pattern 01: Functional Options Pattern</title>
@@ -1371,329 +1635,6 @@ If we want to define a class representing <code>Label</code>, we can do it like 
       </tags>
   </entry>
   <entry>
-    <title>Go1.22 a new math  lib</title>
-    <url>/2024/04/18/Go1.22%20a%20new%20math%20%20lib/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<h1>Go1.22 a new math lib</h1>
-<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
-<span id="more"></span> 
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/bb79ed583d1402f7ca9b2ff886f939e5.jpeg" alt="640"></p>
-<h2 id="Reasons">Reasons</h2>
-<ol>
-<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
-<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
-<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
-</ol>
-<h2 id="change-list">change list</h2>
-<ul>
-<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
-<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
-<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
-<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
-<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
-<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
-<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
-<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
-<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
-<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
-</ul>
-<h2 id="example">example</h2>
-<h3 id="Read-Seed">Read &amp; Seed</h3>
-<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
- <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">import</span> (</span><br><span class="line"> <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line"> <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"> b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line"> _, err := rand.Read(b)</span><br><span class="line"> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">  <span class="built_in">panic</span>(err)</span><br><span class="line"> &#125;</span><br><span class="line"> fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>output：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
-<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
-<h3 id="internal">internal</h3>
-<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail:<a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
-<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
-<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
-<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
-<ul>
-<li><code>int</code></li>
-<li><code>int8</code></li>
-<li><code>int16</code></li>
-<li><code>int32</code></li>
-<li><code>int64</code></li>
-</ul>
-<h1>Summary:</h1>
-<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
-<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of<a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Go defer：makes the function simpler and more robust.</title>
-    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
-<span id="more"></span> 
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p><code>defer</code> is used to release locks or any other resources.</p>
-<blockquote>
-<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
-The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
-</blockquote>
-<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
-<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
-<h1>Several Use Cases for <code>defer</code></h1>
-<ul>
-<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
-<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
-<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
-<h1>Performance Overhead of <code>defer</code></h1>
-<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
-<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
-<h1>Conclusion</h1>
-<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Advanced Debugging Tips for the Go Language</title>
-    <url>/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/</url>
-    <content><![CDATA[<p>Last time we shared the method of <a href="https://medium.com/@hxzhouh/how-to-analyze-go-code-in-assembly-81cada6d4f0a">debugging Go code using assembly language</a>. Assembly language allows us to easily trace low-level knowledge of the Go runtime and other underlying details. In this article, we will introduce the powerful debugging tool called “go tool”, which, when mastered, can elevate your development skills to the next level.</p>
-<span id="more"></span>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b" alt=""></p>
-<p>This article focuses on practical techniques for debugging in Golang and the effective usage of related tools, so you no longer need to worry about how to debug Golang code. Golang, as a modern language, comes with built-in debugging capabilities from the very beginning:</p>
-<ul>
-<li>Golang tools are directly integrated into the language tools, supporting memory analysis, CPU analysis, and blocking lock analysis, among others.</li>
-<li>Delve and GDB are the most commonly used debug tools, allowing you to dive deeper into program debugging.</li>
-<li>Delve is currently the most user-friendly Golang debugging program, and IDE debugging is essentially calling dlv, such as in Goland.</li>
-<li>Unit testing is deeply integrated into the language design, making it very convenient to execute unit tests and generate code coverage.</li>
-</ul>
-<h1>Golang tools</h1>
-<p>Golang integrates a variety of useful tools at the language level, which are the essence of the experience accumulated by Robert Griesemer, Rob Pike, Ken Thompson, and other experts. After installing Golang, you can see all the built-in tools by executing <code>go tool</code>.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~&gt; go tool</span><br><span class="line"> addr2line</span><br><span class="line"> asm</span><br><span class="line"> buildid</span><br><span class="line"> cgo</span><br><span class="line"> compile</span><br><span class="line"> covdata</span><br><span class="line"> cover</span><br><span class="line"> dist</span><br><span class="line"> distpack</span><br><span class="line"> doc</span><br><span class="line"> fix</span><br><span class="line"> link</span><br><span class="line"> nm</span><br><span class="line"> objdump</span><br><span class="line"> pack</span><br><span class="line"> pprof</span><br><span class="line"> test2json</span><br><span class="line"> trace</span><br><span class="line"> vet</span><br></pre></td></tr></table></figure>
-<p>Here, I will focus on selecting several commonly used debug tools:</p>
-<ul>
-<li><code>nm</code>: view the symbol table (equivalent to the system <code>nm</code> command).</li>
-<li><code>objdump</code>: disassembly tool, used to analyze binary files (equivalent to the system <code>objdump</code> command).</li>
-<li><code>pprof</code>: metric and performance analysis tool.</li>
-<li><code>cover</code>: code coverage generation.</li>
-<li><code>trace</code>: sampling over a period of time, metric tracking and analysis tool.</li>
-<li><code>compile</code>: code assembly.</li>
-</ul>
-<p>Now, I will demonstrate the usage of these tools with an example.</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">import</span> (</span><br><span class="line">     <span class="string">&quot;log&quot;</span></span><br><span class="line">     <span class="string">&quot;net&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">var</span> helloCount <span class="type">int</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">     listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:50050&quot;</span>)</span><br><span class="line">     <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">         log.Fatal(err)</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">defer</span> listener.Close()</span><br><span class="line"> ​</span><br><span class="line">     <span class="keyword">for</span> &#123;</span><br><span class="line">         conn, err := listener.Accept()</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Fatal(err)</span><br><span class="line">         &#125;</span><br><span class="line">         tcpConn := conn.(*net.TCPConn)</span><br><span class="line">         err = tcpConn.SetNoDelay(<span class="literal">true</span>)</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Println(err)</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">go</span> handleConnection(conn)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">     <span class="keyword">defer</span> conn.Close()</span><br><span class="line">     helloCount++</span><br><span class="line">     resp := []<span class="type">byte</span>(<span class="string">&quot;Hello count: &quot;</span>)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, []<span class="type">byte</span>(<span class="type">string</span>(<span class="type">rune</span>(helloCount)))...)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">     conn.Write(resp)</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// go build main.go</span></span><br></pre></td></tr></table></figure>
-<h2 id="nm">nm</h2>
-<p>The <code>nm</code> command is used to view the symbol table, which is equivalent to the system <code>nm</code> command and is very useful. When setting breakpoints, if you don’t know the function symbol of the breakpoint, you can use this command to find out (this command operates on binary program files).</p>
-<h2 id="compile">compile</h2>
-<p>Assemble a specific file:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool compile -N -l -S main.go</span><br></pre></td></tr></table></figure>
-<p>You will be able to see the assembly code corresponding to your Go code (please note that this command operates on Go code text), which is cool.</p>
-<h2 id="objdump">objdump</h2>
-<p>The objdump tool is used to disassemble binaries, equivalent to the system <code>objdump</code> (please note that this command parses binary program files).</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool objdump main.o</span><br><span class="line">go tool objdump -s DoFunc main.o  // Disassembling specific functions</span><br></pre></td></tr></table></figure>
-<p>Assembly code may not be needed in 90% of scenarios, but if you have experience working with C programs, in certain special situations, inferring application behavior by disassembling a piece of logic may be your only way out. This is because the code running in production usually has optimization enabled, which can cause your code to not match. Furthermore, you cannot attach to processes at will in production environments. Many times, you only have a core file to troubleshoot.</p>
-<h2 id="pprof">pprof</h2>
-<p>pprof supports four types of analysis:</p>
-<ul>
-<li><code>CPU</code>: CPU analysis, sampling calls that consume CPU resources, which is generally used to locate and troubleshoot areas of high computational resource consumption in programs.</li>
-<li><code>Memory</code>: Memory analysis, which is generally used to troubleshoot memory usage, memory leaks, and other issues.</li>
-<li><code>Block</code>: Blocking analysis, which samples the blocking calls in the program.</li>
-<li><code>Mutex</code>: Mutex analysis, which samples the competition for mutex locks.</li>
-</ul>
-<p>For more information about pprof, you can refer to this article.</p>
-<h2 id="trace">trace</h2>
-<p>Program trace debugging:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool trace -http=&quot;:6060&quot; ./ssd_336959_20190704_105540_trace</span><br></pre></td></tr></table></figure>
-<p>The trace command allows you to trace and collect information over a period of time, then dump it to a file, and finally analyze the dump file using <code>go tool trace</code> and open it in a web format.</p>
-<h1>Unit Testing</h1>
-<p>The importance of unit testing is self-evident. In Golang, files ending with <code>_test.go</code> are considered test files. As a modern language, Golang supports unit testing at the language tool level.</p>
-<h2 id="Running-Unit-Tests">Running Unit Tests</h2>
-<p>There are two ways to execute unit tests:</p>
-<ul>
-<li>Run <code>go test</code> directly, which is the simplest method.</li>
-<li>Compile the test files first, then run them. This method provides more flexibility.</li>
-</ul>
-<h2 id="Running-go-test">Running <code>go test</code></h2>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Run go test directly in your project directory.</span><br><span class="line"> go test .</span><br><span class="line"> // Specify the running function.</span><br><span class="line"> go test -run=TestPutAndGetKeyValue</span><br><span class="line"> // Print details.</span><br><span class="line"> go test -v</span><br></pre></td></tr></table></figure>
-<h2 id="Compilation-and-Execution">Compilation and Execution</h2>
-<p>Essentially, running Golang unit tests involves compiling <code>*_test.go</code> files into binaries and then running these binaries. When you execute <code>go test</code>, the tool handles these actions for you, but you can also perform them separately.</p>
-<p>Compile the test files to generate the test executable:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Compile the .test file first.</span><br><span class="line">go test -c -coverpkg=. -covermode=atomic -o 1TestSwapInt32_in_sync_atomic.test sync/atomic</span><br><span class="line"> // Specify running a file.</span><br><span class="line">./1TestSwapInt32_in_sync_atomic.test -test.timeout=10m0s -test.v=true -test.run=TestSwapInt32</span><br></pre></td></tr></table></figure>
-<p>This method is usually used in the following scenarios:</p>
-<ol>
-<li>Compile on one machine and run tests on another.</li>
-<li>Debugging test programs.</li>
-</ol>
-<h1>Code Coverage Analysis</h1>
-<p>Golang’s code coverage is based on unit tests, which serve as the starting point for measuring code coverage of your business code. The operation is simple:</p>
-<ol>
-<li>Add the <code>-coverprofile</code> parameter when running tests to record code coverage.</li>
-<li>Use the <code>go tool cover</code> command to analyze and generate coverage reports.</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go test -coverprofile=coverage.out</span><br><span class="line">go tool cover -func=coverage.out</span><br></pre></td></tr></table></figure>
-<p>The output will be similar to the following:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~/w/g/s/sync&gt; go tool cover -func=coverage.out                                                                                                                heads/go1.21.4?</span><br><span class="line">sync/cond.go:47:        NewCond                         100.0%</span><br><span class="line">sync/cond.go:66:        Wait                            100.0%</span><br><span class="line">sync/cond.go:81:        Signal                          100.0%</span><br><span class="line">sync/cond.go:90:        Broadcast                       100.0%</span><br><span class="line">sync/cond.go:98:        check                           100.0%</span><br><span class="line">sync/cond.go:116:       Lock                            0.0%</span><br><span class="line">sync/cond.go:117:       Unlock                          0.0%</span><br><span class="line">sync/map.go:104:        newEntry                        100.0%</span><br><span class="line">sync/map.go:110:        loadReadOnly                    100.0%</span><br><span class="line">sync/map.go:120:        Load                            100.0%</span><br><span class="line">sync/map.go:145:        load                            100.0%</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
-<p>This way, you can see the code coverage for each function.</p>
-<h1>Program Debugging</h1>
-<p>Program debugging mainly relies on two tools:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. dlv</span><br><span class="line">2. gdb</span><br></pre></td></tr></table></figure>
-<p>Here, I recommend dlv because GDB’s functionality is limited. GDB does not understand Golang’s specific types such as channels, maps, and slices. GDB’s native support for goroutines is limited since it only understands threads. However, GDB has one irreplaceable feature, which is the <code>gcore</code> command.</p>
-<h2 id="dlv-Debugging">dlv Debugging</h2>
-<h4 id="Debugging-Binaries">Debugging Binaries</h4>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec &lt;path/to/binary&gt; [flags]</span><br></pre></td></tr></table></figure>
-<p>For example:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging binaries with dlv and passing arguments:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main -- --audit=./d</span><br></pre></td></tr></table></figure>
-<h2 id="Debugging-Processes">Debugging Processes</h2>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach $&#123;pid&#125; [executable] [flags]</span><br></pre></td></tr></table></figure>
-<p>The process ID is mandatory. For example:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
-<h4 id="Debugging-Core-Files">Debugging Core Files</h4>
-<p>Debugging core files with dlv and redirecting standard output to a file:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core &lt;executable&gt; &lt;core&gt; [flags]</span><br></pre></td></tr></table></figure>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
-<h1>Common Debugging Syntax</h1>
-<h2 id="System-Summary">System Summary</h2>
-<p><strong>Program Execution</strong></p>
-<ol>
-<li>call: call a function (note that this will cause the entire program to run).</li>
-<li>continue: resume execution.</li>
-<li>next: step over.</li>
-<li>restart: restart.</li>
-<li>step: step into a function.</li>
-<li>step-instruction: step into a specific assembly instruction.</li>
-<li>stepout: step out of the current function.</li>
-</ol>
-<h2 id="Breakpoint-related"><strong>Breakpoint-related</strong></h2>
-<ol>
-<li>break (alias: b): set a breakpoint.</li>
-<li>breakpoints (alias: bp): print all breakpoint information.</li>
-<li>clear: clear a breakpoint.</li>
-<li>clearall: clear all breakpoints.</li>
-<li>condition (alias: cond): set a conditional breakpoint.</li>
-<li>on: set a command to be executed when a breakpoint is hit.</li>
-<li>trace (alias: t): set a tracepoint, which is also a breakpoint but does not stop the program when hit; it only prints a line of information. This command is useful in certain scenarios where stopping the program affects logic (e.g., business timeouts), and you only want to print a specific variable.</li>
-</ol>
-<h2 id="Information-Printing"><strong>Information Printing</strong></h2>
-<ul>
-<li>args: print function arguments.</li>
-<li>examinemem (alias: x): a powerful command for examining memory, similar to gdb’s <code>x</code> command.</li>
-<li>locals: print local variables.</li>
-<li>print (alias: p): print an expression or variable.</li>
-<li>regs: print register information.</li>
-<li>set: set variable value.</li>
-<li>vars: print global variables (package variables).</li>
-<li>whatis: print type information.</li>
-</ul>
-<h2 id="Goroutine-related"><strong>Goroutine-related</strong></h2>
-<ul>
-<li>goroutine (alias: gr): print information of a specific goroutine.</li>
-<li>goroutines (alias: grs): list all goroutines.</li>
-<li>thread (alias: tr): switch to a specific thread.</li>
-<li>threads: print information of all threads.</li>
-</ul>
-<h2 id="Stack-related"><strong>Stack-related</strong></h2>
-<ul>
-<li>deferred: execute commands in the context of a defer function.</li>
-<li>down: move up the stack.</li>
-<li>frame: jump to a specific stack frame.</li>
-<li>stack (alias: bt): print stack information.</li>
-<li>up: move down the stack.</li>
-</ul>
-<h2 id="Other-Commands"><strong>Other Commands</strong></h2>
-<ul>
-<li>config: modify configurations.</li>
-<li>disassemble (alias: disass): disassemble.</li>
-<li>edit (alias: ed): omitted.</li>
-<li>exit (alias: quit | q): omitted.</li>
-<li>funcs: print all function symbols.</li>
-<li>libraries: print all loaded dynamic libraries.</li>
-<li>list (alias: ls | l): display source code.</li>
-<li>source: load commands.</li>
-<li>sources: print source code.</li>
-<li>types: print all type information.</li>
-</ul>
-<p>The above commands cover the complete set of commands supported by dlv, which meet our debugging needs (some commands are only applicable during development and debugging, as it is not possible to single-step debug on production code in most cases).</p>
-<p>Application Examples</p>
-<p><strong>Print Global Variables</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(dlv) vars</span><br></pre></td></tr></table></figure>
-<p>This is very useful for inspecting global variables.</p>
-<p><strong>Conditional Breakpoints</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set a breakpoint first.</span></span><br><span class="line">(dlv) b</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Check breakpoint information.</span></span><br><span class="line">(dlv) bp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Customize the condition.</span></span><br><span class="line">(dlv) condition 2 i==2 &amp;&amp; j==7 &amp;&amp; z==32</span><br></pre></td></tr></table></figure>
-<p><strong>Inspecting the Stack</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Show all stacks.</span></span><br><span class="line">(dlv) goroutines</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Expand all stacks.</span></span><br><span class="line">(dlv) goroutines -t</span><br></pre></td></tr></table></figure>
-<p><strong>Examining Memory</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(dlv) x -fmt hex -len 20 0xc00008af38</span><br></pre></td></tr></table></figure>
-<p>The <code>x</code> command is the same as gdb’s <code>x</code> command.</p>
-<h3 id="gdb-Debugging">gdb Debugging</h3>
-<p>GDB’s support for Golang debugging is achieved through a Python script called <code>src/runtime/runtime-gdb.py</code>, so its functionality is limited. GDB can only perform basic variable printing and cannot understand some of Golang’s specific types such as channels, maps, and slices. GDB cannot directly debug goroutines because it only understands threads. However, GDB has one feature that cannot be replaced, which is the <code>gcore</code> command.</p>
-<h4 id="dlv-Debugging-Example">dlv Debugging Example</h4>
-<p>Debugging a Binary</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging a Process</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging a Core File</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
-<h4 id="gdb-Debugging-Example">gdb Debugging Example</h4>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gdb ./main</span><br></pre></td></tr></table></figure>
-<p>Print Global Variables (note the single quotation marks)</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p &#x27;runtime.firstmoduledata&#x27;</span><br></pre></td></tr></table></figure>
-<p>Due to GDB’s limited understanding of Golang’s type system, sometimes it may not be able to print variables, so please pay attention to this.</p>
-<p>Print Array Length</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p $len(xxx)</span><br></pre></td></tr></table></figure>
-<p>Therefore, I usually only use GDB to generate core files.</p>
-<h3 id="Tips-and-Tricks">Tips and Tricks</h3>
-<h3 id="Don’t-know-how-to-set-breakpoints-in-functions">Don’t know how to set breakpoints in functions?</h3>
-<p>Sometimes you don’t know how to set breakpoints in a function. You can use <code>nm</code> to query the function and then set a breakpoint, which will ensure that you hit the breakpoint.</p>
-<h3 id="Don’t-know-the-calling-context">Don’t know the calling context?</h3>
-<p>Add the following line in your code:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">debug.PrintStack()</span><br></pre></td></tr></table></figure>
-<p>This will print the stack trace at the current code position, allowing you to understand the calling path of the function.</p>
-<h3 id="Don’t-know-how-to-enable-pprof">Don’t know how to enable pprof?</h3>
-<p>There are two ways to enable pprof, corresponding to two packages:</p>
-<ul>
-<li>net/http/pprof: used in web server scenarios.</li>
-<li>runtime/pprof: used in non-server applications.</li>
-</ul>
-<p>These two packages are essentially the same, with <code>net/http/pprof</code> being a web wrapper on top of <code>runtime/pprof</code>.</p>
-<p><strong>Using</strong> <code>net/http/pprof</code></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br></pre></td></tr></table></figure>
-<p><strong>Using</strong> <code>runtime/pprof</code></p>
-<p>This method is usually used for performance optimization. When running a program that is not a server application, you want to find bottlenecks, so you typically use this method.</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CPU pprof file path</span></span><br><span class="line">    f, err := os.Create(<span class="string">&quot;cpufile.pprof&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Start CPU pprof</span></span><br><span class="line">    pprof.StartCPUProfile(f)</span><br><span class="line">    <span class="keyword">defer</span> pprof.StopCPUProfile()</span><br></pre></td></tr></table></figure>
-<h3 id="Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging">Why does the code sometimes execute unexpectedly during single-step debugging?</h3>
-<p>This situation is usually caused by compiler optimization, such as function inlining and removal of redundant logic and parameters from the compiled binary. This can cause unexpected execution during dlv single-step debugging or prevent the printing of certain variables. The solution to this problem is to disable compiler optimization.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go build -gcflags &quot;-N -l&quot;</span><br></pre></td></tr></table></figure>
-<h1>Conclusion</h1>
-<p>This article provides a systematic overview of the techniques and usage of Golang program debugging:</p>
-<ol>
-<li>The language tool package provides built-in tools that support assembly, disassembly, pprof analysis, symbol table queries, and other practical functions.</li>
-<li>The language tool package integrates unit testing, and code coverage relies on triggering unit tests.</li>
-<li>The powerful dlv/gdb tools serve as the main debugging tools, supporting the analysis of binaries, processes, and core files.</li>
-</ol>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>How was my blog built</title>
     <url>/2024/04/18/How%20was%20my%20blog%20built/</url>
     <content><![CDATA[<p>Blogging, is the last and most important link in my knowledge circulatory system, which takes care of my output, as well as my personal brand. In this post, I describe how my <a href="https://hxzhouh.com">blog</a>, was built.</p>
@@ -1849,6 +1790,71 @@ As a gopher, I pondered: will Google abandon Go? And if so, what would become of
       </tags>
   </entry>
   <entry>
+    <title>Performance analysis of goroutine switching</title>
+    <url>/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/</url>
+    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
+<blockquote>
+<p>Note: Non-members can read the full story in this <a href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&amp;sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
+</blockquote>
+<h1>Introduction</h1>
+<p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
+<ul>
+<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
+<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
+<li>High network I/O: Often requires network I/O from other machines, such as Redis, MySQL, etc.</li>
+<li>Low computation: General CPU-intensive operations are not frequent.</li>
+</ul>
+<span id="more"></span>
+<p>Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</p>
+<p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
+<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process/thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process/thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
+<p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
+<h2 id="Coroutine-Overhead-Test">Coroutine Overhead Test</h2>
+<blockquote>
+<p>This article is based on go 1.22.1.</p>
+</blockquote>
+<ul>
+<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>
+The test process involves continuously yielding the CPU between coroutines. The core code is as follows.</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Compilation and execution</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>The average overhead of each coroutine switch is 54ns, which is approximately 1/70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
+<p><strong>Coroutine Memory Overhead</strong><br>
+In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+<h1>Conclusion</h1>
+<p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
+<p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
+<p>Coroutines ultimately execute attached to operating system threads.</p>
+<p>A question we need to consider is:<br>
+Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>
+Therefore:<br>
+Using threads = thread switch overhead (low)<br>
+Using coroutines = thread switch overhead (high) + coroutine switch overhead</p>
+<p>Then CPU overhead:<br>
+Instruction cycles of threads = interrupt detection + instruction execution (including fetch, decode, and execute)<br>
+Instruction cycles of coroutines = interrupt detection + instruction execution + interrupt detection + coroutine signal detection</p>
+<p>So, I have the following conclusion:<br>
+In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
+<p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
+<p>If you like my articles, consider to :</p>
+<ol>
+<li>Drop me a follow -&gt; <a href="https://medium.hxzhouh.com/">huizhou92</a></li>
+<li>Leave a clap👏 (50 👏👏👏👏would be the best) and a comment if you want to interact with me.</li>
+<li>Receive an email every time I post on Medium -&gt; <a href="https://medium.hxzhouh.com/subscribe">Click here</a>!</li>
+<li>If you find my article helpful to you, please buy me a cup of <a href="https://www.buymeacoffee.com/hxzhouh">coffee</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Learn How to Handle Time In Golang</title>
     <url>/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png" alt="99e178071ff04a758df4210c2e330fc8.png~tplv-6bxrjdptv7-image"><br>
@@ -1959,68 +1965,40 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </tags>
   </entry>
   <entry>
-    <title>Performance analysis of goroutine switching</title>
-    <url>/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/</url>
-    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
-<blockquote>
-<p>Note: Non-members can read the full story in this <a href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&amp;sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
-</blockquote>
-<h1>Introduction</h1>
-<p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
-<ul>
-<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
-<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
-<li>High network I/O: Often requires network I/O from other machines, such as Redis, MySQL, etc.</li>
-<li>Low computation: General CPU-intensive operations are not frequent.</li>
-</ul>
+    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
+    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
+    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
 <span id="more"></span>
-<p>Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</p>
-<p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
-<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process/thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process/thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
-<p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
-<h2 id="Coroutine-Overhead-Test">Coroutine Overhead Test</h2>
 <blockquote>
-<p>This article is based on go 1.22.1.</p>
+<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
 </blockquote>
-<ul>
-<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>
-The test process involves continuously yielding the CPU between coroutines. The core code is as follows.</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Compilation and execution</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>The average overhead of each coroutine switch is 54ns, which is approximately 1/70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
-<p><strong>Coroutine Memory Overhead</strong><br>
-In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
-<h1>Conclusion</h1>
-<p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
-<p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
-<p>Coroutines ultimately execute attached to operating system threads.</p>
-<p>A question we need to consider is:<br>
-Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>
-Therefore:<br>
-Using threads = thread switch overhead (low)<br>
-Using coroutines = thread switch overhead (high) + coroutine switch overhead</p>
-<p>Then CPU overhead:<br>
-Instruction cycles of threads = interrupt detection + instruction execution (including fetch, decode, and execute)<br>
-Instruction cycles of coroutines = interrupt detection + instruction execution + interrupt detection + coroutine signal detection</p>
-<p>So, I have the following conclusion:<br>
-In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
-<p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
-<p>If you like my articles, consider to :</p>
-<ol>
-<li>Drop me a follow -&gt; <a href="https://medium.hxzhouh.com/">huizhou92</a></li>
-<li>Leave a clap👏 (50 👏👏👏👏would be the best) and a comment if you want to interact with me.</li>
-<li>Receive an email every time I post on Medium -&gt; <a href="https://medium.hxzhouh.com/subscribe">Click here</a>!</li>
-<li>If you find my article helpful to you, please buy me a cup of <a href="https://www.buymeacoffee.com/hxzhouh">coffee</a></li>
-</ol>
+<h2 id="Using-dmc">Using <code>dmc</code></h2>
+<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
+<p>It offers various disk profiles to choose from:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
+<p>Each profile corresponds to different speed modes, such as:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
+<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
+<p>Then, to verify the status:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
+<h2 id="Verification">Verification</h2>
+<p>We can validate using the <code>fio</code> tool:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
+<p>Now, with <code>dmc</code> turned off and the same command:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
+<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
 ]]></content>
       <categories>
-        <category>go</category>
+        <category>blog</category>
       </categories>
       <tags>
-        <tag>go</tag>
+        <tag>tools</tag>
       </tags>
   </entry>
   <entry>
@@ -2118,43 +2096,6 @@ Memory safety is <strong>the most important value</strong> for Rust. It means th
       <tags>
         <tag>golang</tag>
         <tag>rust</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
-    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
-    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
-<span id="more"></span>
-<blockquote>
-<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
-</blockquote>
-<h2 id="Using-dmc">Using <code>dmc</code></h2>
-<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
-<p>It offers various disk profiles to choose from:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
-<p>Each profile corresponds to different speed modes, such as:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
-<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
-<p>Then, to verify the status:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
-<h2 id="Verification">Verification</h2>
-<p>We can validate using the <code>fio</code> tool:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
-<p>Now, with <code>dmc</code> turned off and the same command:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
-<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
       </tags>
   </entry>
   <entry>
@@ -2317,5 +2258,64 @@ Windows intervened and simply integrated Zip functionality into the operating sy
     <title></title>
     <url>/2024/05/18/post/</url>
     <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>Go1.22 a new math  lib</title>
+    <url>/2024/04/18/Go1.22%20a%20new%20math%20%20lib/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<h1>Go1.22 a new math lib</h1>
+<p>The inaugural v2 version of the standard library in Go, hails from the esteemed <a href="https://github.com/golang/go/discussions/60751">math/rand/v2</a> repository. It is set to make its grand debut with the official release of Go1.22, poised to serve as a reliable and production-ready resource.</p>
+<span id="more"></span> 
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/bb79ed583d1402f7ca9b2ff886f939e5.jpeg" alt="640"></p>
+<h2 id="Reasons">Reasons</h2>
+<ol>
+<li>The original <code>math/rand</code> library in the standard package had numerous deficiencies and areas for improvement. These included outdated generators, slow algorithms (performance), and unfortunate conflicts with <code>crypto/rand.Read</code>, among other issues.</li>
+<li>There is a plan in place to upgrade the v2 versions of standard libraries. Starting with <code>math</code> allows for the accumulation of experience and resolving tooling ecosystem challenges (such as support from tools like gopls and goimports for v2 packages). Subsequent iterations can then address higher-risk packages, like <code>sync/v2</code> or <code>encoding/json/v2</code>.</li>
+<li>Go1 requires compatibility guarantees, making it impractical to directly modify the original library. The issues with <code>math/rand</code> are also more prominent and evident.</li>
+</ol>
+<h2 id="change-list">change list</h2>
+<ul>
+<li>Removed <code>Rand.Read</code> and the top-level <code>Read</code> function.</li>
+<li>Removed <code>Source.Seed</code>, <code>Rand.Seed</code>, and the top-level <code>Seed</code> function (meaning that top-level functions like <code>Int</code> will always use random seeding).</li>
+<li>Removed <code>Source64</code>, as <code>Source</code> now provides the <code>Uint64</code> method, making the original methods unnecessary.</li>
+<li>Utilized a more direct implementation for <code>Float32</code> and <code>Float64</code>. For example, in the case of <code>Float64</code>, the original implementation used <code>float64(r.Int63()) / (1&lt;&lt;63)</code>. However, this had a problem of occasionally rounding to <code>1.0</code>, while <code>Float64</code> should never round. The improvement involves changing it to <code>float64(r.Int63n(1&lt;&lt;53)) / (1&lt;&lt;53)</code>, which avoids the rounding issue.</li>
+<li>Implemented <code>Rand.Perm</code> using <code>Rand.Shuffle</code>. This improves efficiency and ensures only one implementation.</li>
+<li>Renamed <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> to <code>Int32</code>, <code>Int32n</code>, <code>Int64</code>, and <code>Int64n</code>, respectively. These names were unnecessary and confusing.</li>
+<li>Added <code>Uint32</code>, <code>Uint32n</code>, <code>Uint64</code>, <code>Uint64n</code>, <code>Uint</code>, and <code>Uintn</code> as top-level functions and methods on <code>Rand</code>.</li>
+<li>Utilized Lemire’s algorithm in <code>Intn</code>, <code>Uintn</code>, <code>Int32n</code>, <code>Uint32n</code>, <code>Int64n</code>, and <code>Uint64n</code>, resulting in improved performance.</li>
+<li>Introduced a new implementation of <code>Source</code> called PCG-DXSM, including related APIs like <code>NewPCG</code>.</li>
+<li>Removed the Mitchell &amp; Reeds LFSR generator and <code>NewSource</code>.</li>
+</ul>
+<h2 id="example">example</h2>
+<h3 id="Read-Seed">Read &amp; Seed</h3>
+<p>The functions <code>Read</code> and <code>Seed</code> have been removed. It is recommended to use <code>crypto/rand</code>’s <code>Read</code> function instead.</p>
+ <figure class="highlight go"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">import</span> (</span><br><span class="line"> <span class="string">&quot;crypto/rand&quot;</span></span><br><span class="line"> <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"> b := <span class="built_in">make</span>([]<span class="type">byte</span>, <span class="number">3</span>)</span><br><span class="line"> _, err := rand.Read(b)</span><br><span class="line"> <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">  <span class="built_in">panic</span>(err)</span><br><span class="line"> &#125;</span><br><span class="line"> fmt.Printf(<span class="string">&quot;hxzhouh: %v\n&quot;</span>, b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>output：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh: [48 71 122]</span><br></pre></td></tr></table></figure>
+<p>For the <code>Seed</code> function, it is advised to call <code>New(NewSource(seed))</code> in order to reinitialize the random number generator.</p>
+<h3 id="internal">internal</h3>
+<p>The functions <code>N</code>, <code>IntN</code>, and <code>UintN</code> now utilize a novel implementation algorithm. Interested individuals are encouraged to allocate extra time to examine it in detail:<a href="https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/">A fast alternative to the modulo reduction</a></p>
+<p>The functions <code>Intn</code>, <code>Int31</code>, <code>Int31n</code>, <code>Int63</code>, and <code>Int64n</code> have been renamed as follows: <code>IntN</code>, <code>Int32</code>, <code>Int32N</code>, <code>Int64</code>, and <code>Int64N</code>, respectively.</p>
+<p>Additionally, new functions <code>Uint32</code>, <code>Uint32N</code>, <code>Uint64</code>, <code>Uint64N</code>, <code>Uint</code>, and <code>UintN</code> have been introduced to generate random unsigned integers. They have also been added as corresponding functions within the <code>Rand</code> structure.</p>
+<p>The newly added function <code>N</code> generates random numbers of arbitrary integer types. This function is implemented using generics, and the following integer types are its type parameters:</p>
+<ul>
+<li><code>int</code></li>
+<li><code>int8</code></li>
+<li><code>int16</code></li>
+<li><code>int32</code></li>
+<li><code>int64</code></li>
+</ul>
+<h1>Summary:</h1>
+<p>Today, we have shared and further described the new <code>math/rand/v2</code> library, highlighting key changes including performance optimization (algorithm rewrite), standardization, and additions of new random generators.</p>
+<p>Given the substantial amount of information covered, we have selected and presented only the aspects that are essential for understanding and using the library. However, for those who are interested in delving deeper, it is recommended to refer to the full documentation of<a href="https://pkg.go.dev/math/rand/v2@master">https://pkg.go.dev/math/rand/v2@master</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+      </tags>
   </entry>
 </search>
