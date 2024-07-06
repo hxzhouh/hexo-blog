@@ -325,45 +325,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       </categories>
   </entry>
   <entry>
-    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
-    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
-    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
-<span id="more"></span>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
-<h1>Overview</h1>
-<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
-<h1>Design</h1>
-<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
-<h1>Ensuring Data Integrity</h1>
-<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
-<h1>Handling Network Latency and Packet Loss</h1>
-<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
-<h1>Waiting for Unsent Data to be Sent</h1>
-<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
-<h1>Handling the Half-Closed State</h1>
-<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
-<h1>Conclusion</h1>
-<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
-<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
-<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
-<hr>
-<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>network</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Why TCP requires three handshakes to establish a connection?</title>
     <url>/2024/01/30/2024-01-30_Why-TCP-requires-three-handshakes-to-establish-a-connection--31d814aac6b8/</url>
     <content><![CDATA[<p>TCP protocol is a network protocol that we encounter almost every day. The majority of network connections are established based on the TCP protocol. People who have studied computer networks or have some understanding of the TCP protocol know that establishing a connection using TCP requires a three-way handshake.</p>
@@ -451,228 +412,42 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
-    <title>Advanced Debugging Tips for the Go Language</title>
-    <url>/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/</url>
-    <content><![CDATA[<p>Last time we shared the method of <a href="https://medium.com/@hxzhouh/how-to-analyze-go-code-in-assembly-81cada6d4f0a">debugging Go code using assembly language</a>. Assembly language allows us to easily trace low-level knowledge of the Go runtime and other underlying details. In this article, we will introduce the powerful debugging tool called “go tool”, which, when mastered, can elevate your development skills to the next level.</p>
+    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
+    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
+    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
 <span id="more"></span>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b" alt=""></p>
-<p>This article focuses on practical techniques for debugging in Golang and the effective usage of related tools, so you no longer need to worry about how to debug Golang code. Golang, as a modern language, comes with built-in debugging capabilities from the very beginning:</p>
-<ul>
-<li>Golang tools are directly integrated into the language tools, supporting memory analysis, CPU analysis, and blocking lock analysis, among others.</li>
-<li>Delve and GDB are the most commonly used debug tools, allowing you to dive deeper into program debugging.</li>
-<li>Delve is currently the most user-friendly Golang debugging program, and IDE debugging is essentially calling dlv, such as in Goland.</li>
-<li>Unit testing is deeply integrated into the language design, making it very convenient to execute unit tests and generate code coverage.</li>
-</ul>
-<h1>Golang tools</h1>
-<p>Golang integrates a variety of useful tools at the language level, which are the essence of the experience accumulated by Robert Griesemer, Rob Pike, Ken Thompson, and other experts. After installing Golang, you can see all the built-in tools by executing <code>go tool</code>.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~&gt; go tool</span><br><span class="line"> addr2line</span><br><span class="line"> asm</span><br><span class="line"> buildid</span><br><span class="line"> cgo</span><br><span class="line"> compile</span><br><span class="line"> covdata</span><br><span class="line"> cover</span><br><span class="line"> dist</span><br><span class="line"> distpack</span><br><span class="line"> doc</span><br><span class="line"> fix</span><br><span class="line"> link</span><br><span class="line"> nm</span><br><span class="line"> objdump</span><br><span class="line"> pack</span><br><span class="line"> pprof</span><br><span class="line"> test2json</span><br><span class="line"> trace</span><br><span class="line"> vet</span><br></pre></td></tr></table></figure>
-<p>Here, I will focus on selecting several commonly used debug tools:</p>
-<ul>
-<li><code>nm</code>: view the symbol table (equivalent to the system <code>nm</code> command).</li>
-<li><code>objdump</code>: disassembly tool, used to analyze binary files (equivalent to the system <code>objdump</code> command).</li>
-<li><code>pprof</code>: metric and performance analysis tool.</li>
-<li><code>cover</code>: code coverage generation.</li>
-<li><code>trace</code>: sampling over a period of time, metric tracking and analysis tool.</li>
-<li><code>compile</code>: code assembly.</li>
-</ul>
-<p>Now, I will demonstrate the usage of these tools with an example.</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">import</span> (</span><br><span class="line">     <span class="string">&quot;log&quot;</span></span><br><span class="line">     <span class="string">&quot;net&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">var</span> helloCount <span class="type">int</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">     listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:50050&quot;</span>)</span><br><span class="line">     <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">         log.Fatal(err)</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">defer</span> listener.Close()</span><br><span class="line"> ​</span><br><span class="line">     <span class="keyword">for</span> &#123;</span><br><span class="line">         conn, err := listener.Accept()</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Fatal(err)</span><br><span class="line">         &#125;</span><br><span class="line">         tcpConn := conn.(*net.TCPConn)</span><br><span class="line">         err = tcpConn.SetNoDelay(<span class="literal">true</span>)</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Println(err)</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">go</span> handleConnection(conn)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">     <span class="keyword">defer</span> conn.Close()</span><br><span class="line">     helloCount++</span><br><span class="line">     resp := []<span class="type">byte</span>(<span class="string">&quot;Hello count: &quot;</span>)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, []<span class="type">byte</span>(<span class="type">string</span>(<span class="type">rune</span>(helloCount)))...)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">     conn.Write(resp)</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// go build main.go</span></span><br></pre></td></tr></table></figure>
-<h2 id="nm">nm</h2>
-<p>The <code>nm</code> command is used to view the symbol table, which is equivalent to the system <code>nm</code> command and is very useful. When setting breakpoints, if you don’t know the function symbol of the breakpoint, you can use this command to find out (this command operates on binary program files).</p>
-<h2 id="compile">compile</h2>
-<p>Assemble a specific file:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool compile -N -l -S main.go</span><br></pre></td></tr></table></figure>
-<p>You will be able to see the assembly code corresponding to your Go code (please note that this command operates on Go code text), which is cool.</p>
-<h2 id="objdump">objdump</h2>
-<p>The objdump tool is used to disassemble binaries, equivalent to the system <code>objdump</code> (please note that this command parses binary program files).</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool objdump main.o</span><br><span class="line">go tool objdump -s DoFunc main.o  // Disassembling specific functions</span><br></pre></td></tr></table></figure>
-<p>Assembly code may not be needed in 90% of scenarios, but if you have experience working with C programs, in certain special situations, inferring application behavior by disassembling a piece of logic may be your only way out. This is because the code running in production usually has optimization enabled, which can cause your code to not match. Furthermore, you cannot attach to processes at will in production environments. Many times, you only have a core file to troubleshoot.</p>
-<h2 id="pprof">pprof</h2>
-<p>pprof supports four types of analysis:</p>
-<ul>
-<li><code>CPU</code>: CPU analysis, sampling calls that consume CPU resources, which is generally used to locate and troubleshoot areas of high computational resource consumption in programs.</li>
-<li><code>Memory</code>: Memory analysis, which is generally used to troubleshoot memory usage, memory leaks, and other issues.</li>
-<li><code>Block</code>: Blocking analysis, which samples the blocking calls in the program.</li>
-<li><code>Mutex</code>: Mutex analysis, which samples the competition for mutex locks.</li>
-</ul>
-<p>For more information about pprof, you can refer to this article.</p>
-<h2 id="trace">trace</h2>
-<p>Program trace debugging:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool trace -http=&quot;:6060&quot; ./ssd_336959_20190704_105540_trace</span><br></pre></td></tr></table></figure>
-<p>The trace command allows you to trace and collect information over a period of time, then dump it to a file, and finally analyze the dump file using <code>go tool trace</code> and open it in a web format.</p>
-<h1>Unit Testing</h1>
-<p>The importance of unit testing is self-evident. In Golang, files ending with <code>_test.go</code> are considered test files. As a modern language, Golang supports unit testing at the language tool level.</p>
-<h2 id="Running-Unit-Tests">Running Unit Tests</h2>
-<p>There are two ways to execute unit tests:</p>
-<ul>
-<li>Run <code>go test</code> directly, which is the simplest method.</li>
-<li>Compile the test files first, then run them. This method provides more flexibility.</li>
-</ul>
-<h2 id="Running-go-test">Running <code>go test</code></h2>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Run go test directly in your project directory.</span><br><span class="line"> go test .</span><br><span class="line"> // Specify the running function.</span><br><span class="line"> go test -run=TestPutAndGetKeyValue</span><br><span class="line"> // Print details.</span><br><span class="line"> go test -v</span><br></pre></td></tr></table></figure>
-<h2 id="Compilation-and-Execution">Compilation and Execution</h2>
-<p>Essentially, running Golang unit tests involves compiling <code>*_test.go</code> files into binaries and then running these binaries. When you execute <code>go test</code>, the tool handles these actions for you, but you can also perform them separately.</p>
-<p>Compile the test files to generate the test executable:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Compile the .test file first.</span><br><span class="line">go test -c -coverpkg=. -covermode=atomic -o 1TestSwapInt32_in_sync_atomic.test sync/atomic</span><br><span class="line"> // Specify running a file.</span><br><span class="line">./1TestSwapInt32_in_sync_atomic.test -test.timeout=10m0s -test.v=true -test.run=TestSwapInt32</span><br></pre></td></tr></table></figure>
-<p>This method is usually used in the following scenarios:</p>
-<ol>
-<li>Compile on one machine and run tests on another.</li>
-<li>Debugging test programs.</li>
-</ol>
-<h1>Code Coverage Analysis</h1>
-<p>Golang’s code coverage is based on unit tests, which serve as the starting point for measuring code coverage of your business code. The operation is simple:</p>
-<ol>
-<li>Add the <code>-coverprofile</code> parameter when running tests to record code coverage.</li>
-<li>Use the <code>go tool cover</code> command to analyze and generate coverage reports.</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go test -coverprofile=coverage.out</span><br><span class="line">go tool cover -func=coverage.out</span><br></pre></td></tr></table></figure>
-<p>The output will be similar to the following:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~/w/g/s/sync&gt; go tool cover -func=coverage.out                                                                                                                heads/go1.21.4?</span><br><span class="line">sync/cond.go:47:        NewCond                         100.0%</span><br><span class="line">sync/cond.go:66:        Wait                            100.0%</span><br><span class="line">sync/cond.go:81:        Signal                          100.0%</span><br><span class="line">sync/cond.go:90:        Broadcast                       100.0%</span><br><span class="line">sync/cond.go:98:        check                           100.0%</span><br><span class="line">sync/cond.go:116:       Lock                            0.0%</span><br><span class="line">sync/cond.go:117:       Unlock                          0.0%</span><br><span class="line">sync/map.go:104:        newEntry                        100.0%</span><br><span class="line">sync/map.go:110:        loadReadOnly                    100.0%</span><br><span class="line">sync/map.go:120:        Load                            100.0%</span><br><span class="line">sync/map.go:145:        load                            100.0%</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
-<p>This way, you can see the code coverage for each function.</p>
-<h1>Program Debugging</h1>
-<p>Program debugging mainly relies on two tools:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. dlv</span><br><span class="line">2. gdb</span><br></pre></td></tr></table></figure>
-<p>Here, I recommend dlv because GDB’s functionality is limited. GDB does not understand Golang’s specific types such as channels, maps, and slices. GDB’s native support for goroutines is limited since it only understands threads. However, GDB has one irreplaceable feature, which is the <code>gcore</code> command.</p>
-<h2 id="dlv-Debugging">dlv Debugging</h2>
-<h4 id="Debugging-Binaries">Debugging Binaries</h4>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec &lt;path/to/binary&gt; [flags]</span><br></pre></td></tr></table></figure>
-<p>For example:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging binaries with dlv and passing arguments:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main -- --audit=./d</span><br></pre></td></tr></table></figure>
-<h2 id="Debugging-Processes">Debugging Processes</h2>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach $&#123;pid&#125; [executable] [flags]</span><br></pre></td></tr></table></figure>
-<p>The process ID is mandatory. For example:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
-<h4 id="Debugging-Core-Files">Debugging Core Files</h4>
-<p>Debugging core files with dlv and redirecting standard output to a file:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core &lt;executable&gt; &lt;core&gt; [flags]</span><br></pre></td></tr></table></figure>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
-<h1>Common Debugging Syntax</h1>
-<h2 id="System-Summary">System Summary</h2>
-<p><strong>Program Execution</strong></p>
-<ol>
-<li>call: call a function (note that this will cause the entire program to run).</li>
-<li>continue: resume execution.</li>
-<li>next: step over.</li>
-<li>restart: restart.</li>
-<li>step: step into a function.</li>
-<li>step-instruction: step into a specific assembly instruction.</li>
-<li>stepout: step out of the current function.</li>
-</ol>
-<h2 id="Breakpoint-related"><strong>Breakpoint-related</strong></h2>
-<ol>
-<li>break (alias: b): set a breakpoint.</li>
-<li>breakpoints (alias: bp): print all breakpoint information.</li>
-<li>clear: clear a breakpoint.</li>
-<li>clearall: clear all breakpoints.</li>
-<li>condition (alias: cond): set a conditional breakpoint.</li>
-<li>on: set a command to be executed when a breakpoint is hit.</li>
-<li>trace (alias: t): set a tracepoint, which is also a breakpoint but does not stop the program when hit; it only prints a line of information. This command is useful in certain scenarios where stopping the program affects logic (e.g., business timeouts), and you only want to print a specific variable.</li>
-</ol>
-<h2 id="Information-Printing"><strong>Information Printing</strong></h2>
-<ul>
-<li>args: print function arguments.</li>
-<li>examinemem (alias: x): a powerful command for examining memory, similar to gdb’s <code>x</code> command.</li>
-<li>locals: print local variables.</li>
-<li>print (alias: p): print an expression or variable.</li>
-<li>regs: print register information.</li>
-<li>set: set variable value.</li>
-<li>vars: print global variables (package variables).</li>
-<li>whatis: print type information.</li>
-</ul>
-<h2 id="Goroutine-related"><strong>Goroutine-related</strong></h2>
-<ul>
-<li>goroutine (alias: gr): print information of a specific goroutine.</li>
-<li>goroutines (alias: grs): list all goroutines.</li>
-<li>thread (alias: tr): switch to a specific thread.</li>
-<li>threads: print information of all threads.</li>
-</ul>
-<h2 id="Stack-related"><strong>Stack-related</strong></h2>
-<ul>
-<li>deferred: execute commands in the context of a defer function.</li>
-<li>down: move up the stack.</li>
-<li>frame: jump to a specific stack frame.</li>
-<li>stack (alias: bt): print stack information.</li>
-<li>up: move down the stack.</li>
-</ul>
-<h2 id="Other-Commands"><strong>Other Commands</strong></h2>
-<ul>
-<li>config: modify configurations.</li>
-<li>disassemble (alias: disass): disassemble.</li>
-<li>edit (alias: ed): omitted.</li>
-<li>exit (alias: quit | q): omitted.</li>
-<li>funcs: print all function symbols.</li>
-<li>libraries: print all loaded dynamic libraries.</li>
-<li>list (alias: ls | l): display source code.</li>
-<li>source: load commands.</li>
-<li>sources: print source code.</li>
-<li>types: print all type information.</li>
-</ul>
-<p>The above commands cover the complete set of commands supported by dlv, which meet our debugging needs (some commands are only applicable during development and debugging, as it is not possible to single-step debug on production code in most cases).</p>
-<p>Application Examples</p>
-<p><strong>Print Global Variables</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(dlv) vars</span><br></pre></td></tr></table></figure>
-<p>This is very useful for inspecting global variables.</p>
-<p><strong>Conditional Breakpoints</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set a breakpoint first.</span></span><br><span class="line">(dlv) b</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Check breakpoint information.</span></span><br><span class="line">(dlv) bp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Customize the condition.</span></span><br><span class="line">(dlv) condition 2 i==2 &amp;&amp; j==7 &amp;&amp; z==32</span><br></pre></td></tr></table></figure>
-<p><strong>Inspecting the Stack</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Show all stacks.</span></span><br><span class="line">(dlv) goroutines</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Expand all stacks.</span></span><br><span class="line">(dlv) goroutines -t</span><br></pre></td></tr></table></figure>
-<p><strong>Examining Memory</strong></p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(dlv) x -fmt hex -len 20 0xc00008af38</span><br></pre></td></tr></table></figure>
-<p>The <code>x</code> command is the same as gdb’s <code>x</code> command.</p>
-<h3 id="gdb-Debugging">gdb Debugging</h3>
-<p>GDB’s support for Golang debugging is achieved through a Python script called <code>src/runtime/runtime-gdb.py</code>, so its functionality is limited. GDB can only perform basic variable printing and cannot understand some of Golang’s specific types such as channels, maps, and slices. GDB cannot directly debug goroutines because it only understands threads. However, GDB has one feature that cannot be replaced, which is the <code>gcore</code> command.</p>
-<h4 id="dlv-Debugging-Example">dlv Debugging Example</h4>
-<p>Debugging a Binary</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging a Process</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
-<p>Debugging a Core File</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
-<h4 id="gdb-Debugging-Example">gdb Debugging Example</h4>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gdb ./main</span><br></pre></td></tr></table></figure>
-<p>Print Global Variables (note the single quotation marks)</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p &#x27;runtime.firstmoduledata&#x27;</span><br></pre></td></tr></table></figure>
-<p>Due to GDB’s limited understanding of Golang’s type system, sometimes it may not be able to print variables, so please pay attention to this.</p>
-<p>Print Array Length</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p $len(xxx)</span><br></pre></td></tr></table></figure>
-<p>Therefore, I usually only use GDB to generate core files.</p>
-<h3 id="Tips-and-Tricks">Tips and Tricks</h3>
-<h3 id="Don’t-know-how-to-set-breakpoints-in-functions">Don’t know how to set breakpoints in functions?</h3>
-<p>Sometimes you don’t know how to set breakpoints in a function. You can use <code>nm</code> to query the function and then set a breakpoint, which will ensure that you hit the breakpoint.</p>
-<h3 id="Don’t-know-the-calling-context">Don’t know the calling context?</h3>
-<p>Add the following line in your code:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">debug.PrintStack()</span><br></pre></td></tr></table></figure>
-<p>This will print the stack trace at the current code position, allowing you to understand the calling path of the function.</p>
-<h3 id="Don’t-know-how-to-enable-pprof">Don’t know how to enable pprof?</h3>
-<p>There are two ways to enable pprof, corresponding to two packages:</p>
-<ul>
-<li>net/http/pprof: used in web server scenarios.</li>
-<li>runtime/pprof: used in non-server applications.</li>
-</ul>
-<p>These two packages are essentially the same, with <code>net/http/pprof</code> being a web wrapper on top of <code>runtime/pprof</code>.</p>
-<p><strong>Using</strong> <code>net/http/pprof</code></p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br></pre></td></tr></table></figure>
-<p><strong>Using</strong> <code>runtime/pprof</code></p>
-<p>This method is usually used for performance optimization. When running a program that is not a server application, you want to find bottlenecks, so you typically use this method.</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CPU pprof file path</span></span><br><span class="line">    f, err := os.Create(<span class="string">&quot;cpufile.pprof&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Start CPU pprof</span></span><br><span class="line">    pprof.StartCPUProfile(f)</span><br><span class="line">    <span class="keyword">defer</span> pprof.StopCPUProfile()</span><br></pre></td></tr></table></figure>
-<h3 id="Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging">Why does the code sometimes execute unexpectedly during single-step debugging?</h3>
-<p>This situation is usually caused by compiler optimization, such as function inlining and removal of redundant logic and parameters from the compiled binary. This can cause unexpected execution during dlv single-step debugging or prevent the printing of certain variables. The solution to this problem is to disable compiler optimization.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go build -gcflags &quot;-N -l&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
+<h1>Overview</h1>
+<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
+<h1>Design</h1>
+<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
+<h1>Ensuring Data Integrity</h1>
+<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
+<h1>Handling Network Latency and Packet Loss</h1>
+<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
+<h1>Waiting for Unsent Data to be Sent</h1>
+<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
+<h1>Handling the Half-Closed State</h1>
+<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
 <h1>Conclusion</h1>
-<p>This article provides a systematic overview of the techniques and usage of Golang program debugging:</p>
-<ol>
-<li>The language tool package provides built-in tools that support assembly, disassembly, pprof analysis, symbol table queries, and other practical functions.</li>
-<li>The language tool package integrates unit testing, and code coverage relies on triggering unit tests.</li>
-<li>The powerful dlv/gdb tools serve as the main debugging tools, supporting the analysis of binaries, processes, and core files.</li>
-</ol>
+<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
+<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
+<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
+<hr>
+<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
 ]]></content>
       <categories>
-        <category>go</category>
+        <category>network</category>
       </categories>
       <tags>
-        <tag>golang</tag>
+        <tag>tcp</tag>
       </tags>
   </entry>
   <entry>
@@ -1029,6 +804,231 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
+    <title>Advanced Debugging Tips for the Go Language</title>
+    <url>/2024/02/04/2024-02-04_Advanced-Debugging-Tips-for-the-Go-Language-9ca36e7e8f68/</url>
+    <content><![CDATA[<p>Last time we shared the method of <a href="https://medium.com/@hxzhouh/how-to-analyze-go-code-in-assembly-81cada6d4f0a">debugging Go code using assembly language</a>. Assembly language allows us to easily trace low-level knowledge of the Go runtime and other underlying details. In this article, we will introduce the powerful debugging tool called “go tool”, which, when mastered, can elevate your development skills to the next level.</p>
+<span id="more"></span>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*2Qecdc1lDBmffp1b" alt=""></p>
+<p>This article focuses on practical techniques for debugging in Golang and the effective usage of related tools, so you no longer need to worry about how to debug Golang code. Golang, as a modern language, comes with built-in debugging capabilities from the very beginning:</p>
+<ul>
+<li>Golang tools are directly integrated into the language tools, supporting memory analysis, CPU analysis, and blocking lock analysis, among others.</li>
+<li>Delve and GDB are the most commonly used debug tools, allowing you to dive deeper into program debugging.</li>
+<li>Delve is currently the most user-friendly Golang debugging program, and IDE debugging is essentially calling dlv, such as in Goland.</li>
+<li>Unit testing is deeply integrated into the language design, making it very convenient to execute unit tests and generate code coverage.</li>
+</ul>
+<h1>Golang tools</h1>
+<p>Golang integrates a variety of useful tools at the language level, which are the essence of the experience accumulated by Robert Griesemer, Rob Pike, Ken Thompson, and other experts. After installing Golang, you can see all the built-in tools by executing <code>go tool</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~&gt; go tool</span><br><span class="line"> addr2line</span><br><span class="line"> asm</span><br><span class="line"> buildid</span><br><span class="line"> cgo</span><br><span class="line"> compile</span><br><span class="line"> covdata</span><br><span class="line"> cover</span><br><span class="line"> dist</span><br><span class="line"> distpack</span><br><span class="line"> doc</span><br><span class="line"> fix</span><br><span class="line"> link</span><br><span class="line"> nm</span><br><span class="line"> objdump</span><br><span class="line"> pack</span><br><span class="line"> pprof</span><br><span class="line"> test2json</span><br><span class="line"> trace</span><br><span class="line"> vet</span><br></pre></td></tr></table></figure>
+<p>Here, I will focus on selecting several commonly used debug tools:</p>
+<ul>
+<li><code>nm</code>: view the symbol table (equivalent to the system <code>nm</code> command).</li>
+<li><code>objdump</code>: disassembly tool, used to analyze binary files (equivalent to the system <code>objdump</code> command).</li>
+<li><code>pprof</code>: metric and performance analysis tool.</li>
+<li><code>cover</code>: code coverage generation.</li>
+<li><code>trace</code>: sampling over a period of time, metric tracking and analysis tool.</li>
+<li><code>compile</code>: code assembly.</li>
+</ul>
+<p>Now, I will demonstrate the usage of these tools with an example.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">import</span> (</span><br><span class="line">     <span class="string">&quot;log&quot;</span></span><br><span class="line">     <span class="string">&quot;net&quot;</span></span><br><span class="line"> )</span><br><span class="line"> ​</span><br><span class="line"> <span class="keyword">var</span> helloCount <span class="type">int</span></span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">     listener, err := net.Listen(<span class="string">&quot;tcp&quot;</span>, <span class="string">&quot;:50050&quot;</span>)</span><br><span class="line">     <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">         log.Fatal(err)</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">defer</span> listener.Close()</span><br><span class="line"> ​</span><br><span class="line">     <span class="keyword">for</span> &#123;</span><br><span class="line">         conn, err := listener.Accept()</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Fatal(err)</span><br><span class="line">         &#125;</span><br><span class="line">         tcpConn := conn.(*net.TCPConn)</span><br><span class="line">         err = tcpConn.SetNoDelay(<span class="literal">true</span>)</span><br><span class="line">         <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">             log.Println(err)</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">go</span> handleConnection(conn)</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br><span class="line"> ​</span><br><span class="line"> <span class="function"><span class="keyword">func</span> <span class="title">handleConnection</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">     <span class="keyword">defer</span> conn.Close()</span><br><span class="line">     helloCount++</span><br><span class="line">     resp := []<span class="type">byte</span>(<span class="string">&quot;Hello count: &quot;</span>)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, []<span class="type">byte</span>(<span class="type">string</span>(<span class="type">rune</span>(helloCount)))...)</span><br><span class="line">     resp = <span class="built_in">append</span>(resp, <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">     conn.Write(resp)</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">// go build main.go</span></span><br></pre></td></tr></table></figure>
+<h2 id="nm">nm</h2>
+<p>The <code>nm</code> command is used to view the symbol table, which is equivalent to the system <code>nm</code> command and is very useful. When setting breakpoints, if you don’t know the function symbol of the breakpoint, you can use this command to find out (this command operates on binary program files).</p>
+<h2 id="compile">compile</h2>
+<p>Assemble a specific file:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool compile -N -l -S main.go</span><br></pre></td></tr></table></figure>
+<p>You will be able to see the assembly code corresponding to your Go code (please note that this command operates on Go code text), which is cool.</p>
+<h2 id="objdump">objdump</h2>
+<p>The objdump tool is used to disassemble binaries, equivalent to the system <code>objdump</code> (please note that this command parses binary program files).</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool objdump main.o</span><br><span class="line">go tool objdump -s DoFunc main.o  // Disassembling specific functions</span><br></pre></td></tr></table></figure>
+<p>Assembly code may not be needed in 90% of scenarios, but if you have experience working with C programs, in certain special situations, inferring application behavior by disassembling a piece of logic may be your only way out. This is because the code running in production usually has optimization enabled, which can cause your code to not match. Furthermore, you cannot attach to processes at will in production environments. Many times, you only have a core file to troubleshoot.</p>
+<h2 id="pprof">pprof</h2>
+<p>pprof supports four types of analysis:</p>
+<ul>
+<li><code>CPU</code>: CPU analysis, sampling calls that consume CPU resources, which is generally used to locate and troubleshoot areas of high computational resource consumption in programs.</li>
+<li><code>Memory</code>: Memory analysis, which is generally used to troubleshoot memory usage, memory leaks, and other issues.</li>
+<li><code>Block</code>: Blocking analysis, which samples the blocking calls in the program.</li>
+<li><code>Mutex</code>: Mutex analysis, which samples the competition for mutex locks.</li>
+</ul>
+<p>For more information about pprof, you can refer to this article.</p>
+<h2 id="trace">trace</h2>
+<p>Program trace debugging:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go tool trace -http=&quot;:6060&quot; ./ssd_336959_20190704_105540_trace</span><br></pre></td></tr></table></figure>
+<p>The trace command allows you to trace and collect information over a period of time, then dump it to a file, and finally analyze the dump file using <code>go tool trace</code> and open it in a web format.</p>
+<h1>Unit Testing</h1>
+<p>The importance of unit testing is self-evident. In Golang, files ending with <code>_test.go</code> are considered test files. As a modern language, Golang supports unit testing at the language tool level.</p>
+<h2 id="Running-Unit-Tests">Running Unit Tests</h2>
+<p>There are two ways to execute unit tests:</p>
+<ul>
+<li>Run <code>go test</code> directly, which is the simplest method.</li>
+<li>Compile the test files first, then run them. This method provides more flexibility.</li>
+</ul>
+<h2 id="Running-go-test">Running <code>go test</code></h2>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Run go test directly in your project directory.</span><br><span class="line"> go test .</span><br><span class="line"> // Specify the running function.</span><br><span class="line"> go test -run=TestPutAndGetKeyValue</span><br><span class="line"> // Print details.</span><br><span class="line"> go test -v</span><br></pre></td></tr></table></figure>
+<h2 id="Compilation-and-Execution">Compilation and Execution</h2>
+<p>Essentially, running Golang unit tests involves compiling <code>*_test.go</code> files into binaries and then running these binaries. When you execute <code>go test</code>, the tool handles these actions for you, but you can also perform them separately.</p>
+<p>Compile the test files to generate the test executable:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">// Compile the .test file first.</span><br><span class="line">go test -c -coverpkg=. -covermode=atomic -o 1TestSwapInt32_in_sync_atomic.test sync/atomic</span><br><span class="line"> // Specify running a file.</span><br><span class="line">./1TestSwapInt32_in_sync_atomic.test -test.timeout=10m0s -test.v=true -test.run=TestSwapInt32</span><br></pre></td></tr></table></figure>
+<p>This method is usually used in the following scenarios:</p>
+<ol>
+<li>Compile on one machine and run tests on another.</li>
+<li>Debugging test programs.</li>
+</ol>
+<h1>Code Coverage Analysis</h1>
+<p>Golang’s code coverage is based on unit tests, which serve as the starting point for measuring code coverage of your business code. The operation is simple:</p>
+<ol>
+<li>Add the <code>-coverprofile</code> parameter when running tests to record code coverage.</li>
+<li>Use the <code>go tool cover</code> command to analyze and generate coverage reports.</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go test -coverprofile=coverage.out</span><br><span class="line">go tool cover -func=coverage.out</span><br></pre></td></tr></table></figure>
+<p>The output will be similar to the following:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh@hxzhouhdeMacBook-Pro ~/w/g/s/sync&gt; go tool cover -func=coverage.out                                                                                                                heads/go1.21.4?</span><br><span class="line">sync/cond.go:47:        NewCond                         100.0%</span><br><span class="line">sync/cond.go:66:        Wait                            100.0%</span><br><span class="line">sync/cond.go:81:        Signal                          100.0%</span><br><span class="line">sync/cond.go:90:        Broadcast                       100.0%</span><br><span class="line">sync/cond.go:98:        check                           100.0%</span><br><span class="line">sync/cond.go:116:       Lock                            0.0%</span><br><span class="line">sync/cond.go:117:       Unlock                          0.0%</span><br><span class="line">sync/map.go:104:        newEntry                        100.0%</span><br><span class="line">sync/map.go:110:        loadReadOnly                    100.0%</span><br><span class="line">sync/map.go:120:        Load                            100.0%</span><br><span class="line">sync/map.go:145:        load                            100.0%</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+<p>This way, you can see the code coverage for each function.</p>
+<h1>Program Debugging</h1>
+<p>Program debugging mainly relies on two tools:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1. dlv</span><br><span class="line">2. gdb</span><br></pre></td></tr></table></figure>
+<p>Here, I recommend dlv because GDB’s functionality is limited. GDB does not understand Golang’s specific types such as channels, maps, and slices. GDB’s native support for goroutines is limited since it only understands threads. However, GDB has one irreplaceable feature, which is the <code>gcore</code> command.</p>
+<h2 id="dlv-Debugging">dlv Debugging</h2>
+<h4 id="Debugging-Binaries">Debugging Binaries</h4>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec &lt;path/to/binary&gt; [flags]</span><br></pre></td></tr></table></figure>
+<p>For example:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging binaries with dlv and passing arguments:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main -- --audit=./d</span><br></pre></td></tr></table></figure>
+<h2 id="Debugging-Processes">Debugging Processes</h2>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach $&#123;pid&#125; [executable] [flags]</span><br></pre></td></tr></table></figure>
+<p>The process ID is mandatory. For example:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+<h4 id="Debugging-Core-Files">Debugging Core Files</h4>
+<p>Debugging core files with dlv and redirecting standard output to a file:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core &lt;executable&gt; &lt;core&gt; [flags]</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+<h1>Common Debugging Syntax</h1>
+<h2 id="System-Summary">System Summary</h2>
+<p><strong>Program Execution</strong></p>
+<ol>
+<li>call: call a function (note that this will cause the entire program to run).</li>
+<li>continue: resume execution.</li>
+<li>next: step over.</li>
+<li>restart: restart.</li>
+<li>step: step into a function.</li>
+<li>step-instruction: step into a specific assembly instruction.</li>
+<li>stepout: step out of the current function.</li>
+</ol>
+<h2 id="Breakpoint-related"><strong>Breakpoint-related</strong></h2>
+<ol>
+<li>break (alias: b): set a breakpoint.</li>
+<li>breakpoints (alias: bp): print all breakpoint information.</li>
+<li>clear: clear a breakpoint.</li>
+<li>clearall: clear all breakpoints.</li>
+<li>condition (alias: cond): set a conditional breakpoint.</li>
+<li>on: set a command to be executed when a breakpoint is hit.</li>
+<li>trace (alias: t): set a tracepoint, which is also a breakpoint but does not stop the program when hit; it only prints a line of information. This command is useful in certain scenarios where stopping the program affects logic (e.g., business timeouts), and you only want to print a specific variable.</li>
+</ol>
+<h2 id="Information-Printing"><strong>Information Printing</strong></h2>
+<ul>
+<li>args: print function arguments.</li>
+<li>examinemem (alias: x): a powerful command for examining memory, similar to gdb’s <code>x</code> command.</li>
+<li>locals: print local variables.</li>
+<li>print (alias: p): print an expression or variable.</li>
+<li>regs: print register information.</li>
+<li>set: set variable value.</li>
+<li>vars: print global variables (package variables).</li>
+<li>whatis: print type information.</li>
+</ul>
+<h2 id="Goroutine-related"><strong>Goroutine-related</strong></h2>
+<ul>
+<li>goroutine (alias: gr): print information of a specific goroutine.</li>
+<li>goroutines (alias: grs): list all goroutines.</li>
+<li>thread (alias: tr): switch to a specific thread.</li>
+<li>threads: print information of all threads.</li>
+</ul>
+<h2 id="Stack-related"><strong>Stack-related</strong></h2>
+<ul>
+<li>deferred: execute commands in the context of a defer function.</li>
+<li>down: move up the stack.</li>
+<li>frame: jump to a specific stack frame.</li>
+<li>stack (alias: bt): print stack information.</li>
+<li>up: move down the stack.</li>
+</ul>
+<h2 id="Other-Commands"><strong>Other Commands</strong></h2>
+<ul>
+<li>config: modify configurations.</li>
+<li>disassemble (alias: disass): disassemble.</li>
+<li>edit (alias: ed): omitted.</li>
+<li>exit (alias: quit | q): omitted.</li>
+<li>funcs: print all function symbols.</li>
+<li>libraries: print all loaded dynamic libraries.</li>
+<li>list (alias: ls | l): display source code.</li>
+<li>source: load commands.</li>
+<li>sources: print source code.</li>
+<li>types: print all type information.</li>
+</ul>
+<p>The above commands cover the complete set of commands supported by dlv, which meet our debugging needs (some commands are only applicable during development and debugging, as it is not possible to single-step debug on production code in most cases).</p>
+<p>Application Examples</p>
+<p><strong>Print Global Variables</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">(dlv) vars</span><br></pre></td></tr></table></figure>
+<p>This is very useful for inspecting global variables.</p>
+<p><strong>Conditional Breakpoints</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set a breakpoint first.</span></span><br><span class="line">(dlv) b</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Check breakpoint information.</span></span><br><span class="line">(dlv) bp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Customize the condition.</span></span><br><span class="line">(dlv) condition 2 i==2 &amp;&amp; j==7 &amp;&amp; z==32</span><br></pre></td></tr></table></figure>
+<p><strong>Inspecting the Stack</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Show all stacks.</span></span><br><span class="line">(dlv) goroutines</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Expand all stacks.</span></span><br><span class="line">(dlv) goroutines -t</span><br></pre></td></tr></table></figure>
+<p><strong>Examining Memory</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(dlv) x -fmt hex -len 20 0xc00008af38</span><br></pre></td></tr></table></figure>
+<p>The <code>x</code> command is the same as gdb’s <code>x</code> command.</p>
+<h3 id="gdb-Debugging">gdb Debugging</h3>
+<p>GDB’s support for Golang debugging is achieved through a Python script called <code>src/runtime/runtime-gdb.py</code>, so its functionality is limited. GDB can only perform basic variable printing and cannot understand some of Golang’s specific types such as channels, maps, and slices. GDB cannot directly debug goroutines because it only understands threads. However, GDB has one feature that cannot be replaced, which is the <code>gcore</code> command.</p>
+<h4 id="dlv-Debugging-Example">dlv Debugging Example</h4>
+<p>Debugging a Binary</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv exec ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging a Process</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv attach 12808 ./main</span><br></pre></td></tr></table></figure>
+<p>Debugging a Core File</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dlv core ./main core.277282</span><br></pre></td></tr></table></figure>
+<h4 id="gdb-Debugging-Example">gdb Debugging Example</h4>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">gdb ./main</span><br></pre></td></tr></table></figure>
+<p>Print Global Variables (note the single quotation marks)</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p &#x27;runtime.firstmoduledata&#x27;</span><br></pre></td></tr></table></figure>
+<p>Due to GDB’s limited understanding of Golang’s type system, sometimes it may not be able to print variables, so please pay attention to this.</p>
+<p>Print Array Length</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">(gdb) p $len(xxx)</span><br></pre></td></tr></table></figure>
+<p>Therefore, I usually only use GDB to generate core files.</p>
+<h3 id="Tips-and-Tricks">Tips and Tricks</h3>
+<h3 id="Don’t-know-how-to-set-breakpoints-in-functions">Don’t know how to set breakpoints in functions?</h3>
+<p>Sometimes you don’t know how to set breakpoints in a function. You can use <code>nm</code> to query the function and then set a breakpoint, which will ensure that you hit the breakpoint.</p>
+<h3 id="Don’t-know-the-calling-context">Don’t know the calling context?</h3>
+<p>Add the following line in your code:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">debug.PrintStack()</span><br></pre></td></tr></table></figure>
+<p>This will print the stack trace at the current code position, allowing you to understand the calling path of the function.</p>
+<h3 id="Don’t-know-how-to-enable-pprof">Don’t know how to enable pprof?</h3>
+<p>There are two ways to enable pprof, corresponding to two packages:</p>
+<ul>
+<li>net/http/pprof: used in web server scenarios.</li>
+<li>runtime/pprof: used in non-server applications.</li>
+</ul>
+<p>These two packages are essentially the same, with <code>net/http/pprof</code> being a web wrapper on top of <code>runtime/pprof</code>.</p>
+<p><strong>Using</strong> <code>net/http/pprof</code></p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> _ <span class="string">&quot;net/http/pprof&quot;</span></span><br></pre></td></tr></table></figure>
+<p><strong>Using</strong> <code>runtime/pprof</code></p>
+<p>This method is usually used for performance optimization. When running a program that is not a server application, you want to find bottlenecks, so you typically use this method.</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CPU pprof file path</span></span><br><span class="line">    f, err := os.Create(<span class="string">&quot;cpufile.pprof&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        log.Fatal(err)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Start CPU pprof</span></span><br><span class="line">    pprof.StartCPUProfile(f)</span><br><span class="line">    <span class="keyword">defer</span> pprof.StopCPUProfile()</span><br></pre></td></tr></table></figure>
+<h3 id="Why-does-the-code-sometimes-execute-unexpectedly-during-single-step-debugging">Why does the code sometimes execute unexpectedly during single-step debugging?</h3>
+<p>This situation is usually caused by compiler optimization, such as function inlining and removal of redundant logic and parameters from the compiled binary. This can cause unexpected execution during dlv single-step debugging or prevent the printing of certain variables. The solution to this problem is to disable compiler optimization.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">go build -gcflags &quot;-N -l&quot;</span><br></pre></td></tr></table></figure>
+<h1>Conclusion</h1>
+<p>This article provides a systematic overview of the techniques and usage of Golang program debugging:</p>
+<ol>
+<li>The language tool package provides built-in tools that support assembly, disassembly, pprof analysis, symbol table queries, and other practical functions.</li>
+<li>The language tool package integrates unit testing, and code coverage relies on triggering unit tests.</li>
+<li>The powerful dlv/gdb tools serve as the main debugging tools, supporting the analysis of binaries, processes, and core files.</li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>8 Common SQL Slow Query Statements and How to Optimize Them</title>
     <url>/2024/05/11/8%20Common%20SQL%20Slow%20Query%20Statements%20and%20How%20to%20Optimize%20Them/</url>
     <content><![CDATA[<p>Thanks to Moore’s Law, computer performance has greatly improved, along with advancements in databases and various anti-pattern designs advocated by microservices. As a result, we now have fewer opportunities to write complex SQL queries. The industry (yes, even Google) has started advocating against specialized SQL optimization, as the resources saved do not outweigh the cost of employee salaries. However, as engineers, we should strive for technical excellence to become rocket scientists in our field.</p>
@@ -1107,6 +1107,44 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>db</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Decryption go: understand go language pointer</title>
+    <url>/2024/04/23/Decryption%20go%EF%BC%9A%20understand%20go%20language%20pointer_%20english/</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
+<span id="more"></span>
+<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"><span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line">*(arr+<span class="number">2</span>) = <span class="number">1</span>;		<span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Example 2</span></span><br><span class="line"><span class="type">int</span> a = <span class="number">4</span>;	</span><br><span class="line"><span class="type">int</span>* ap = &amp;a;	 <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line">*(<span class="type">short</span>*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
+<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"><span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a	<span class="comment">// Ordinary pointer with type</span></span><br><span class="line"></span><br><span class="line">ap++ 				<span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line">p := (*<span class="type">int16</span>)(ap)	<span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
+<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
+<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:</p>
+<ul>
+<li><code>unsafe.Pointer</code>.</li>
+<li><code>uintptr</code>.<br>
+To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</li>
+</ul>
+<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> on a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that a data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
+<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
+<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
+<p>Summary of the three types of pointers in Go language:</p>
+<ul>
+<li>Ordinary pointer: Does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
+<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
+</ul>
+<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
+<p>Here’s a simple example:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">    a <span class="type">int32</span></span><br><span class="line">    b <span class="type">int32</span></span><br><span class="line">&#125;</span><br><span class="line">foo := &amp;Foo&#123;&#125;</span><br><span class="line">bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>	<span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line">*(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>		<span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line">fmt.Println(foo.b)	<span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -1271,44 +1309,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
-    <title>Decryption go: understand go language pointer</title>
-    <url>/2024/04/23/Decryption%20go%EF%BC%9A%20understand%20go%20language%20pointer_%20english/</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>Go language has three types of pointers. In the normal development process, we only encounter the ordinary pointer. However, in the low-level source code of Go language, there are a lot of operations involving three types of pointer conversion and manipulation. Let’s clarify these points first.</p>
-<span id="more"></span>
-<p>In the C language, pointers are crucial. Although pointers make operations highly flexible and efficient, there are many security risks associated with accessing memory through pointer operations, such as accessing memory out of bounds and compromising the atomicity of types in the type system. Here are some examples of incorrect usage:</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Example 1</span></span><br><span class="line"><span class="type">int</span> arr[<span class="number">2</span>];</span><br><span class="line">*(arr+<span class="number">2</span>) = <span class="number">1</span>;		<span class="comment">// Accessing memory address out of bounds</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Example 2</span></span><br><span class="line"><span class="type">int</span> a = <span class="number">4</span>;	</span><br><span class="line"><span class="type">int</span>* ap = &amp;a;	 <span class="comment">// Taking the starting address of variable a (4 bytes)</span></span><br><span class="line">*(<span class="type">short</span>*)ap = <span class="number">2</span>; <span class="comment">// Modifying the first 2 bytes of the 4-byte variable a directly through type casting, thus breaking the atomicity of the int variable</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// The code in Example 2 may occur in certain scenarios, but it has portability issues on machines with different endianness</span></span><br></pre></td></tr></table></figure>
-<p>The reason for these security risks in the C language is that it supports pointer operations and pointer type conversions. Therefore, in Go language, the most commonly used ordinary pointers, which have types, have eliminated pointer arithmetic and type conversion operations to ensure type safety. Here’s an example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int32</span> = <span class="number">10</span></span><br><span class="line"><span class="keyword">var</span> ap *<span class="type">int32</span> = &amp;a	<span class="comment">// Ordinary pointer with type</span></span><br><span class="line"></span><br><span class="line">ap++ 				<span class="comment">// Illegal, pointer arithmetic is not allowed</span></span><br><span class="line">p := (*<span class="type">int16</span>)(ap)	<span class="comment">// Illegal, *int32 cannot be directly converted to *int16</span></span><br></pre></td></tr></table></figure>
-<p>This ensures that pointers always point to valid addresses with allocated memory and preserves type independence and atomicity.</p>
-<p>In addition to ordinary pointers, Go language also retains two other types of pointers that allow bypassing the type system and achieving the same level of memory manipulation as in C language. The other two types of pointers are:</p>
-<ul>
-<li><code>unsafe.Pointer</code>.</li>
-<li><code>uintptr</code>.<br>
-To understand these two, we need to establish a concept: a pointer is essentially a number that stores a memory address. The addressing space is 32 bits for a 32-bit machine and 64 bits for a 64-bit machine, so the size of a pointer is equal to the number of bits in the machine.</li>
-</ul>
-<p><code>uintptr</code> is straightforward; it is simply a number that stores a memory address. It is equivalent to <code>uint32</code> on a 32-bit machine and <code>uint64</code> on a 64-bit machine. Since it is a number, it naturally supports arithmetic operations, which allows it to represent any memory location. However, the problem is that a data cannot be operated solely based on its memory address; you also need to know its size. In other words, we cannot manipulate data solely based on a <code>uintptr</code> pointer. On the other hand, an ordinary typed pointer not only provides the address but also informs the compiler about the size of the data pointed to. For example, <code>*int32</code> and <code>*int64</code> pointers tell the compiler that they operate on 4-byte and 8-byte data, respectively.</p>
-<p>Now that we have explained ordinary pointers and <code>uintptr</code> pointers in Go language, what is this additional <code>unsafe.Pointer</code> compared to C language?</p>
-<p><code>unsafe.Pointer</code> is a generic pointer that, like <code>uintptr</code>, only keeps the memory address without concerning itself with the type. However, the difference between <code>unsafe.Pointer</code> and <code>uintptr</code> is that the former refers to an object that will be referenced by the garbage collector (GC), so it will not be collected as garbage by the GC. In contrast, the latter only represents the memory address as a number, which means that if a data address is saved by <code>uintptr</code>, it will be mercilessly collected by the garbage collector.</p>
-<p>Summary of the three types of pointers in Go language:</p>
-<ul>
-<li>Ordinary pointer: Does not support pointer arithmetic, saves the address and type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>unsafe.Pointer</code>: Does not support pointer arithmetic, saves the address but not the type information, and the data it points to will not be garbage collected by the GC.</li>
-<li><code>uintptr</code>: Supports address arithmetic, saves the address but not the type information, and the data it points to will be garbage collected by the GC.</li>
-</ul>
-<p>In practical usage, <code>uintptr</code> cannot be directly converted to an ordinary pointer, and both must be first converted to <code>unsafe.Pointer</code> as an intermediate step before further conversion.</p>
-<p>Here’s a simple example:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo <span class="keyword">struct</span>&#123;</span><br><span class="line">    a <span class="type">int32</span></span><br><span class="line">    b <span class="type">int32</span></span><br><span class="line">&#125;</span><br><span class="line">foo := &amp;Foo&#123;&#125;</span><br><span class="line">bp := <span class="type">uintptr</span>(unsafe.Pointer(foo)) + <span class="number">4</span>	<span class="comment">// Add 4 to the address of foo to locate foo.b</span></span><br><span class="line">*(*<span class="type">int32</span>)(unsafe.Pointer(bp)) = <span class="number">1</span>		<span class="comment">// Convert to *int32 ordinary pointer and modify the value</span></span><br><span class="line">fmt.Println(foo.b)	<span class="comment">// foo.b = 1</span></span><br></pre></td></tr></table></figure>]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go - Ordering in Select Statements</title>
     <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
     <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
@@ -1357,45 +1357,6 @@ To understand these two, we need to establish a concept: a pointer is essentiall
       </tags>
   </entry>
   <entry>
-    <title>Go defer：makes the function simpler and more robust.</title>
-    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
-    <content><![CDATA[<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
-<span id="more"></span> 
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
-<p><code>defer</code> is used to release locks or any other resources.</p>
-<blockquote>
-<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
-The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
-</blockquote>
-<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
-<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
-<h1>Several Use Cases for <code>defer</code></h1>
-<ul>
-<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
-<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
-<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
-<h1>Performance Overhead of <code>defer</code></h1>
-<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
-<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
-<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
-<h1>Conclusion</h1>
-<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go Program pattern 04: Map-Reduce</title>
     <url>/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/</url>
     <content><![CDATA[<p>Map-Reduce is a programming paradigm used for processing large-scale datasets. It helps simplify the process of parallel computation and improves computational efficiency.</p>
@@ -1440,6 +1401,45 @@ First, we have an employee object and some data:</p>
       <categories>
         <category>go</category>
       </categories>
+  </entry>
+  <entry>
+    <title>Go defer：makes the function simpler and more robust.</title>
+    <url>/2024/04/18/Go%20defer%EF%BC%9Amakes%20the%20function%20simpler%20and%20more%20robust./</url>
+    <content><![CDATA[<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>In the previous article, we used <code>defer</code> to recover from panics. In the practical work of a gopher, <code>defer</code> acts like a loyal and reliable teammate, silently helping us with the clean-up work behind the scenes. For example:</p>
+<span id="more"></span> 
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">wg.Add(goroutines)</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; goroutines; i++ &#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">       <span class="keyword">defer</span> wg.Done()</span><br><span class="line">       <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; count/goroutines; j++ &#123;</span><br><span class="line">          atomic.AddInt64(&amp;sum, <span class="number">1</span>)</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">wg.Wait()</span><br></pre></td></tr></table></figure>
+<p><code>defer</code> is used to release locks or any other resources.</p>
+<blockquote>
+<p>In Go, <code>defer</code> can only be used inside functions and methods.<br>
+The <code>defer</code> keyword must be followed by a function or method, which are referred to as deferred functions.</p>
+</blockquote>
+<p><code>defer</code> registers these functions into a stack data structure specific to the goroutine in which it is executed. The deferred functions are then scheduled to be executed in a last-in, first-out (LIFO) order before the function containing the <code>defer</code> statement exits.</p>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/02/7ca8d7abc4864e3b4c698edd9144ecf6.png" alt="Pasted image 20240229205228"></p>
+<p>Regardless of whether the function reaches the end of its body and returns, explicitly calls <code>return</code> in an error handling branch, or encounters a panic, the functions stored in the deferred function stack will be scheduled for execution. Thus, deferred functions provide a convenient way to perform clean-up tasks for a function in any scenario.</p>
+<h1>Several Use Cases for <code>defer</code></h1>
+<ul>
+<li>Capturing panics: Since deferred functions are always executed in any scenario, we can handle exceptions within <code>defer</code> (although it is not recommended to use <code>panic</code> for general errors unless necessary).</li>
+<li>Resource release: <code>defer</code> allows for graceful resource release, such as file descriptors or locks.</li>
+<li>Delayed execution: <code>defer</code> can be used to record the execution time of a function, for example:</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(s time.Time)</span></span> &#123;</span><br><span class="line">    fmt.Println(time.Now().Sub(s))</span><br><span class="line">&#125;(time.Now())</span><br></pre></td></tr></table></figure>
+<h1>Performance Overhead of <code>defer</code></h1>
+<p><code>defer</code> makes resource release (like file descriptors or locks) more elegant and less error-prone. However, in performance-sensitive programs, Gophers must be aware of and consider the performance burden introduced by <code>defer</code>.</p>
+<p>In the following benchmark test, we can observe the performance difference between a version with <code>defer</code> and a version without <code>defer</code>:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 20:16  go test -bench=BenchmarkFooWithDefer </span><br><span class="line">10000000</span><br><span class="line">goos: darwin</span><br><span class="line">goarch: arm64</span><br><span class="line">pkg: github.com/hxzhouh/go-example/atomic</span><br><span class="line">BenchmarkFooWithDefer-10        189423524                6.353 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    3.631s</span><br><span class="line">hxzhouh  atomic  ➜ ( main  1)  ♥ 21:05  go test -bench=BenchmarkFooWithoutDefer </span><br><span class="line">BenchmarkFooWithoutDefer-10     273232389                4.397 ns/op</span><br><span class="line">PASS</span><br><span class="line">ok      github.com/hxzhouh/go-example/atomic    2.875s</span><br></pre></td></tr></table></figure>
+<p>In this test, the non-deferred version is approximately 7 times faster than the version with <code>defer</code> in Go 1.12. After optimization in versions 1.13 and 1.14, the performance of <code>defer</code> has significantly improved. On my computer, the non-deferred version still has a performance advantage of about 50%.</p>
+<h1>Conclusion</h1>
+<p>In most cases, our programs are not highly sensitive to performance. I recommend using <code>defer</code> whenever possible. However, it is important to understand how <code>defer</code> works, as well as a few things to avoid.</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
   </entry>
   <entry>
     <title>Go program pattern 01: Functional Options Pattern</title>
@@ -1806,114 +1806,6 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
       </tags>
   </entry>
   <entry>
-    <title>If Google No Longer supports Golang</title>
-    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
-<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
-<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
-<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
-As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
-<h1>What does Google offer to Go?</h1>
-<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
-<ol>
-<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
-<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
-<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
-<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
-<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
-</ol>
-<h1>Potential Scenarios</h1>
-<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
-<ul>
-<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
-<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
-<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
-<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
-</ul>
-<h1>Probability of Occurrence</h1>
-<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
-<h1>Conclusion</h1>
-<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
-<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Performance analysis of goroutine switching</title>
-    <url>/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/</url>
-    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
-<blockquote>
-<p>Note: Non-members can read the full story in this <a href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&amp;sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
-</blockquote>
-<h1>Introduction</h1>
-<p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
-<ul>
-<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
-<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
-<li>High network I/O: Often requires network I/O from other machines, such as Redis, MySQL, etc.</li>
-<li>Low computation: General CPU-intensive operations are not frequent.</li>
-</ul>
-<span id="more"></span>
-<p>Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</p>
-<p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
-<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process/thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process/thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
-<p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
-<h2 id="Coroutine-Overhead-Test">Coroutine Overhead Test</h2>
-<blockquote>
-<p>This article is based on go 1.22.1.</p>
-</blockquote>
-<ul>
-<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>
-The test process involves continuously yielding the CPU between coroutines. The core code is as follows.</li>
-</ul>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Compilation and execution</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>The average overhead of each coroutine switch is 54ns, which is approximately 1/70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
-<p><strong>Coroutine Memory Overhead</strong><br>
-In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
-<h1>Conclusion</h1>
-<p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
-<p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
-<p>Coroutines ultimately execute attached to operating system threads.</p>
-<p>A question we need to consider is:<br>
-Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>
-Therefore:<br>
-Using threads = thread switch overhead (low)<br>
-Using coroutines = thread switch overhead (high) + coroutine switch overhead</p>
-<p>Then CPU overhead:<br>
-Instruction cycles of threads = interrupt detection + instruction execution (including fetch, decode, and execute)<br>
-Instruction cycles of coroutines = interrupt detection + instruction execution + interrupt detection + coroutine signal detection</p>
-<p>So, I have the following conclusion:<br>
-In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
-<p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
-<p>If you like my articles, consider to :</p>
-<ol>
-<li>Drop me a follow -&gt; <a href="https://medium.hxzhouh.com/">huizhou92</a></li>
-<li>Leave a clap👏 (50 👏👏👏👏would be the best) and a comment if you want to interact with me.</li>
-<li>Receive an email every time I post on Medium -&gt; <a href="https://medium.hxzhouh.com/subscribe">Click here</a>!</li>
-<li>If you find my article helpful to you, please buy me a cup of <a href="https://www.buymeacoffee.com/hxzhouh">coffee</a></li>
-</ol>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Learn How to Handle Time In Golang</title>
     <url>/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png" alt="99e178071ff04a758df4210c2e330fc8.png~tplv-6bxrjdptv7-image"><br>
@@ -2024,108 +1916,39 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </tags>
   </entry>
   <entry>
-    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
-    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
-    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
-<span id="more"></span>
-<blockquote>
-<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
-</blockquote>
-<h2 id="Using-dmc">Using <code>dmc</code></h2>
-<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
-<p>It offers various disk profiles to choose from:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
-<p>Each profile corresponds to different speed modes, such as:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
-<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
-<p>Then, to verify the status:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
-<h2 id="Verification">Verification</h2>
-<p>We can validate using the <code>fio</code> tool:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
-<p>Now, with <code>dmc</code> turned off and the same command:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
-<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
-<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Smart Go compiler: Slimming</title>
-    <url>/2024/05/11/Smart%20Go%20compiler%20Slimming/</url>
-    <content><![CDATA[<h1>Smart Go compiler:  Slimming</h1>
-<h3 id="1-Experiment-Which-Functions-are-Included-in-the-Final-Executable">1. Experiment: Which Functions are Included in the Final Executable?</h3>
-<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>Let’s conduct an experiment to determine which functions are included in the final executable! We’ll create a demo1 with the following directory structure and code snippets:</p>
-<span id="more"></span>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo1</span></span><br><span class="line">$ tree -F .</span><br><span class="line">.</span><br><span class="line">├── <span class="keyword">go</span>.mod</span><br><span class="line">├── main.<span class="keyword">go</span></span><br><span class="line">└── pkga/</span><br><span class="line">    └── pkga.<span class="keyword">go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;demo/pkga&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    result := pkga.Foo()</span><br><span class="line">    fmt.Println(result)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// pkga/pkga.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> pkga</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Foo</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Bar</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Bar.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>The example is very simple! The main function calls the exported function Foo from the pkga package, which also contains the Bar function (although it is not called by any other function). Now let’s compile this module and examine the functions from the pkga package included in the compiled executable file! (This article uses Go version 1.22.0)</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br></pre></td></tr></table></figure>
-<p>Surprisingly, we didn’t find any symbol information related to pkga in the output of the executable file. This might be due to Go’s optimization. Let’s disable the optimization of the Go compiler and try again:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags <span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br><span class="line"> 108ca80 T demo/pkga.Foo</span><br></pre></td></tr></table></figure>
-<p>After disabling inlining optimization, we can see that pkga.Foo appears in the final executable file demo, but the unused Bar function is not included.</p>
-<p>Now let’s look at an example with indirect dependencies:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo2</span></span><br><span class="line">$ tree .</span><br><span class="line">.</span><br><span class="line">├── <span class="keyword">go</span>.mod</span><br><span class="line">├── main.<span class="keyword">go</span></span><br><span class="line">├── pkga</span><br><span class="line">│   └── pkga.<span class="keyword">go</span></span><br><span class="line">└── pkgb</span><br><span class="line">    └── pkgb.<span class="keyword">go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// pkga/pkga.go</span></span><br><span class="line"><span class="keyword">package</span> pkga</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;demo/pkgb&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Foo</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    pkgb.Zoo()</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Bar</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Bar.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In this example, we call a new function Zoo from the pkgb package within the pkga.Foo function. Let’s compile this new example and see which functions are included in the final executable:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags=<span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br><span class="line"> 1093b40 T demo/pkga.Foo</span><br><span class="line"> 1093aa0 T demo/pkgb.Zoo</span><br></pre></td></tr></table></figure>
-<p>We can observe that only the functions reachable through the program execution path are included in the final executable!</p>
-<p>In more complex examples, we can use the <code>go build -ldflags='-dumpdep'</code> command to view the call dependency relationship (using demo2 as an example):</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">$ <span class="keyword">go</span> build -ldflags=<span class="string">&#x27;-dumpdep&#x27;</span> -gcflags=<span class="string">&#x27;-l -N&#x27;</span> &gt; deps.txt <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br><span class="line"></span><br><span class="line">$ grep demo deps.txt</span><br><span class="line"># demo</span><br><span class="line">main.main -&gt; demo/pkga.Foo</span><br><span class="line">demo/pkga.Foo -&gt; demo/pkgb.Zoo</span><br><span class="line">demo/pkga.Foo -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">demo/pkgb.Zoo -&gt; math/rand.Int31n</span><br><span class="line">demo/pkgb.Zoo -&gt; demo/pkgb..stmp_0</span><br><span class="line">demo/pkgb..stmp_0 -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Zoo in pkgb&quot;</span></span><br></pre></td></tr></table></figure>
-<p>From this, we can conclude that Go ensures that only the code that is actually used enters the final executable file, even if some code (such as pkga.Bar) and the code that is actually used (such as pkga.Foo) are in the same package. This mechanism also ensures that the final executable file size remains within a manageable range.</p>
-<p>Next, let’s explore this mechanism in Go.</p>
-<h3 id="2-Dead-Code-Elimination">2. Dead Code Elimination</h3>
-<p>Let’s review the build process of <code>go build</code>. The following steps outline the <code>go build</code> command:</p>
+    <title>If Google No Longer supports Golang</title>
+    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
+<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
+<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
+<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
+As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
+<h1>What does Google offer to Go?</h1>
+<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
 <ol>
-<li>Read go.mod and go.sum: If the current directory contains a go.mod file, <code>go build</code> reads it to determine the project’s dependencies. It also verifies the integrity of the dependencies based on checksums in the go.sum file.</li>
-<li>Calculate the package dependency graph: <code>go build</code> analyzes the import statements in the packages being built and their dependencies to construct a dependency graph. This graph represents the relationships between packages, enabling the compiler to determine the build order of packages.</li>
-<li>Determine the packages to build: Based on the build cache and the dependency graph, <code>go build</code> determines which packages need to be built. It checks the build cache to see if the compiled packages are up to date. If any package or its dependencies have changed since the last build, <code>go build</code> will rebuild those packages.</li>
-<li>Invoke the compiler (go tool compile): For each package that needs to be built, <code>go build</code> invokes the Go compiler (go tool compile). The compiler converts the Go source code into machine code specific to the target platform and generates object files (.o files).</li>
-<li>Invoke the linker (go tool link): After compiling all the necessary packages, <code>go build</code> invokes the Go linker (go tool link). The linker merges the object files generated by the compiler into an executable binary file or a package archive file. It resolves symbols and references between packages, performs necessary relocations, and generates the final output.</li>
+<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
+<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
+<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
+<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
+<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
 </ol>
-<p>The entire build process can be represented by the following diagram:</p>
-<p><img src="https://tonybai.com/wp-content/uploads/dead-code-elimination-and-executable-file-slimming-in-go-2.png" alt="Build Process"></p>
-<p>During the build process, <code>go build</code> performs various optimizations, such as dead code elimination and inlining, to improve the performance and reduce the size of the generated binary files. Dead code elimination is an important mechanism that ensures the controllable size of the final executable file in Go.</p>
-<p>The implementation of the dead code detection algorithm can be found in the <code>$GOROOT/src/cmd/link/internal/ld/deadcode.go</code> file. The algorithm operates by traversing the graph and follows these steps:</p>
-<ol>
-<li>Start from the entry point of the system and mark all symbols reachable through relocations. Relocation represents the dependency relationship between two symbols.</li>
-<li>By traversing the relocation relationships, the algorithm marks all symbols that can be accessed from the entry point. For example, if the function pkga.Foo is called in the main function main.main, there will be a relocation entry for this function in main.main.</li>
-<li>After marking is complete, the algorithm marks all unmarked symbols as unreachable and dead code. These unmarked symbols represent the code that cannot be accessed by the entry point or any other reachable symbols.</li>
-</ol>
-<p>However, there is a special syntax element to note, which is types with methods. Whether the methods of a type are included in the final executable depends on different scenarios. In deadcode.go, the function implementation for marking reachable symbols distinguishes three cases of method invocation for reachable types:</p>
-<ol>
-<li>Direct invocation</li>
-<li>Invocation through reachable interface types</li>
-<li>Invocation through reflection: reflect.Value.Method (or MethodByName) or reflect.Type.Method (or MethodByName)</li>
-</ol>
-<p>In the first case, the invoked method is marked as reachable. In the second case, all reachable interface types are decomposed into method signatures. Each encountered method is compared with the interface method signatures, and if there is a match, it is marked as reachable. This method is conservative but simple and correct.</p>
-<p>In the third case, the algorithm handles methods by looking for functions marked as REFLECTMETHOD by the compiler. The presence of REFLECTMETHOD on a function F means that F uses reflection for method lookup, but the compiler cannot determine the method name during static analysis. Therefore, all functions that call reflect.Value.Method or reflect.Type.Method are marked as REFLECTMETHOD. Functions that call reflect.Value.MethodByName or reflect.Type.MethodByName with non-constant arguments are also considered REFLECTMETHOD. If a REFLECTMETHOD is found, static analysis is abandoned, and all exported methods of reachable types are marked as reachable.</p>
-<p>Here is an example from the reference material:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo3/main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> X <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> Y <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> One()   &#123; fmt.Println(<span class="string">&quot;hello 1&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Two()   &#123; fmt.Println(<span class="string">&quot;hello 2&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Three() &#123; fmt.Println(<span class="string">&quot;hello 3&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Four()  &#123; fmt.Println(<span class="string">&quot;hello 4&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Five()  &#123; fmt.Println(<span class="string">&quot;hello 5&quot;</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> name <span class="type">string</span></span><br><span class="line">    fmt.Scanf(<span class="string">&quot;%s&quot;</span>, &amp;name)</span><br><span class="line">    reflect.ValueOf(&amp;X&#123;&#125;).MethodByName(name).Call(<span class="literal">nil</span>)</span><br><span class="line">    <span class="keyword">var</span> y Y</span><br><span class="line">    y.Five()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In this example, type *X has three methods, and type *Y has two methods. In the main function, we call the methods of an X instance through reflection and directly call a method of a Y instance. Let’s see which methods of X and Y are included in the final executable:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags=<span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm ./demo | grep main</span></span><br><span class="line"> 11d59c0 D go:main.inittasks</span><br><span class="line"> 10d4500 T main.(*X).One</span><br><span class="line"> 10d4640 T main.(*X).Three</span><br><span class="line"> 10d45a0 T main.(*X).Two</span><br><span class="line"> 10d46e0 T main.(*Y).Five</span><br><span class="line"> 10d4780 T main.main</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure>
-<p>We can observe that only the directly called method Five of the reachable type Y is included in the final executable, while all methods of the reachable type X through reflection are present! This aligns with the third case mentioned earlier.</p>
-<h3 id="3-Summary">3. Summary</h3>
-<p>This article introduced the dead code elimination and executable file size reduction mechanisms in the Go language. Through experiments, we verified that only the functions called on the program execution path are included in the final executable, and unused functions are eliminated.</p>
-<p>The article explained the Go build process, including package dependency graph calculation, compilation, and linking steps, and highlighted dead code elimination as an important optimization strategy. The specific dead code elimination algorithm is implemented through graph traversal, where reachable symbols are marked and unmarked symbols are considered unused. The article also mentioned the handling of type methods.</p>
-<p>With this dead code elimination mechanism, Go controls the size of the final executable file, achieving executable file size reduction.</p>
-<p>The source code mentioned in this article can be downloaded <a href="https://github.com/bigwhite/experiments/tree/master/dead-code-elimination">here</a>.</p>
-<h3 id="4-References">4. References</h3>
+<h1>Potential Scenarios</h1>
+<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
 <ul>
-<li><a href="https://golab.io/talks/getting-the-most-out-of-dead-code-elimination">Getting the most out of Dead Code elimination</a></li>
-<li><a href="https://github.com/golang/go/issues/6853">all: binaries too big and growing</a></li>
-<li><a href="https://github.com/aarzilli/whydeadcode">aarzilli/whydeadcode</a></li>
+<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
+<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
+<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
+<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
+</ul>
+<h1>Probability of Occurrence</h1>
+<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
+<h1>Conclusion</h1>
+<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
+<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -2133,6 +1956,71 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </categories>
       <tags>
         <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Performance analysis of goroutine switching</title>
+    <url>/2024/03/20/Performance%20analysis%20of%20goroutine%20switching/</url>
+    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/03/057d94f39fc9a6838acdbc94b915f654.png" alt="Pasted image 20240320201037"></p>
+<blockquote>
+<p>Note: Non-members can read the full story in this <a href="https://medium.hxzhouh.com/d91a49604cae?source=friends_link&amp;sk=f3140285d590037631e7f7354ee9f629">link</a>.</p>
+</blockquote>
+<h1>Introduction</h1>
+<p>In the previous article, we verified the context switch overhead of Linux processes and threads experimentally, which was approximately between 3-5 microseconds. This overhead is not significant, but for massively concurrent internet servers and typical computer programs, the characteristics are as follows:</p>
+<ul>
+<li>High concurrency: Thousands to tens of thousands of user requests need to be processed per second.</li>
+<li>Short cycles: The processing time per user should be as short as possible, often in the millisecond range.</li>
+<li>High network I/O: Often requires network I/O from other machines, such as Redis, MySQL, etc.</li>
+<li>Low computation: General CPU-intensive operations are not frequent.</li>
+</ul>
+<span id="more"></span>
+<p>Even with a context switch overhead of 3-5 microseconds, it can still appear somewhat performance-degrading if the context switch volume is particularly high. For example, the Apache web server, which was the software product under this model, suffered from this. (In fact, when Linux operating system was designed, its goal was to be a general-purpose operating system rather than specifically designed for high-concurrency server-side applications.)</p>
+<p>To avoid frequent context switches, there is another asynchronous non-blocking development model. That is to use a process or thread to handle a large number of user requests and then improve performance through IO multiplexing (processes or threads do not block, saving the overhead of context switches). Nginx and Node.js are typical representatives of this model. Frankly speaking, in terms of program execution efficiency, this model is the most machine-friendly, with the highest efficiency (better than the coroutine development model mentioned below). Therefore, Nginx has replaced Apache as the preferred web server. However, the problem with this programming model lies in its unfriendliness to development, which is overly mechanized and deviates from the original intention of abstracting the concept of processes. Normal linear thinking of humans is disrupted, and application layer developers are forced to write code with non-human-like thinking, making code debugging extremely difficult.</p>
+<p>So, some smart heads continued to brainstorm at the application layer and designed “threads” that do not require process/thread context switching, called coroutines. Using coroutines to handle high-concurrency application scenarios can not only meet the original intention of processes but also allow developers to use normal linear thinking to handle their business, while also eliminating the expensive overhead of process/thread context switches. Therefore, it can be said that coroutines are a good patch for the process model in the scenario of processing massive requests on Linux.</p>
+<p>With the background introduced, what I want to say is that although coroutine encapsulation is lightweight, it still incurs some additional costs. So, let’s take a look at how small these additional costs are.</p>
+<h2 id="Coroutine-Overhead-Test">Coroutine Overhead Test</h2>
+<blockquote>
+<p>This article is based on go 1.22.1.</p>
+</blockquote>
+<ul>
+<li><strong>1. Coroutine Context Switch CPU Overhead</strong><br>
+The test process involves continuously yielding the CPU between coroutines. The core code is as follows.</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">import</span> (  </span><br><span class="line">    <span class="string">&quot;fmt&quot;</span>  </span><br><span class="line">    <span class="string">&quot;runtime&quot;</span>    </span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">cal</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    runtime.GOMAXPROCS(<span class="number">1</span>)  </span><br><span class="line">    currentTime := time.Now()  </span><br><span class="line">    fmt.Println(currentTime)  </span><br><span class="line">    <span class="keyword">go</span> cal()  </span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000</span>; i++ &#123;  </span><br><span class="line">       runtime.Gosched()  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    fmt.Println(time.Now().Sub(currentTime) / <span class="number">2000000</span>)  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Compilation and execution</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ go run main.go              </span><br><span class="line">2024-03-20 19:52:24.772579 +0800 CST m=+0.000114834</span><br><span class="line">54ns</span><br><span class="line">➜  trace git:(main) ✗ </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>The average overhead of each coroutine switch is 54ns, which is approximately 1/70 of the context switch overhead measured in the previous article, about 3.5 microseconds, and is approximately 70 times lower than the overhead caused by system calls.</p>
+<p><strong>Coroutine Memory Overhead</strong><br>
+In terms of space, when coroutines are initialized and created, a stack of 2KB is allocated for them. The stack of threads is much larger than this number, which can be checked through the <code>ulimit</code> command, usually in several megabytes. On my Mac, it’s 8MB. If a coroutine is created for each user to handle, 2GB of memory is sufficient for handling 1 million concurrent user requests, while the thread model would require 8TB.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  trace git:(main) ✗ ulimit -a   </span><br><span class="line">-t: cpu time (seconds)              unlimited</span><br><span class="line">-f: file size (blocks)              unlimited</span><br><span class="line">-d: data seg size (kbytes)          unlimited</span><br><span class="line">-s: stack size (kbytes)             8176</span><br><span class="line">-c: core file size (blocks)         0</span><br><span class="line">-v: address space (kbytes)          unlimited</span><br><span class="line">-l: locked-in-memory size (kbytes)  unlimited</span><br><span class="line">-u: processes                       2666</span><br><span class="line">-n: file descriptors                12544</span><br></pre></td></tr></table></figure>
+<h1>Conclusion</h1>
+<p>Since coroutines complete context switches in user space, the switch time is only slightly over 50ns, which is 70 times higher than process switches. The stack memory required by a single coroutine is also quite small, only requiring 2KB. Therefore, coroutines have shined in high-concurrency scenarios in backend internet applications in recent years.</p>
+<p>Whether in terms of space or time performance, they are much better than processes (threads). Then why doesn’t Linus implement them in the operating system? For the sake of better real-time performance, the operating system may preempt the CPU of processes with higher priorities. However, coroutines cannot achieve this and still rely on the coroutines currently using the CPU to release it actively, which is not consistent with the implementation purpose of the operating system. Therefore, the efficiency of coroutines comes at the cost of sacrificing preemption.</p>
+<p>Coroutines ultimately execute attached to operating system threads.</p>
+<p>A question we need to consider is:<br>
+Does using coroutines mean threads no longer switch? The frequency of thread switches basically depends on the number of threads. When using coroutines, you need to specify tasks for each thread. For the same workload, the number of threads required by coroutines should always be higher than that of automatically allocated thread pools.<br>
+Therefore:<br>
+Using threads = thread switch overhead (low)<br>
+Using coroutines = thread switch overhead (high) + coroutine switch overhead</p>
+<p>Then CPU overhead:<br>
+Instruction cycles of threads = interrupt detection + instruction execution (including fetch, decode, and execute)<br>
+Instruction cycles of coroutines = interrupt detection + instruction execution + interrupt detection + coroutine signal detection</p>
+<p>So, I have the following conclusion:<br>
+In terms of performance, IO multiplexing + thread pool completely outperforms coroutines; but in terms of convenience, coroutines are still easier to use.</p>
+<p>Because calling coroutines in Go is so convenient, some Go programmers use the <code>go</code> keyword casually. It should be noted that before switching to a coroutine, the coroutine must be created first. Once created, plus the scheduling overhead, it increases to 400ns, which is almost equivalent to the time consumed by a system call. Although coroutines are efficient, they should not be used casually,</p>
+<p>If you like my articles, consider to :</p>
+<ol>
+<li>Drop me a follow -&gt; <a href="https://medium.hxzhouh.com/">huizhou92</a></li>
+<li>Leave a clap👏 (50 👏👏👏👏would be the best) and a comment if you want to interact with me.</li>
+<li>Receive an email every time I post on Medium -&gt; <a href="https://medium.hxzhouh.com/subscribe">Click here</a>!</li>
+<li>If you find my article helpful to you, please buy me a cup of <a href="https://www.buymeacoffee.com/hxzhouh">coffee</a></li>
+</ol>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -2233,6 +2121,48 @@ Memory safety is <strong>the most important value</strong> for Rust. It means th
       </tags>
   </entry>
   <entry>
+    <title>Mac: Slowing Down Your Disk Speed by 60x</title>
+    <url>/2024/04/27/Slowing%20Down%20Your%20Disk%20Speed%20by%2060x/</url>
+    <content><![CDATA[<p>Sometimes in the development process, we need to simulate slow disk conditions to verify if our code can still function on low-performance machines. Typically, we would use <code>cgroup</code> or Docker for this purpose, but it can be cumbersome on a MacBook. However, there’s a built-in tool on macOS that can help us achieve this: <code>dmc</code>.</p>
+<span id="more"></span>
+<blockquote>
+<p>This piece was originally published in the Medium MPP plan. If you’re a Medium user, feel free to follow me on <a href="https://medium.hxzhouh.com/">Medium</a>. Thanks!</p>
+</blockquote>
+<h2 id="Using-dmc">Using <code>dmc</code></h2>
+<p>macOS comes with <code>dmc</code>, which we can explore using <code>dmc -h</code>.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc -h</span><br><span class="line">usage: dmc &lt;commands...&gt;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">commands:</span></span><br><span class="line">  start &lt;mount&gt; (profile_name|profile_index [-boot])</span><br><span class="line">  stop &lt;mount&gt;</span><br><span class="line">  status &lt;mount&gt; [-json]</span><br><span class="line">  show profile_name|profile_index</span><br><span class="line">  list</span><br><span class="line">  select &lt;mount&gt; (profile_name|profile_index)</span><br><span class="line">  configure &lt;mount&gt; &lt;type&gt; &lt;access_time&gt; &lt;read_throughput&gt; &lt;write_throughput&gt; [&lt;ioqueue_depth&gt; &lt;maxreadcnt&gt; &lt;maxwritecnt&gt; &lt;segreadcnt&gt; &lt;segwritecnt&gt;]</span><br><span class="line">  help | -h</span><br></pre></td></tr></table></figure>
+<p>It offers various disk profiles to choose from:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc list</span><br><span class="line">  0: Faulty 5400 HDD</span><br><span class="line">  1: 5400 HDD</span><br><span class="line">  2: 7200 HDD</span><br><span class="line">  3: Slow SSD</span><br><span class="line">  4: SATA II SSD</span><br><span class="line">  5: SATA III SSD</span><br><span class="line">  6: PCIe 2 SSD</span><br><span class="line">  7: PCIe 3 SSD</span><br></pre></td></tr></table></figure>
+<p>Each profile corresponds to different speed modes, such as:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc show 0</span><br><span class="line">Profile: Faulty 5400 HDD</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 16777216</span><br><span class="line"> Max Write Bytes: 16777216</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br><span class="line">➜  /tmp dmc show 7</span><br><span class="line">Profile: PCIe 3 SSD</span><br><span class="line"> Type: SSD</span><br><span class="line"> Access time: 3 us</span><br><span class="line"> Read throughput: 3072 MB/s</span><br><span class="line"> Write throughput: 2560 MB/s</span><br><span class="line"> I/O Queue Depth: 256</span><br><span class="line"> Max Read Bytes: 67108864</span><br><span class="line"> Max Write Bytes: 67108864</span><br><span class="line"> Max Read Segments: 256</span><br><span class="line"> Max Write Segments: 256</span><br></pre></td></tr></table></figure>
+<p>Using it is straightforward. Suppose our disk is mounted on <code>/tmp/data</code>, and we want to set it to level 0. We simply execute:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo dmc start /tmp/data 0</span><br></pre></td></tr></table></figure>
+<p>Then, to verify the status:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp dmc status /tmp/data</span><br><span class="line">Disk Mount Conditioner: ON</span><br><span class="line">Profile: Custom</span><br><span class="line"> Type: HDD</span><br><span class="line"> Access time: 52222 us</span><br><span class="line"> Read throughput: 50 MB/s</span><br><span class="line"> Write throughput: 50 MB/s</span><br><span class="line"> I/O Queue Depth: 16</span><br><span class="line"> Max Read Bytes: 1048576</span><br><span class="line"> Max Write Bytes: 1048576</span><br><span class="line"> Max Read Segments: 128</span><br><span class="line"> Max Write Segments: 128</span><br></pre></td></tr></table></figure>
+<h2 id="Verification">Verification</h2>
+<p>We can validate using the <code>fio</code> tool:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">➜  /tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>Writing a 1GB file sequentially yields a speed of only 95.4MB/s, with IOPS at 91:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Run status group 0 (all jobs):</span><br><span class="line">  WRITE: bw=91.0MiB/s (95.4MB/s), 91.0MiB/s-91.0MiB/s (95.4MB/s-95.4MB/s), io=5468MiB (5734MB), run=60073-60073msec</span><br></pre></td></tr></table></figure>
+<p>Now, with <code>dmc</code> turned off and the same command:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/tmp sudo dmc stop /tmp/data</span><br><span class="line">/tmp fio --filename=./data/test1 -direct=1 --rw=write --ioengine=posixaio --bs=1m --iodepth=32 --size=1G --numjobs=1 --runtime=60 --time_base=1 --group_reporting --name=test-seq-read --log_avg_msec=1000 </span><br></pre></td></tr></table></figure>
+<p>The test results in 3211MB/s and IOPS of 3061, which represents the true speed of the disk:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">WRITE: bw=3062MiB/s (3211MB/s), 3062MiB/s-3062MiB/s (3211MB/s-3211MB/s), io=179GiB (193GB), run=60006-60006msec</span><br></pre></td></tr></table></figure>
+<p>In conclusion, <code>dmc</code> is quite handy in testing scenarios. I hadn’t known about this software before; if you find it useful, give it a try.</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2024/05/18/post/</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
     <title>The Magical Algorithms Written by Two Old Men, Dominating the World!</title>
     <url>/2024/04/25/The%20Magical%20Algorithms%20Written%20by%20Two%20Old%20Men,%20Dominating%20the%20World/</url>
     <content><![CDATA[<p>As an ordinary person, when you browse the web, you may not realize that the web pages sent to you by the server are actually compressed.</p>
@@ -2314,8 +2244,78 @@ Windows intervened and simply integrated Zip functionality into the operating sy
       </tags>
   </entry>
   <entry>
-    <title></title>
-    <url>/2024/05/18/post/</url>
-    <content><![CDATA[]]></content>
+    <title>Smart Go compiler: Slimming</title>
+    <url>/2024/05/11/Smart%20Go%20compiler%20Slimming/</url>
+    <content><![CDATA[<h1>Smart Go compiler:  Slimming</h1>
+<h3 id="1-Experiment-Which-Functions-are-Included-in-the-Final-Executable">1. Experiment: Which Functions are Included in the Final Executable?</h3>
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>Let’s conduct an experiment to determine which functions are included in the final executable! We’ll create a demo1 with the following directory structure and code snippets:</p>
+<span id="more"></span>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo1</span></span><br><span class="line">$ tree -F .</span><br><span class="line">.</span><br><span class="line">├── <span class="keyword">go</span>.mod</span><br><span class="line">├── main.<span class="keyword">go</span></span><br><span class="line">└── pkga/</span><br><span class="line">    └── pkga.<span class="keyword">go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="string">&quot;demo/pkga&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    result := pkga.Foo()</span><br><span class="line">    fmt.Println(result)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// pkga/pkga.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> pkga</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Foo</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Bar</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Bar.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The example is very simple! The main function calls the exported function Foo from the pkga package, which also contains the Bar function (although it is not called by any other function). Now let’s compile this module and examine the functions from the pkga package included in the compiled executable file! (This article uses Go version 1.22.0)</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br></pre></td></tr></table></figure>
+<p>Surprisingly, we didn’t find any symbol information related to pkga in the output of the executable file. This might be due to Go’s optimization. Let’s disable the optimization of the Go compiler and try again:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags <span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br><span class="line"> 108ca80 T demo/pkga.Foo</span><br></pre></td></tr></table></figure>
+<p>After disabling inlining optimization, we can see that pkga.Foo appears in the final executable file demo, but the unused Bar function is not included.</p>
+<p>Now let’s look at an example with indirect dependencies:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo2</span></span><br><span class="line">$ tree .</span><br><span class="line">.</span><br><span class="line">├── <span class="keyword">go</span>.mod</span><br><span class="line">├── main.<span class="keyword">go</span></span><br><span class="line">├── pkga</span><br><span class="line">│   └── pkga.<span class="keyword">go</span></span><br><span class="line">└── pkgb</span><br><span class="line">    └── pkgb.<span class="keyword">go</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// pkga/pkga.go</span></span><br><span class="line"><span class="keyword">package</span> pkga</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;demo/pkgb&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Foo</span><span class="params">()</span></span> <span class="type">string</span> &#123;</span><br><span class="line">    pkgb.Zoo()</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Bar</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(<span class="string">&quot;This is Bar.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In this example, we call a new function Zoo from the pkgb package within the pkga.Foo function. Let’s compile this new example and see which functions are included in the final executable:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags=<span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm demo | grep demo</span></span><br><span class="line"> 1093b40 T demo/pkga.Foo</span><br><span class="line"> 1093aa0 T demo/pkgb.Zoo</span><br></pre></td></tr></table></figure>
+<p>We can observe that only the functions reachable through the program execution path are included in the final executable!</p>
+<p>In more complex examples, we can use the <code>go build -ldflags='-dumpdep'</code> command to view the call dependency relationship (using demo2 as an example):</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">$ <span class="keyword">go</span> build -ldflags=<span class="string">&#x27;-dumpdep&#x27;</span> -gcflags=<span class="string">&#x27;-l -N&#x27;</span> &gt; deps.txt <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br><span class="line"></span><br><span class="line">$ grep demo deps.txt</span><br><span class="line"># demo</span><br><span class="line">main.main -&gt; demo/pkga.Foo</span><br><span class="line">demo/pkga.Foo -&gt; demo/pkgb.Zoo</span><br><span class="line">demo/pkga.Foo -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Hello from Foo!&quot;</span></span><br><span class="line">demo/pkgb.Zoo -&gt; math/rand.Int31n</span><br><span class="line">demo/pkgb.Zoo -&gt; demo/pkgb..stmp_0</span><br><span class="line">demo/pkgb..stmp_0 -&gt; <span class="keyword">go</span>:<span class="type">string</span>.<span class="string">&quot;Zoo in pkgb&quot;</span></span><br></pre></td></tr></table></figure>
+<p>From this, we can conclude that Go ensures that only the code that is actually used enters the final executable file, even if some code (such as pkga.Bar) and the code that is actually used (such as pkga.Foo) are in the same package. This mechanism also ensures that the final executable file size remains within a manageable range.</p>
+<p>Next, let’s explore this mechanism in Go.</p>
+<h3 id="2-Dead-Code-Elimination">2. Dead Code Elimination</h3>
+<p>Let’s review the build process of <code>go build</code>. The following steps outline the <code>go build</code> command:</p>
+<ol>
+<li>Read go.mod and go.sum: If the current directory contains a go.mod file, <code>go build</code> reads it to determine the project’s dependencies. It also verifies the integrity of the dependencies based on checksums in the go.sum file.</li>
+<li>Calculate the package dependency graph: <code>go build</code> analyzes the import statements in the packages being built and their dependencies to construct a dependency graph. This graph represents the relationships between packages, enabling the compiler to determine the build order of packages.</li>
+<li>Determine the packages to build: Based on the build cache and the dependency graph, <code>go build</code> determines which packages need to be built. It checks the build cache to see if the compiled packages are up to date. If any package or its dependencies have changed since the last build, <code>go build</code> will rebuild those packages.</li>
+<li>Invoke the compiler (go tool compile): For each package that needs to be built, <code>go build</code> invokes the Go compiler (go tool compile). The compiler converts the Go source code into machine code specific to the target platform and generates object files (.o files).</li>
+<li>Invoke the linker (go tool link): After compiling all the necessary packages, <code>go build</code> invokes the Go linker (go tool link). The linker merges the object files generated by the compiler into an executable binary file or a package archive file. It resolves symbols and references between packages, performs necessary relocations, and generates the final output.</li>
+</ol>
+<p>The entire build process can be represented by the following diagram:</p>
+<p><img src="https://tonybai.com/wp-content/uploads/dead-code-elimination-and-executable-file-slimming-in-go-2.png" alt="Build Process"></p>
+<p>During the build process, <code>go build</code> performs various optimizations, such as dead code elimination and inlining, to improve the performance and reduce the size of the generated binary files. Dead code elimination is an important mechanism that ensures the controllable size of the final executable file in Go.</p>
+<p>The implementation of the dead code detection algorithm can be found in the <code>$GOROOT/src/cmd/link/internal/ld/deadcode.go</code> file. The algorithm operates by traversing the graph and follows these steps:</p>
+<ol>
+<li>Start from the entry point of the system and mark all symbols reachable through relocations. Relocation represents the dependency relationship between two symbols.</li>
+<li>By traversing the relocation relationships, the algorithm marks all symbols that can be accessed from the entry point. For example, if the function pkga.Foo is called in the main function main.main, there will be a relocation entry for this function in main.main.</li>
+<li>After marking is complete, the algorithm marks all unmarked symbols as unreachable and dead code. These unmarked symbols represent the code that cannot be accessed by the entry point or any other reachable symbols.</li>
+</ol>
+<p>However, there is a special syntax element to note, which is types with methods. Whether the methods of a type are included in the final executable depends on different scenarios. In deadcode.go, the function implementation for marking reachable symbols distinguishes three cases of method invocation for reachable types:</p>
+<ol>
+<li>Direct invocation</li>
+<li>Invocation through reachable interface types</li>
+<li>Invocation through reflection: reflect.Value.Method (or MethodByName) or reflect.Type.Method (or MethodByName)</li>
+</ol>
+<p>In the first case, the invoked method is marked as reachable. In the second case, all reachable interface types are decomposed into method signatures. Each encountered method is compared with the interface method signatures, and if there is a match, it is marked as reachable. This method is conservative but simple and correct.</p>
+<p>In the third case, the algorithm handles methods by looking for functions marked as REFLECTMETHOD by the compiler. The presence of REFLECTMETHOD on a function F means that F uses reflection for method lookup, but the compiler cannot determine the method name during static analysis. Therefore, all functions that call reflect.Value.Method or reflect.Type.Method are marked as REFLECTMETHOD. Functions that call reflect.Value.MethodByName or reflect.Type.MethodByName with non-constant arguments are also considered REFLECTMETHOD. If a REFLECTMETHOD is found, static analysis is abandoned, and all exported methods of reachable types are marked as reachable.</p>
+<p>Here is an example from the reference material:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// dead-code-elimination/demo3/main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> X <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="keyword">type</span> Y <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> One()   &#123; fmt.Println(<span class="string">&quot;hello 1&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Two()   &#123; fmt.Println(<span class="string">&quot;hello 2&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*X)</span></span> Three() &#123; fmt.Println(<span class="string">&quot;hello 3&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Four()  &#123; fmt.Println(<span class="string">&quot;hello 4&quot;</span>) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(*Y)</span></span> Five()  &#123; fmt.Println(<span class="string">&quot;hello 5&quot;</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> name <span class="type">string</span></span><br><span class="line">    fmt.Scanf(<span class="string">&quot;%s&quot;</span>, &amp;name)</span><br><span class="line">    reflect.ValueOf(&amp;X&#123;&#125;).MethodByName(name).Call(<span class="literal">nil</span>)</span><br><span class="line">    <span class="keyword">var</span> y Y</span><br><span class="line">    y.Five()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In this example, type *X has three methods, and type *Y has two methods. In the main function, we call the methods of an X instance through reflection and directly call a method of a Y instance. Let’s see which methods of X and Y are included in the final executable:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go build -gcflags=<span class="string">&#x27;-l -N&#x27;</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go tool nm ./demo | grep main</span></span><br><span class="line"> 11d59c0 D go:main.inittasks</span><br><span class="line"> 10d4500 T main.(*X).One</span><br><span class="line"> 10d4640 T main.(*X).Three</span><br><span class="line"> 10d45a0 T main.(*X).Two</span><br><span class="line"> 10d46e0 T main.(*Y).Five</span><br><span class="line"> 10d4780 T main.main</span><br><span class="line">... ...</span><br></pre></td></tr></table></figure>
+<p>We can observe that only the directly called method Five of the reachable type Y is included in the final executable, while all methods of the reachable type X through reflection are present! This aligns with the third case mentioned earlier.</p>
+<h3 id="3-Summary">3. Summary</h3>
+<p>This article introduced the dead code elimination and executable file size reduction mechanisms in the Go language. Through experiments, we verified that only the functions called on the program execution path are included in the final executable, and unused functions are eliminated.</p>
+<p>The article explained the Go build process, including package dependency graph calculation, compilation, and linking steps, and highlighted dead code elimination as an important optimization strategy. The specific dead code elimination algorithm is implemented through graph traversal, where reachable symbols are marked and unmarked symbols are considered unused. The article also mentioned the handling of type methods.</p>
+<p>With this dead code elimination mechanism, Go controls the size of the final executable file, achieving executable file size reduction.</p>
+<p>The source code mentioned in this article can be downloaded <a href="https://github.com/bigwhite/experiments/tree/master/dead-code-elimination">here</a>.</p>
+<h3 id="4-References">4. References</h3>
+<ul>
+<li><a href="https://golab.io/talks/getting-the-most-out-of-dead-code-elimination">Getting the most out of Dead Code elimination</a></li>
+<li><a href="https://github.com/golang/go/issues/6853">all: binaries too big and growing</a></li>
+<li><a href="https://github.com/aarzilli/whydeadcode">aarzilli/whydeadcode</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
   </entry>
 </search>
