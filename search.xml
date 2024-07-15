@@ -412,45 +412,6 @@ With the increasing popularity of open-source products, it is crucial for a back
       </tags>
   </entry>
   <entry>
-    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
-    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
-    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
-<span id="more"></span>
-<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
-<h1>Overview</h1>
-<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
-<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
-<h1>Design</h1>
-<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
-<h1>Ensuring Data Integrity</h1>
-<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
-<h1>Handling Network Latency and Packet Loss</h1>
-<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
-<h1>Waiting for Unsent Data to be Sent</h1>
-<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
-<h1>Handling the Half-Closed State</h1>
-<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
-<h1>Conclusion</h1>
-<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
-<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
-<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
-<hr>
-<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
-<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
-<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>network</category>
-      </categories>
-      <tags>
-        <tag>tcp</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Performance Profiling with PProf</title>
     <url>/2024/02/02/2024-02-02_Performance-Profiling-with-PProf--A-Powerful-Tool-in-Golang-c0b0fbce4bdb/</url>
     <content><![CDATA[<h1>Introduction</h1>
@@ -935,6 +896,29 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </tags>
   </entry>
   <entry>
+    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
+    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
+    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
+<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
+<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
+<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
+<h1>Constantly Switching Note Formats</h1>
+<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
+<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
+<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
+<h1>Mixing Project Notes with Knowledge Notes</h1>
+<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
+<h1>Obsessive Note Organization</h1>
+<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
+]]></content>
+      <categories>
+        <category>self</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>11 Tips for Detecting and Responding to Intrusions on Linux</title>
     <url>/2024/05/10/2024-05-10_11-Tips-for-Detecting-and-Responding-to-Intrusions-on-Linux/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db9ed8c90e3341c2adf625afbd5ea8b0.png" alt="Generate By DELLA-3">Generate By DELLA-3</p>
@@ -1003,29 +987,6 @@ We hope this article has been helpful to you. We encourage you to try it out you
       </categories>
       <tags>
         <tag>safe</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Crafting Your Second Brain Lessons Learned from My Note-Taking Journey</title>
-    <url>/2024/05/08/2024-05-08_Crafting-Your-Second-Brain--Lessons-Learned-from-My-Note-Taking-Journey-21de5c55e95d/</url>
-    <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/05/5ab6b54893dc2241704444526269572a.jpg" alt="o8f0u"></p>
-<p>I’ve spent the past few years building my second brain, and here are some lessons I’ve learned along the way.</p>
-<h1>Frequent Switching of Note-Taking Software/Blogging Systems</h1>
-<p>I’ve tried EverNote, WizNote, VNote, CSDN blog, Google blogspot, WordPress, only to end up scattering my blogs across multiple corners of the internet. The solution? Going all in one. I’ve now settled on Obsidian.</p>
-<h1>Constantly Switching Note Formats</h1>
-<p>I’ve experimented with txt, orgmode, markdown, rich text, and more, only to find myself frustrated with format conversions. Similar to the first point, each note system may not be universally compatible. The reason I chose Obsidian is for its markdown syntax. If need be, I can easily migrate it to any note system.</p>
-<h1>Mixing Fleeting Thoughts with Truly Useful Notes</h1>
-<p>Fleeting thoughts serve to capture a moment of inspiration, but it’s only meaningful if you revisit them within a day or two and turn them into useful, relevant notes. Without timely review, good ideas drown in a sea of whims. Most of our daily thoughts are insignificant and should be discarded, while those with potential significance must be identified.</p>
-<h1>Mixing Project Notes with Knowledge Notes</h1>
-<p>Only recording notes relevant to specific projects leads to the loss of interesting insights or ideas during the project. The correct approach is to extract universal knowledge from projects. I recommend using the P.A.R.A method to organize notes. For more information on P.A.R.A, you can refer to this <a href="https://fortelabs.com/blog/para/">page</a></p>
-<h1>Obsessive Note Organization</h1>
-<p>A large pile of notes leads to an urge to organize knowledge, but too many attempts can affect the confidence to keep recording. The solution is to define the areas of interest and responsibility and not completely adopt a bottom-up knowledge management approach. When reaching the point of psychological pressure, use the MOCS (Maps of Content) method to organize notes (bidirectional linking is definitely worth trying). The most important aspect of a knowledge management system is to record your insights in one place, with the same format, and consistent standards.</p>
-]]></content>
-      <categories>
-        <category>self</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
       </tags>
   </entry>
   <entry>
@@ -1309,54 +1270,6 @@ To understand these two, we need to establish a concept: a pointer is essentiall
       </tags>
   </entry>
   <entry>
-    <title>Go - Ordering in Select Statements</title>
-    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
-    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
-<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
-<hr>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
-<blockquote>
-<p>本文基于 go 1.14</p>
-</blockquote>
-<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
-<span id="more"></span>
-<h1>Order</h1>
-<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
-<p>看一个有三个就绪的channel的例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
-<p>在 select 的每次迭代中，case 都会被打乱：<br>
-![[Pasted image 20240517215906.png]]</p>
-<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>输出的结果：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
-<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
-<h1>Non-ready channels</h1>
-<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
-<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
-<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
-<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
-<h1>Simplification</h1>
-<p>如果只有一个case 加上一个default，例子：</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
-<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
-<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
-]]></content>
-      <categories>
-        <category>Go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-        <tag>底层</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go Program pattern 04: Map-Reduce</title>
     <url>/2024/04/23/Go%20Program%20pattern%2004%EF%BC%9AMap-Reduce/</url>
     <content><![CDATA[<p>Map-Reduce is a programming paradigm used for processing large-scale datasets. It helps simplify the process of parallel computation and improves computational efficiency.</p>
@@ -1516,40 +1429,6 @@ Let’s define a <code>Server</code> struct:</p>
       </tags>
   </entry>
   <entry>
-    <title>Go program pattern 03: Inversion of Control</title>
-    <url>/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/</url>
-    <content><![CDATA[<p>In the previous article, I briefly introduced the composite pattern in Go, which was explained in a simple manner. We understood that Go can achieve polymorphism in object-oriented programming through composition.</p>
-<span id="more"></span>
-<blockquote>
-<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
-</blockquote>
-<p>In this article, let’s learn about Inversion of Control (IoC). <a href="https://en.wikipedia.org/wiki/Inversion_of_control" title="IoC - Inversion of Control">Inversion of Control</a> is a software design method that involves separating control logic from business logic. Instead of writing control logic within the business logic, which creates a dependency of control logic on business logic, IoC reverses this relationship and makes the business logic dependent on the control logic.</p>
-<h2 id="Inversion-of-Control">Inversion of Control</h2>
-<p>Let’s consider an example where we want to implement a functionality to record the existence of numbers. We can easily implement the following code:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;  </span><br><span class="line">    data <span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewIntSet</span><span class="params">()</span></span> IntSet &#123;  </span><br><span class="line">    <span class="keyword">return</span> IntSet&#123;<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Add(x <span class="type">int</span>) &#123;  </span><br><span class="line">    set.data[x] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Delete(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="built_in">delete</span>(set.data, x)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Contains(x <span class="type">int</span>) <span class="type">bool</span> &#123;  </span><br><span class="line">    _, ok := set.data[x]  </span><br><span class="line">    <span class="keyword">return</span> ok  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>The above code uses a map to store numbers and provides functionalities for adding, deleting, and checking the existence of numbers. Everything seems perfect.</p>
-<p>Now, suppose we want to add an undo feature to this functionality. How can we do that? With a little thought, we can write clear code by wrapping <code>IntSet</code> into <code>UndoableIntSet</code>. Here’s the code:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> UndoableIntSet <span class="keyword">struct</span> &#123; <span class="comment">// Poor style</span></span><br><span class="line">    IntSet    <span class="comment">// Embedding (delegation)</span></span><br><span class="line">    functions []<span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewUndoableIntSet</span><span class="params">()</span></span> UndoableIntSet &#123;</span><br><span class="line">    <span class="keyword">return</span> UndoableIntSet&#123;NewIntSet(), <span class="literal">nil</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Add(x <span class="type">int</span>) &#123; <span class="comment">// Override</span></span><br><span class="line">    <span class="keyword">if</span> !set.Contains(x) &#123;</span><br><span class="line">        set.data[x] = <span class="literal">true</span></span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; set.Delete(x) &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="literal">nil</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Delete(x <span class="type">int</span>) &#123; <span class="comment">// Override</span></span><br><span class="line">    <span class="keyword">if</span> set.Contains(x) &#123;</span><br><span class="line">        <span class="built_in">delete</span>(set.data, x)</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; set.Add(x) &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="literal">nil</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Undo() <span class="type">error</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(set.functions) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> errors.New(<span class="string">&quot;No functions to undo&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// invert the order of calls</span></span><br><span class="line">    index := <span class="built_in">len</span>(set.functions) - <span class="number">1</span></span><br><span class="line">    <span class="keyword">if</span> function := set.functions[index]; function != <span class="literal">nil</span> &#123;</span><br><span class="line">        function()</span><br><span class="line">    &#125;</span><br><span class="line">    set.functions = set.functions[:index]</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>This approach is a good choice for extending existing code with new functionalities. It allows for a balance between reusing the existing code and adding new features. However, the main issue with this approach is that the Undo operation is actually a form of control logic, not business logic. The Undo feature cannot be reused because it contains a lot of business logic related to <code>IntSet</code>.</p>
-<h2 id="Dependency-Inversion">Dependency Inversion</h2>
-<p>Let’s explore another implementation approach where we extract the undo feature and make <code>IntSet</code> depend on it:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Undo []<span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(undo *Undo)</span></span> Add(u <span class="function"><span class="keyword">func</span><span class="params">()</span></span>) &#123;  </span><br><span class="line">    *undo = <span class="built_in">append</span>(*undo, u)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(undo *Undo)</span></span> Undo() &#123;  </span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(*undo) == <span class="number">0</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125;  </span><br><span class="line">    index := <span class="built_in">len</span>(*undo) - <span class="number">1</span>  </span><br><span class="line">    (*undo)[index]()  </span><br><span class="line">    *undo = (*undo)[:index]  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Next, we embed <code>Undo</code> in <code>IntSet</code>:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;  </span><br><span class="line">    data <span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;  </span><br><span class="line">    undo Undo  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewIntSet</span><span class="params">()</span></span> IntSet &#123;  </span><br><span class="line">    <span class="keyword">return</span> IntSet&#123;<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;), <span class="built_in">make</span>(Undo, <span class="number">0</span>)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Undo() &#123;  </span><br><span class="line">    set.undo.Undo()  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Add(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="keyword">if</span> set.Contains(x) &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">       set.undo.Add(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          set.Delete(x)  </span><br><span class="line">       &#125;)  </span><br><span class="line">       set.data[x] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Delete(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="keyword">if</span> !set.Contains(x) &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">       set.undo.Add(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          set.Add(x)  </span><br><span class="line">       &#125;)  </span><br><span class="line">       <span class="built_in">delete</span>(set.data, x)  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Contains(x <span class="type">int</span>) <span class="type">bool</span> &#123;  </span><br><span class="line">    _, ok := set.data[x]  </span><br><span class="line">    <span class="keyword">return</span> ok  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>In our application, we can use it as follows:</p>
-<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    set := NewIntSet()  </span><br><span class="line">    set.Add(<span class="number">1</span>)  </span><br><span class="line">    set.Add(<span class="number">2</span>)  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">2</span>))  </span><br><span class="line">    set.Undo()  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">2</span>))  </span><br><span class="line">    set.Delete(<span class="number">1</span>)  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">1</span>))  </span><br><span class="line">    set.Undo()  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">1</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Output:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_pattern_ioc</span><br><span class="line">true</span><br><span class="line">false</span><br><span class="line">false</span><br><span class="line">true</span><br></pre></td></tr></table></figure>
-<p>This is Inversion of Control, where the control logic <code>Undo</code> no longer depends on the business logic <code>IntSet</code>, but rather the business logic <code>IntSet</code> depends on <code>Undo</code>. Now, the Undo feature can be easily used by other business logics.</p>
-]]></content>
-      <categories>
-        <category>go</category>
-      </categories>
-      <tags>
-        <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Go program pattern 02: Implementing Class Inheritance and Method Overriding through Composition</title>
     <url>/2024/04/23/Go%20program%20pattern%2002%EF%BC%9A%20Implementing%20Class%20Inheritance%20and%20Method%20Overriding%20through%20Composition/</url>
     <content><![CDATA[<p>In the previous tutorial, I have already introduced that Go language, unlike object-oriented programming languages such as Java and PHP, does not support keywords like <code>class</code> to define classes. Instead, it uses the <code>type</code> keyword combined with basic types or structures to define the type system. Additionally, it does not support explicitly defining inheritance relationships between types using the <code>extends</code> keyword.</p>
@@ -1591,6 +1470,40 @@ If we want to define a class representing <code>Label</code>, we can do it like 
       </categories>
       <tags>
         <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go program pattern 03: Inversion of Control</title>
+    <url>/2024/04/23/Go%20program%20pattern%2003%EF%BC%9AInversion%20of%20Control/</url>
+    <content><![CDATA[<p>In the previous article, I briefly introduced the composite pattern in Go, which was explained in a simple manner. We understood that Go can achieve polymorphism in object-oriented programming through composition.</p>
+<span id="more"></span>
+<blockquote>
+<p>This article is first published in the medium MPP plan. If you are a medium user, please follow me in <a href="https://medium.hxzhouh.com/">medium</a>. Thank you very much.</p>
+</blockquote>
+<p>In this article, let’s learn about Inversion of Control (IoC). <a href="https://en.wikipedia.org/wiki/Inversion_of_control" title="IoC - Inversion of Control">Inversion of Control</a> is a software design method that involves separating control logic from business logic. Instead of writing control logic within the business logic, which creates a dependency of control logic on business logic, IoC reverses this relationship and makes the business logic dependent on the control logic.</p>
+<h2 id="Inversion-of-Control">Inversion of Control</h2>
+<p>Let’s consider an example where we want to implement a functionality to record the existence of numbers. We can easily implement the following code:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;  </span><br><span class="line">    data <span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewIntSet</span><span class="params">()</span></span> IntSet &#123;  </span><br><span class="line">    <span class="keyword">return</span> IntSet&#123;<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Add(x <span class="type">int</span>) &#123;  </span><br><span class="line">    set.data[x] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Delete(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="built_in">delete</span>(set.data, x)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Contains(x <span class="type">int</span>) <span class="type">bool</span> &#123;  </span><br><span class="line">    _, ok := set.data[x]  </span><br><span class="line">    <span class="keyword">return</span> ok  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The above code uses a map to store numbers and provides functionalities for adding, deleting, and checking the existence of numbers. Everything seems perfect.</p>
+<p>Now, suppose we want to add an undo feature to this functionality. How can we do that? With a little thought, we can write clear code by wrapping <code>IntSet</code> into <code>UndoableIntSet</code>. Here’s the code:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> UndoableIntSet <span class="keyword">struct</span> &#123; <span class="comment">// Poor style</span></span><br><span class="line">    IntSet    <span class="comment">// Embedding (delegation)</span></span><br><span class="line">    functions []<span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewUndoableIntSet</span><span class="params">()</span></span> UndoableIntSet &#123;</span><br><span class="line">    <span class="keyword">return</span> UndoableIntSet&#123;NewIntSet(), <span class="literal">nil</span>&#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Add(x <span class="type">int</span>) &#123; <span class="comment">// Override</span></span><br><span class="line">    <span class="keyword">if</span> !set.Contains(x) &#123;</span><br><span class="line">        set.data[x] = <span class="literal">true</span></span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; set.Delete(x) &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="literal">nil</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Delete(x <span class="type">int</span>) &#123; <span class="comment">// Override</span></span><br><span class="line">    <span class="keyword">if</span> set.Contains(x) &#123;</span><br><span class="line">        <span class="built_in">delete</span>(set.data, x)</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; set.Add(x) &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        set.functions = <span class="built_in">append</span>(set.functions, <span class="literal">nil</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *UndoableIntSet)</span></span> Undo() <span class="type">error</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(set.functions) == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> errors.New(<span class="string">&quot;No functions to undo&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// invert the order of calls</span></span><br><span class="line">    index := <span class="built_in">len</span>(set.functions) - <span class="number">1</span></span><br><span class="line">    <span class="keyword">if</span> function := set.functions[index]; function != <span class="literal">nil</span> &#123;</span><br><span class="line">        function()</span><br><span class="line">    &#125;</span><br><span class="line">    set.functions = set.functions[:index]</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>This approach is a good choice for extending existing code with new functionalities. It allows for a balance between reusing the existing code and adding new features. However, the main issue with this approach is that the Undo operation is actually a form of control logic, not business logic. The Undo feature cannot be reused because it contains a lot of business logic related to <code>IntSet</code>.</p>
+<h2 id="Dependency-Inversion">Dependency Inversion</h2>
+<p>Let’s explore another implementation approach where we extract the undo feature and make <code>IntSet</code> depend on it:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Undo []<span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(undo *Undo)</span></span> Add(u <span class="function"><span class="keyword">func</span><span class="params">()</span></span>) &#123;  </span><br><span class="line">    *undo = <span class="built_in">append</span>(*undo, u)  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(undo *Undo)</span></span> Undo() &#123;  </span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(*undo) == <span class="number">0</span> &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125;  </span><br><span class="line">    index := <span class="built_in">len</span>(*undo) - <span class="number">1</span>  </span><br><span class="line">    (*undo)[index]()  </span><br><span class="line">    *undo = (*undo)[:index]  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Next, we embed <code>Undo</code> in <code>IntSet</code>:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> IntSet <span class="keyword">struct</span> &#123;  </span><br><span class="line">    data <span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;  </span><br><span class="line">    undo Undo  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewIntSet</span><span class="params">()</span></span> IntSet &#123;  </span><br><span class="line">    <span class="keyword">return</span> IntSet&#123;<span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">int</span>]<span class="keyword">struct</span>&#123;&#125;), <span class="built_in">make</span>(Undo, <span class="number">0</span>)&#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Undo() &#123;  </span><br><span class="line">    set.undo.Undo()  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Add(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="keyword">if</span> set.Contains(x) &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">       set.undo.Add(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          set.Delete(x)  </span><br><span class="line">       &#125;)  </span><br><span class="line">       set.data[x] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Delete(x <span class="type">int</span>) &#123;  </span><br><span class="line">    <span class="keyword">if</span> !set.Contains(x) &#123;  </span><br><span class="line">       <span class="keyword">return</span>  </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">       set.undo.Add(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">          set.Add(x)  </span><br><span class="line">       &#125;)  </span><br><span class="line">       <span class="built_in">delete</span>(set.data, x)  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(set *IntSet)</span></span> Contains(x <span class="type">int</span>) <span class="type">bool</span> &#123;  </span><br><span class="line">    _, ok := set.data[x]  </span><br><span class="line">    <span class="keyword">return</span> ok  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>In our application, we can use it as follows:</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;  </span><br><span class="line">    set := NewIntSet()  </span><br><span class="line">    set.Add(<span class="number">1</span>)  </span><br><span class="line">    set.Add(<span class="number">2</span>)  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">2</span>))  </span><br><span class="line">    set.Undo()  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">2</span>))  </span><br><span class="line">    set.Delete(<span class="number">1</span>)  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">1</span>))  </span><br><span class="line">    set.Undo()  </span><br><span class="line">    fmt.Println(set.Contains(<span class="number">1</span>))  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Output:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/Users/hxzhouh/Library/Caches/JetBrains/GoLand2023.3/tmp/GoLand/___go_build_github_com_hxzhouh_go_example_pattern_ioc</span><br><span class="line">true</span><br><span class="line">false</span><br><span class="line">false</span><br><span class="line">true</span><br></pre></td></tr></table></figure>
+<p>This is Inversion of Control, where the control logic <code>Undo</code> no longer depends on the business logic <code>IntSet</code>, but rather the business logic <code>IntSet</code> depends on <code>Undo</code>. Now, the Undo feature can be easily used by other business logics.</p>
+]]></content>
+      <categories>
+        <category>go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
       </tags>
   </entry>
   <entry>
@@ -1806,6 +1719,49 @@ I used Obsidian’s Image auto upload Plugin + picList to upload images. The wri
       </tags>
   </entry>
   <entry>
+    <title>If Google No Longer supports Golang</title>
+    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
+    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
+<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
+<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
+<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
+As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
+<h1>What does Google offer to Go?</h1>
+<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
+<ol>
+<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
+<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
+<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
+<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
+<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
+</ol>
+<h1>Potential Scenarios</h1>
+<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
+<ul>
+<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
+<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
+<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
+<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
+</ul>
+<h1>Probability of Occurrence</h1>
+<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
+<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
+<h1>Conclusion</h1>
+<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
+<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>golang</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Learn How to Handle Time In Golang</title>
     <url>/2024/04/19/Learn%20How%20to%20Handle%20Time%20In%20Golang/</url>
     <content><![CDATA[<p><img src="https://images.hxzhouh.com/blog-images/2024/04/407a476e9b0e72dfefa2c636f2fd71ce.png" alt="99e178071ff04a758df4210c2e330fc8.png~tplv-6bxrjdptv7-image"><br>
@@ -1913,49 +1869,6 @@ Handling time is a common task for programmers. In Go, the standard library <cod
       </categories>
       <tags>
         <tag>go</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>If Google No Longer supports Golang</title>
-    <url>/2024/05/07/If%20Google%20No%20Longer%20supports%20Golang/</url>
-    <content><![CDATA[<p><img src="https://cdn-images-1.medium.com/max/800/0*5tD3S180Mg9n475o" alt=""></p>
-<p>Last month’s hot topic in IT circles was Google laying off many developers from its Python core team and flutter/dart team, purportedly for a city-wide reorganization.<br>
-<a href="https://news.ycombinator.com/item?id=40171125">https://news.ycombinator.com/item?id=40171125</a></p>
-<p>Reportedly, those laid off were mostly core members responsible for important Python maintenance.<br>
-As a gopher, I pondered: will Google abandon Go? And if so, what would become of Go?</p>
-<h1>What does Google offer to Go?</h1>
-<p>Based on our past understanding clarified by @Lance Taylor and descriptions from various sources, we can estimate what Go has likely received from Google.</p>
-<ol>
-<li><strong>Job Positions</strong>: Details regarding job positions of members of the Go core team, including compensation, benefits, and other remuneration.</li>
-<li><strong>Software and Hardware Resources</strong>: Information on Go-related resources such as intellectual property, servers, domain names, and module management mirrors required by the community.</li>
-<li><strong>Offline Activities</strong>: Possibility of reduced or scaled-down Go conferences worldwide in terms of funding and endorsement.</li>
-<li><strong>Internal Resources of Big Corporations</strong>: Gradual loss of exposure to advanced projects and opportunities for Go’s adoption due to the absence of resources within Google.</li>
-<li><strong>Promotion and Feedback Channels</strong>: Slower discovery and response to significant issues and features in Go as Google’s internal demands historically take precedence.</li>
-</ol>
-<h1>Potential Scenarios</h1>
-<p>What might happen if Google dissolves the Go core team and ceases all infrastructure support?</p>
-<ul>
-<li>Dissolution of the Go core team, leading members may retire or seek employment elsewhere.</li>
-<li>If Google decides to cease all investment in Go, maintenance of Go could become more complex as it relies heavily on infrastructure. In such a scenario, Go might transition from Google to an external foundation, resulting in noticeable maintenance fluctuations.</li>
-<li>If Google chooses to continue investing in Go through other internal teams, the worst-case scenario could involve Google flexing its ownership of intellectual property, possibly leading to Go being rebranded.</li>
-<li>CNCF might take over Google’s mantle, organizing the future development of Go. Among CNCF projects, the Go language enjoys the widest adoption.</li>
-</ul>
-<h1>Probability of Occurrence</h1>
-<p>Currently, Go belongs to Google Cloud. Considering Go’s current trend focusing on customer success, the likelihood of Google Cloud shutting down Go is low. But who knows? I consulted <code>gemini</code> on this question.</p>
-<p><img src="https://cdn-images-1.medium.com/max/800/0*4EEwSKbJ6DxddogE.png" alt="">generated by Gemini</p>
-<h1>Conclusion</h1>
-<p>Drawing from the example of Rust, which transitioned from Mozilla’s core to an independent foundation, Go could potentially thrive even more. A nonprofit organization will probably form around Go (or it may directly join CNCF), with enough support from major companies, at least for a period.</p>
-<h1>References</h1>
-<ul>
-<li><a href="https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/">https://ajmani.net/2024/02/23/go-2019-2022-becoming-a-cloud-team/</a></li>
-<li><a href="https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/">https://www.reddit.com/r/golang/comments/1cft7mc/if_google_decided_to_part_with_the_core_go_team/</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>golang</tag>
       </tags>
   </entry>
   <entry>
@@ -2311,6 +2224,93 @@ Windows intervened and simply integrated Zip functionality into the operating sy
       <tags>
         <tag>history</tag>
         <tag>compute</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Why does It Take Four Waves For TCP To Disconnect?</title>
+    <url>/2024/02/01/2024-02-01_Why-does-it-take-four-waves-for-TCP-to-disconnect--bd3de1af5b6e/</url>
+    <content><![CDATA[<p>TCP protocol is one of the network protocols we use in our daily lives. It is responsible for establishing and terminating connections. In the <a href="https://levelup.gitconnected.com/why-tcp-requires-three-handshakes-to-establish-a-connection-31d814aac6b8">previous</a> blog post, we analyzed why TCP requires three handshakes to establish a connection. When establishing a connection, we need to ensure the issues of historical connections and sequence numbers. Unlike the three-way handshake during connection establishment, disconnecting a TCP connection requires a four-way handshake. This article will explore why TCP disconnects require a four-way handshake instead of three or any other number.</p>
+<span id="more"></span>
+<p><img src="https://images.hxzhouh.com/blog-images/2024/05/db19965682f215f42c5a8a03cd7f7b76.png" alt="Material from: history-computer.com"></p>
+<h1>Overview</h1>
+<p>Before delving into why a four-way handshake is necessary, let’s first understand the process of TCP connection termination. Typically, when one party in the communication decides to terminate the connection, it sends a FIN (Finish) control message to the other party, indicating that it has no more data to send. The receiving party responds with an ACK (Acknowledgment) control message to acknowledge and enters a half-closed state, indicating that it will no longer send data but can still receive data. When the other party also has no more data to send, it sends a FIN message to indicate its intention to disconnect. The receiving party then sends another ACK message to confirm, and only then will the connection be fully closed.<br>
+<img src="https://images.hxzhouh.com/blog-images/2024/05/b2b3a5d3921acfa31d009eab0f48e139.png" alt="The Four-Way Handshake Process（ geeksforgeeks.org ）"></p>
+<h1>Design</h1>
+<p>Why does TCP disconnect require a four-way handshake? Let’s analyze this question from several aspects:</p>
+<h1>Ensuring Data Integrity</h1>
+<p>TCP is a connection-oriented reliable transport protocol that guarantees data reliability and integrity. During connection termination, both parties may still have unsent or unacknowledged data packets. If only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received during the final handshake. This could result in the other party not fully receiving the data, leading to data loss. Therefore, by performing a four-way handshake, both parties can ensure that they receive each other’s data completely and maintain data integrity.</p>
+<h1>Handling Network Latency and Packet Loss</h1>
+<p>In a network, data packets may be delayed or lost due to network latency or packet loss. During connection termination, if only a three-way handshake is performed, the other party may not know whether the FIN message it sent has been received, which may prevent timely closure of the connection. By performing a four-way handshake, sufficient time is provided for the network to handle latency and packet loss issues, ensuring that the connection can be properly closed.</p>
+<h1>Waiting for Unsent Data to be Sent</h1>
+<p>During connection termination, both parties may still have unsent data packets. If only a three-way handshake is performed, the other party may not know whether there is any unsent data before sending the FIN message. By performing a four-way handshake, both parties have enough time to send and receive the remaining data, ensuring data integrity and correctness.</p>
+<h1>Handling the Half-Closed State</h1>
+<p>During the TCP connection termination process, one party enters a half-closed state by sending a FIN message, indicating that it will no longer send data but can still receive data. If only a three-way handshake is performed, the other party will immediately close the connection upon receiving the FIN message, which may prevent proper handling of the half-closed state. By performing a four-way handshake, both parties can ensure the correct handling of the half-closed state, avoiding data loss and confusion.</p>
+<h1>Conclusion</h1>
+<p>Based on the analysis above, we can conclude that a four-way handshake is necessary for TCP disconnection to ensure data integrity, handle network latency and packet loss, wait for unsent data to be sent, and handle the half-closed state. Through the four-way handshake, both parties can better coordinate and handle the disconnection, ensuring the correct transmission of data and secure closure of the connection.</p>
+<p>When discussing TCP disconnection, we should not focus on why a four-way handshake is used, but rather understand why multiple handshakes are needed to ensure data integrity and proper connection closure. By gaining a deep understanding of TCP protocol design, we can better apply and comprehend the principles and mechanisms of network communication.</p>
+<p>Whether it is three handshakes or four handshakes, the first element of a tcp connection to consider is always security and data integrity, although it seems that three handshakes and four handshakes seem to be very inefficient, but the vast majority of Internet traffic is based on the tcp protocol, which is enough to prove that its reliability, on the issue of performance, there are other ways to optimize the performance of the protocol, such as udp, and later on, we will analyze how UDP and UDP-based QUIC protocol will affect the Internet in the next ten years. and how the UDP-based QUIC protocol will influence the next decade of the Internet.</p>
+<hr>
+<p>If you found my article enjoyable, feel free to follow me and give it a 👏. Your support would be greatly appreciated.</p>
+<h1>References</h1>
+<ul>
+<li><a href="https://tools.ietf.org/html/rfc793">RFC 793 — Transmission Control Protocol — IETF Tools</a></li>
+<li><a href="https://networkengineering.stackexchange.com/questions/24072/why-do-we-need-a-4-way-handshake-to-terminate-a-tcp-connection">Why do we need a 4-way handshake to terminate a TCP connection?</a></li>
+<li><a href="https://www.geeksforgeeks.org/why-tcp-connect-termination-need-4-way-handshake">why-tcp-connect-termination-need-4-way-handshake</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>network</category>
+      </categories>
+      <tags>
+        <tag>tcp</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Go - Ordering in Select Statements</title>
+    <url>/2020/04/29/Go%20-%20Ordering%20in%20Select%20Statements/</url>
+    <content><![CDATA[<p><a href="https://medium.com/a-journey-with-go/go-ordering-in-select-statements-fd0ff80fd8d6">原文链接</a></p>
+<p><a href="https://medium.com/@blanchon.vincent?source=post_page-----fd0ff80fd8d6----------------------">Vincent Blanchon</a></p>
+<hr>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429220520.png" alt=""></p>
+<blockquote>
+<p>本文基于 go 1.14</p>
+</blockquote>
+<p><code>select</code> 允许在一个goroutine中管理多个channel。但是，当所有channel同时就绪的时候，go需要在其中选择一个执行。go还需要处理没有channel就绪的情况，我们先从就绪的channel开始。</p>
+<span id="more"></span>
+<h1>Order</h1>
+<p><code>select</code> 不会按照任何规则或者优先级选择到达的channel。go标准库在每次访问的时候，都会将他们顺序打乱，也就是说不能保证任何顺序。</p>
+<p>看一个有三个就绪的channel的例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		a &lt;- <span class="literal">true</span></span><br><span class="line">		b &lt;- <span class="literal">true</span></span><br><span class="line">		c &lt;- <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-a:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-b:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> &lt;-c:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这三个channel都有三个完整的buffer（不会阻塞），下面是程序的输出</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; b&lt; a&lt; a&lt; b&lt; c&lt; c&lt; c&lt; a&lt; b&lt; b</span><br></pre></td></tr></table></figure>
+<p>在 select 的每次迭代中，case 都会被打乱：<br>
+![[Pasted image 20240517215906.png]]</p>
+<p>由于go 不会删除重复的channel，所以可以使用多次添加case来影响结果，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      a &lt;- <span class="literal">true</span></span><br><span class="line">      b &lt;- <span class="literal">true</span></span><br><span class="line">      c &lt;- <span class="literal">true</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">case</span> &lt;-c:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; c&quot;</span>)</span><br><span class="line"></span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; default&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出的结果：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&lt; c&lt; a&lt; b&lt; a&lt; b&lt; a&lt; a&lt; c&lt; a&lt; a</span><br></pre></td></tr></table></figure>
+<p>当所有channel同时准备就绪时，有80％的机会选择通道a。下面来看一下channel未就绪的情况。</p>
+<h1>Non-ready channels</h1>
+<p><code>select</code> 运行时，如果没有一个case channel就绪，那么他就会运行<code>default:</code>,如果 <code>select</code>中没有写default，那么他就进入等待状态，如下面这个例子</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   a := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   b := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>, <span class="number">100</span>)</span><br><span class="line">   <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">      time.Sleep(time.Minute)</span><br><span class="line">      <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">         a &lt;- <span class="literal">true</span></span><br><span class="line">         b &lt;- <span class="literal">true</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;()</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-a:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; a&quot;</span>)</span><br><span class="line">      <span class="keyword">case</span> &lt;-b:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;&lt; b&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面那个例子中，将在一分钟后打印结果。<code>select</code>阻塞在 channel上。这种情况下，处理<code>select</code>的函数将会订阅所有channel并且等待，下面是一个goroutine#7在select中等待的示例，其中另一个goroutine#4也在等待channel：</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429225528.png" alt=""></p>
+<p>Goroutine(G7)订阅所有频道并在列表末尾等待。 如果channel发送了一条消息，channel将通知已在等待该消息的另一个Goroutine。一旦收到通知，<code>select </code>将取消订阅所有channel，并且返回到代码运行.</p>
+<p>更多关于channel与等待队列的信息，请查看作者另外一篇文章<a href="https://medium.com/a-journey-with-go/go-buffered-and-unbuffered-channels-29a107c00268"><em>Go: Buffered and Unbuffered Channels</em></a><em>.</em></p>
+<p>上面介绍的逻辑，都是针对于有两个或者以上的活动的channel，实际上如果只有一个活动的channel，go乐意简化select</p>
+<h1>Simplification</h1>
+<p>如果只有一个case 加上一个default，例子：</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">   t:= time.NewTicker(time.Second)</span><br><span class="line">   <span class="keyword">for</span>   &#123;</span><br><span class="line">      <span class="keyword">select</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> &lt;-t.C:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;1 second &quot;</span>)</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&quot;default branch&quot;</span>)</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种情况下。Go会以非阻塞模式读取channel的操作替换select语句。如果channel在缓冲区中没有任何值，或者发送方准备发送消息，将会运行default。就像下面这张图</p>
+<p><img src="https://blog-image-1253555052.cos.ap-guangzhou.myqcloud.com/20200429231908.png" alt=""></p>
+<p>如果没有default，则 Go 通过阻塞channel操作重写 select 语句。</p>
+]]></content>
+      <categories>
+        <category>Go</category>
+      </categories>
+      <tags>
+        <tag>go</tag>
+        <tag>底层</tag>
       </tags>
   </entry>
   <entry>
